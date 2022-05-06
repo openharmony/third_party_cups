@@ -3,10 +3,10 @@
 Name:    cups
 Epoch:   1
 Version: 2.4.0
-Release: 1
+Release: 2
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
 License: GPLv2+ and LGPLv2+ with exceptions and AML
-Url:     http://www.cups.org/
+Url:     https://openprinting.github.io/cups/
 # Apple stopped uploading the new versions into github, use OpenPrinting fork
 Source0: https://github.com/OpenPrinting/cups/releases/download/v%{version}/cups-%{version}-source.tar.gz
 
@@ -444,11 +444,11 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
-* Thu Sep 9 2021 hanhui <hanhui15@huawei.com> - 2.4.0-1
-- DESC:update to cups-2.4.0
+* Thu May 6 2022 licihua <licihua@huawei.com> - 2.4.0-2
+- DESC:fix Official website address
 
-* Mon Nov 29 2021 hanhui <hanhui15@huawei.com> - 2.3.3op2-1
-- DESC:update to cups-2.3.3op2
+* Thu Dec 9 2021 hanhui <hanhui15@huawei.com> - 2.4.0-1
+- DESC:update to cups-2.4.0
 
 * Thu Nov 04 2021 wangkerong <wangkerong@huawei.com> - 2.3.3-8
 - Type:bugfix
