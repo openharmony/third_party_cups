@@ -3,7 +3,7 @@
 Name:    cups
 Epoch:   1
 Version: 2.4.0
-Release: 3
+Release: 4
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
 License: GPLv2+ and LGPLv2+ with exceptions and AML
 Url:     https://openprinting.github.io/cups/
@@ -25,6 +25,8 @@ Patch9:  cups-ipp-multifile.patch
 Patch10: cups-web-devices-timeout.patch
 
 Patch6000: backport-CVE-2022-26691.patch
+Patch6001: backport-Remove-legacy-code-for-RIP_MAX_CACHE-environment-variable.patch
+Patch6002: backport-Also-fix-cupsfilter.patch
 
 BuildRequires: pam-devel pkgconf-pkg-config pkgconfig(gnutls) libacl-devel openldap-devel pkgconfig(libusb-1.0)
 BuildRequires: krb5-devel pkgconfig(avahi-client) systemd pkgconfig(libsystemd) pkgconfig(dbus-1) python3-cups
@@ -446,6 +448,9 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
+* Wed Jun 15 2022 hanhui <hanhui15@h-partners.com> - 2.4.0-4
+- Remove legacy code for RIP_MAX_CACHE environment variable
+
 * Thu Jun 9 2022 hanhui <hanhui15@h-partners.com> - 2.4.0-3
 - fix CVE-2022-26691
 
