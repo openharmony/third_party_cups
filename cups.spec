@@ -3,7 +3,7 @@
 Name:    cups
 Epoch:   1
 Version: 2.4.0
-Release: 4
+Release: 5
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
 License: GPLv2+ and LGPLv2+ with exceptions and AML
 Url:     https://openprinting.github.io/cups/
@@ -405,7 +405,6 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %{_bindir}/cups-config
 %{_includedir}/cups
 %{_libdir}/*.so
-%{_mandir}/man1/cups-config.1.gz
 %{_rpmconfigdir}/macros.d/macros.cups
 %{_prefix}/lib/pkgconfig/cups.pc
  
@@ -434,6 +433,7 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 
 %files help
 %{_mandir}/man[1578]/*
+%{_mandir}/man1/cups-config.1.gz
 %doc README.md CREDITS.md CHANGES.md
 %doc %{_datadir}/%{name}/www/index.html
 %doc %{_datadir}/%{name}/www/help
@@ -448,6 +448,9 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
+* Tue Feb 21 2023 zhouwenpei <zhouwenpei@h-partners.com> - 2.4.0-5
+- fix update conflict of devel and help
+
 * Wed Jun 15 2022 hanhui <hanhui15@h-partners.com> - 2.4.0-4
 - Remove legacy code for RIP_MAX_CACHE environment variable
 
