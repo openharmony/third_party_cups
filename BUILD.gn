@@ -1,0 +1,312 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("./cups.gni")
+
+config_dir = "."
+cups_code_dir = "cups-2.4.0/"
+core_code_dir = "$cups_code_dir/cups/"
+filter_code_dir = "$cups_code_dir/filter"
+backend_code_dir = "$cups_code_dir/backend"
+ppdc_code_dir = "$cups_code_dir/ppdc"
+scheduler_code_dir = "$cups_code_dir/scheduler"
+
+SUBSYSTEM_NAME = "thirdparty"
+PART_NAME = "cups"
+
+group("third_party_cups"){
+    deps = [
+        ":cups",
+        ":rastertopwg",
+        ":backend",
+        ":ipp",
+        ":cupsd",
+        ":cupsfilter",
+        ":cups-exec",
+        ":cups-deviced",
+        ":mime.types",
+        ":mime.convs"
+    ]
+}
+
+config("cups_config") {
+    defines = cups_defines
+    include_dirs = [
+        "$config_dir",
+        "$cups_code_dir",
+        "$core_code_dir",
+        "//third_party/libusb/libusb"
+    ]
+
+    cflags = [
+        "-w",
+        "-std=c99",
+        "-D_PPD_DEPRECATED",
+        "-Wextra",
+        "-Wall",
+        "-Wno-unused-parameter",
+        "-Wno-unused-function",
+        "-Wno-unused-variable",
+        "-Wno-unused-value",
+        "-Wno-sign-compare",
+        "-Wno-missing-filed-initializers",
+        "-Wno-implicit-function-declaration",
+        "-Wno-deprecated-deprecations",
+        "-Wno-deincompatible-pointer-types-discards-qualifiers",
+        "-Wno-implicit-int",
+        "-Wno-implicit-function-deprecation",
+    ]
+}
+
+ohos_shared_library("cups") {
+    sources = [
+		"$core_code_dir/array.c",
+		"$core_code_dir/auth.c",
+		"$core_code_dir/debug.c",
+		"$core_code_dir/dest.c",
+		"$core_code_dir/dest-job.c",
+		"$core_code_dir/dest-localization.c",
+		"$core_code_dir/dest-options.c",
+		"$core_code_dir/dir.c",
+		"$core_code_dir/encode.c",
+		"$core_code_dir/file.c",
+		"$core_code_dir/getputfile.c",
+		"$core_code_dir/globals.c",
+		"$core_code_dir/hash.c",
+		"$core_code_dir/http.c",
+		"$core_code_dir/http-addr.c",
+		"$core_code_dir/http-addrlist.c",
+		"$core_code_dir/http-support.c",
+		"$core_code_dir/ipp.c",
+		"$core_code_dir/ipp-file.c",
+		"$core_code_dir/ipp-vars.c",
+		"$core_code_dir/ipp-support.c",
+		"$core_code_dir/langprintf.c",
+		"$core_code_dir/language.c",
+		"$core_code_dir/md5.c",
+		"$core_code_dir/md5passwd.c",
+		"$core_code_dir/notify.c",
+		"$core_code_dir/options.c",
+		"$core_code_dir/pwg-media.c",
+		"$core_code_dir/raster-error.c",
+		"$core_code_dir/raster-stream.c",
+		"$core_code_dir/raster-stubs.c",
+		"$core_code_dir/request.c",
+		"$core_code_dir/snprintf.c",
+		"$core_code_dir/string.c",
+		"$core_code_dir/tempfile.c",
+		"$core_code_dir/thread.c",
+		"$core_code_dir/tls.c",
+		"$core_code_dir/transcode.c",
+		"$core_code_dir/usersys.c",
+		"$core_code_dir/util.c",
+        "$core_code_dir/adminutil.c",
+		"$core_code_dir/backchannel.c",
+		"$core_code_dir/backend.c",
+		"$core_code_dir/getdevices.c",
+		"$core_code_dir/getifaddrs.c",
+		"$core_code_dir/ppd.c",
+		"$core_code_dir/ppd-attr.c",
+		"$core_code_dir/ppd-cache.c",
+		"$core_code_dir/ppd-conflicts.c",
+		"$core_code_dir/ppd-custom.c",
+		"$core_code_dir/ppd-emit.c",
+		"$core_code_dir/ppd-localize.c",
+		"$core_code_dir/ppd-mark.c",
+		"$core_code_dir/ppd-page.c",
+		"$core_code_dir/ppd-util.c",
+		"$core_code_dir/raster-interpret.c",
+		"$core_code_dir/raster-interstub.c",
+		"$core_code_dir/sidechannel.c",
+		"$core_code_dir/snmp.c",
+    ]
+
+    deps = [
+        "//third_party/zlib:libz"
+    ]
+
+    public_configs = [ ":cups_config" ]
+
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_shared_library("cupsimage") {
+    sources = [
+		"$core_code_dir/raster-interstub.c",
+		"$core_code_dir/raster-stubs.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups"
+    ]
+
+    public_configs = [ ":cups_config" ]
+
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("rastertopwg") {
+    sources = [
+        "$filter_code_dir/rastertopwg.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups",
+    ]
+
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/filter"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_shared_library("backend") {
+    sources = [
+        "$backend_code_dir/ieee1284.c",
+		"$backend_code_dir/network.c",
+		"$backend_code_dir/runloop.c",
+		"$backend_code_dir/snmp-supplies.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups"
+    ]
+
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("ipp") {
+    sources = [
+        "$backend_code_dir/ipp.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups",
+        "//third_party/cups:backend",
+    ]
+
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/backend"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("cupsd") {
+    sources = [
+        "$scheduler_code_dir/auth.c",
+		"$scheduler_code_dir/banners.c",
+		"$scheduler_code_dir/cert.c",
+		"$scheduler_code_dir/classes.c",
+		"$scheduler_code_dir/client.c",
+		"$scheduler_code_dir/colorman.c",
+		"$scheduler_code_dir/conf.c",
+		"$scheduler_code_dir/dirsvc.c",
+		"$scheduler_code_dir/env.c",
+		"$scheduler_code_dir/file.c",
+		"$scheduler_code_dir/main.c",
+		"$scheduler_code_dir/ipp.c",
+		"$scheduler_code_dir/listen.c",
+		"$scheduler_code_dir/job.c",
+		"$scheduler_code_dir/log.c",
+		"$scheduler_code_dir/network.c",
+		"$scheduler_code_dir/policy.c",
+		"$scheduler_code_dir/printers.c",
+		"$scheduler_code_dir/process.c",
+		"$scheduler_code_dir/quotas.c",
+		"$scheduler_code_dir/select.c",
+		"$scheduler_code_dir/server.c",
+		"$scheduler_code_dir/statbuf.c",
+		"$scheduler_code_dir/subscriptions.c",
+		"$scheduler_code_dir/sysman.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups",
+        "//third_party/cups:cupsmime",
+    ]
+
+    install_enable = true
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("cupsfilter") {
+    sources = [
+        "$scheduler_code_dir/cupsfilter.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups",
+        "//third_party/cups:cupsmime",
+    ]
+
+    install_enable = true
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("cups-deviced") {
+    sources = [
+        "$backend_code_dir/cups-deviced.c",
+        "$backend_code_dir/util.c",
+    ]
+
+    deps = [
+        "//third_party/cups:cups",
+        "//third_party/cups:cupsmime",
+    ]
+
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/daemon"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_executable("cups-exec") {
+    sources = [
+        "$backend_code_dir/cups-exec.c",
+    ]
+
+    deps = []
+
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/daemon"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_prebuilt_etc("mime.convs") {
+    exec_script("generate_mime_convs.py")
+    source = "$cups_code_dir/conf/mime.convs"
+    relative_install_dir = "cups/share/mime"
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_prebuilt_etc("mime.types") {
+    source = "$cups_code_dir/conf/mime.types"
+    relative_install_dir = "cups/share/mime"
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
