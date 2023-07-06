@@ -176,9 +176,9 @@ ohos_executable("rastertopwg") {
 ohos_shared_library("backend") {
     sources = [
         "$backend_code_dir/ieee1284.c",
-		"$backend_code_dir/network.c",
-		"$backend_code_dir/runloop.c",
-		"$backend_code_dir/snmp-supplies.c",
+        "$backend_code_dir/network.c",
+        "$backend_code_dir/runloop.c",
+        "$backend_code_dir/snmp-supplies.c"
     ]
 
     deps = [
@@ -208,19 +208,19 @@ ohos_executable("ipp") {
 }
 
 ohos_shared_library("cupsmime") {
-  sources = [
-    "$scheduler_code_dir/filter.c",
-    "$scheduler_code_dir/mime.c",
-    "$scheduler_code_dir/type.c",
-  ]
+    sources = [
+        "$scheduler_code_dir/filter.c",
+        "$scheduler_code_dir/mime.c",
+        "$scheduler_code_dir/type.c",
+    ]
 
-  deps = [
-    "//third_party/cups:cups",
-  ]
+    deps = [
+        "//third_party/cups:cups",
+    ]
 
-  public_configs = [":cups_config"]
-  subsystem_name = "$SUBSYSTEM_NAME"
-  part_name = "$PART_NAME"
+    public_configs = [":cups_config"]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
 }
 
 ohos_executable("cupsd") {
