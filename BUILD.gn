@@ -25,303 +25,480 @@ scheduler_code_dir = "$cups_code_dir/scheduler"
 SUBSYSTEM_NAME = "thirdparty"
 PART_NAME = "cups"
 
-group("third_party_cups"){
-    deps = [
-        ":cups",
-        ":rastertopwg",
-        ":ipp",
-        ":cupsd",
-        ":cupsfilter",
-        ":cups-exec",
-        ":cups-deviced",
-        ":mime.types",
-        ":mime.convs"
-    ]
+group("third_party_cups") {
+  deps = [
+    ":cups",
+    ":cups-deviced",
+    ":cups-exec",
+    ":cupsd",
+    ":cupsfilter",
+    ":ipp",
+    ":mime.convs",
+    ":mime.types",
+    ":rastertopwg",
+  ]
 }
 
 config("cups_config") {
-    defines = cups_defines
-    include_dirs = [
-        "$config_dir",
-        "$cups_code_dir",
-        "$core_code_dir",
-        "//third_party/libusb/libusb"
-    ]
+  defines = cups_defines
+  include_dirs = [
+    "$config_dir",
+    "$cups_code_dir",
+    "$core_code_dir",
+    "//third_party/libusb/libusb",
+  ]
 
-    cflags = [
-        "-w",
-        "-std=c99",
-        "-D_PPD_DEPRECATED=",
-        "-Wextra",
-        "-Wall",
-        "-Wno-unused-parameter",
-        "-Wno-unused-function",
-        "-Wno-unused-variable",
-        "-Wno-unused-value",
-        "-Wno-sign-compare",
-        "-Wno-missing-field-initializers",
-        "-Wno-implicit-function-declaration",
-        "-Wno-deprecated-declarations",
-        "-Wno-incompatible-pointer-types-discards-qualifiers",
-        "-Wno-implicit-int",
-        "-Wno-implicit-function-declaration",
-    ]
+  cflags = [
+    "-w",
+    "-std=c99",
+    "-D_PPD_DEPRECATED=",
+    "-Wextra",
+    "-Wall",
+    "-Wno-unused-parameter",
+    "-Wno-unused-function",
+    "-Wno-unused-variable",
+    "-Wno-unused-value",
+    "-Wno-sign-compare",
+    "-Wno-missing-field-initializers",
+    "-Wno-implicit-function-declaration",
+    "-Wno-deprecated-declarations",
+    "-Wno-incompatible-pointer-types-discards-qualifiers",
+    "-Wno-implicit-int",
+    "-Wno-implicit-function-declaration",
+  ]
 }
 
 ohos_shared_library("cups") {
-    sources = [
-		"$core_code_dir/array.c",
-		"$core_code_dir/auth.c",
-		"$core_code_dir/debug.c",
-		"$core_code_dir/dest.c",
-		"$core_code_dir/dest-job.c",
-		"$core_code_dir/dest-localization.c",
-		"$core_code_dir/dest-options.c",
-		"$core_code_dir/dir.c",
-		"$core_code_dir/encode.c",
-		"$core_code_dir/file.c",
-		"$core_code_dir/getputfile.c",
-		"$core_code_dir/globals.c",
-		"$core_code_dir/hash.c",
-		"$core_code_dir/http.c",
-		"$core_code_dir/http-addr.c",
-		"$core_code_dir/http-addrlist.c",
-		"$core_code_dir/http-support.c",
-		"$core_code_dir/ipp.c",
-		"$core_code_dir/ipp-file.c",
-		"$core_code_dir/ipp-vars.c",
-		"$core_code_dir/ipp-support.c",
-		"$core_code_dir/langprintf.c",
-		"$core_code_dir/language.c",
-		"$core_code_dir/md5.c",
-		"$core_code_dir/md5passwd.c",
-		"$core_code_dir/notify.c",
-		"$core_code_dir/options.c",
-		"$core_code_dir/pwg-media.c",
-		"$core_code_dir/raster-error.c",
-		"$core_code_dir/raster-stream.c",
-		"$core_code_dir/raster-stubs.c",
-		"$core_code_dir/request.c",
-		"$core_code_dir/snprintf.c",
-		"$core_code_dir/string.c",
-		"$core_code_dir/tempfile.c",
-		"$core_code_dir/thread.c",
-		"$core_code_dir/tls.c",
-		"$core_code_dir/transcode.c",
-		"$core_code_dir/usersys.c",
-		"$core_code_dir/util.c",
-		"$core_code_dir/adminutil.c",
-		"$core_code_dir/backchannel.c",
-		"$core_code_dir/backend.c",
-		"$core_code_dir/getdevices.c",
-		"$core_code_dir/getifaddrs.c",
-		"$core_code_dir/ppd.c",
-		"$core_code_dir/ppd-attr.c",
-		"$core_code_dir/ppd-cache.c",
-		"$core_code_dir/ppd-conflicts.c",
-		"$core_code_dir/ppd-custom.c",
-		"$core_code_dir/ppd-emit.c",
-		"$core_code_dir/ppd-localize.c",
-		"$core_code_dir/ppd-mark.c",
-		"$core_code_dir/ppd-page.c",
-		"$core_code_dir/ppd-util.c",
-		"$core_code_dir/raster-interpret.c",
-		"$core_code_dir/raster-interstub.c",
-		"$core_code_dir/sidechannel.c",
-		"$core_code_dir/snmp.c",
-    ]
+  sources = [
+    "$core_code_dir/adminutil.c",
+    "$core_code_dir/array.c",
+    "$core_code_dir/auth.c",
+    "$core_code_dir/backchannel.c",
+    "$core_code_dir/backend.c",
+    "$core_code_dir/debug.c",
+    "$core_code_dir/dest-job.c",
+    "$core_code_dir/dest-localization.c",
+    "$core_code_dir/dest-options.c",
+    "$core_code_dir/dest.c",
+    "$core_code_dir/dir.c",
+    "$core_code_dir/encode.c",
+    "$core_code_dir/file.c",
+    "$core_code_dir/getdevices.c",
+    "$core_code_dir/getifaddrs.c",
+    "$core_code_dir/getputfile.c",
+    "$core_code_dir/globals.c",
+    "$core_code_dir/hash.c",
+    "$core_code_dir/http-addr.c",
+    "$core_code_dir/http-addrlist.c",
+    "$core_code_dir/http-support.c",
+    "$core_code_dir/http.c",
+    "$core_code_dir/ipp-file.c",
+    "$core_code_dir/ipp-support.c",
+    "$core_code_dir/ipp-vars.c",
+    "$core_code_dir/ipp.c",
+    "$core_code_dir/langprintf.c",
+    "$core_code_dir/language.c",
+    "$core_code_dir/md5.c",
+    "$core_code_dir/md5passwd.c",
+    "$core_code_dir/notify.c",
+    "$core_code_dir/options.c",
+    "$core_code_dir/ppd-attr.c",
+    "$core_code_dir/ppd-cache.c",
+    "$core_code_dir/ppd-conflicts.c",
+    "$core_code_dir/ppd-custom.c",
+    "$core_code_dir/ppd-emit.c",
+    "$core_code_dir/ppd-localize.c",
+    "$core_code_dir/ppd-mark.c",
+    "$core_code_dir/ppd-page.c",
+    "$core_code_dir/ppd-util.c",
+    "$core_code_dir/ppd.c",
+    "$core_code_dir/pwg-media.c",
+    "$core_code_dir/raster-error.c",
+    "$core_code_dir/raster-interpret.c",
+    "$core_code_dir/raster-interstub.c",
+    "$core_code_dir/raster-stream.c",
+    "$core_code_dir/raster-stubs.c",
+    "$core_code_dir/request.c",
+    "$core_code_dir/sidechannel.c",
+    "$core_code_dir/snmp.c",
+    "$core_code_dir/snprintf.c",
+    "$core_code_dir/string.c",
+    "$core_code_dir/tempfile.c",
+    "$core_code_dir/thread.c",
+    "$core_code_dir/tls.c",
+    "$core_code_dir/transcode.c",
+    "$core_code_dir/usersys.c",
+    "$core_code_dir/util.c",
+  ]
 
-    deps = [
-        "//third_party/zlib:libz"
-    ]
+  deps = [ "//third_party/zlib:libz" ]
 
-    public_configs = [ ":cups_config" ]
+  public_configs = [ ":cups_config" ]
 
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_shared_library("cupsimage") {
-    sources = [
-		"$core_code_dir/raster-interstub.c",
-		"$core_code_dir/raster-stubs.c",
-    ]
+  sources = [
+    "$core_code_dir/raster-interstub.c",
+    "$core_code_dir/raster-stubs.c",
+  ]
 
-    deps = [
-        "//third_party/cups:cups"
-    ]
+  deps = [ "//third_party/cups:cups" ]
 
-    public_configs = [ ":cups_config" ]
+  public_configs = [ ":cups_config" ]
 
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("rastertopwg") {
-    sources = [
-        "$filter_code_dir/rastertopwg.c",
-    ]
+  sources = [ "$filter_code_dir/rastertopwg.c" ]
 
-    deps = [
-        "//third_party/cups:cups",
-    ]
+  deps = [ "//third_party/cups:cups" ]
 
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/filter"
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/filter"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_shared_library("backend") {
-    sources = [
-        "$backend_code_dir/ieee1284.c",
-        "$backend_code_dir/network.c",
-        "$backend_code_dir/runloop.c",
-        "$backend_code_dir/snmp-supplies.c"
-    ]
+  sources = [
+    "$backend_code_dir/ieee1284.c",
+    "$backend_code_dir/network.c",
+    "$backend_code_dir/runloop.c",
+    "$backend_code_dir/snmp-supplies.c",
+  ]
 
-    deps = [
-        "//third_party/cups:cups"
-    ]
+  deps = [ "//third_party/cups:cups" ]
 
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("ipp") {
-    sources = [
-        "$backend_code_dir/ipp.c",
-    ]
+  sources = [ "$backend_code_dir/ipp.c" ]
 
-    deps = [
-        "//third_party/cups:cups",
-        "//third_party/cups:backend",
-    ]
+  deps = [
+    "//third_party/cups:backend",
+    "//third_party/cups:cups",
+  ]
 
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/backend"
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/backend"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
+#end of backend
+
+#ppdc
+ohos_shared_library("cupsppdc") {
+  sources = [
+    "$ppdc_code_dir/ppdc-array.cxx",
+    "$ppdc_code_dir/ppdc-attr.cxx",
+    "$ppdc_code_dir/ppdc-catalog.cxx",
+    "$ppdc_code_dir/ppdc-choice.cxx",
+    "$ppdc_code_dir/ppdc-constraint.cxx",
+    "$ppdc_code_dir/ppdc-driver.cxx",
+    "$ppdc_code_dir/ppdc-file.cxx",
+    "$ppdc_code_dir/ppdc-filter.cxx",
+    "$ppdc_code_dir/ppdc-font.cxx",
+    "$ppdc_code_dir/ppdc-group.cxx",
+    "$ppdc_code_dir/ppdc-import.cxx",
+    "$ppdc_code_dir/ppdc-mediasize.cxx",
+    "$ppdc_code_dir/ppdc-message.cxx",
+    "$ppdc_code_dir/ppdc-option.cxx",
+    "$ppdc_code_dir/ppdc-profile.cxx",
+    "$ppdc_code_dir/ppdc-shared.cxx",
+    "$ppdc_code_dir/ppdc-source.cxx",
+    "$ppdc_code_dir/ppdc-string.cxx",
+    "$ppdc_code_dir/ppdc-variable.cxx",
+  ]
+
+  deps = [ "//third_party/cups:cups" ]
+
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+ohos_executable("ppdc") {
+  sources = [ "$ppdc_code_dir/ppdc.cxx" ]
+
+  deps = [
+    "//third_party/cups:cups",
+    "//third_party/cups:cupsppdc",
+  ]
+
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+#end of ppdc
+
+#scheduler
 ohos_shared_library("cupsmime") {
-    sources = [
-        "$scheduler_code_dir/filter.c",
-        "$scheduler_code_dir/mime.c",
-        "$scheduler_code_dir/type.c",
-    ]
+  sources = [
+    "$scheduler_code_dir/filter.c",
+    "$scheduler_code_dir/mime.c",
+    "$scheduler_code_dir/type.c",
+  ]
 
-    deps = [
-        "//third_party/cups:cups",
-    ]
+  deps = [ "//third_party/cups:cups" ]
 
-    public_configs = [":cups_config"]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("cupsd") {
-    sources = [
-        "$scheduler_code_dir/auth.c",
-		"$scheduler_code_dir/banners.c",
-		"$scheduler_code_dir/cert.c",
-		"$scheduler_code_dir/classes.c",
-		"$scheduler_code_dir/client.c",
-		"$scheduler_code_dir/colorman.c",
-		"$scheduler_code_dir/conf.c",
-		"$scheduler_code_dir/dirsvc.c",
-		"$scheduler_code_dir/env.c",
-		"$scheduler_code_dir/file.c",
-		"$scheduler_code_dir/main.c",
-		"$scheduler_code_dir/ipp.c",
-		"$scheduler_code_dir/listen.c",
-		"$scheduler_code_dir/job.c",
-		"$scheduler_code_dir/log.c",
-		"$scheduler_code_dir/network.c",
-		"$scheduler_code_dir/policy.c",
-		"$scheduler_code_dir/printers.c",
-		"$scheduler_code_dir/process.c",
-		"$scheduler_code_dir/quotas.c",
-		"$scheduler_code_dir/select.c",
-		"$scheduler_code_dir/server.c",
-		"$scheduler_code_dir/statbuf.c",
-		"$scheduler_code_dir/subscriptions.c",
-		"$scheduler_code_dir/sysman.c",
-    ]
+  sources = [
+    "$scheduler_code_dir/auth.c",
+    "$scheduler_code_dir/banners.c",
+    "$scheduler_code_dir/cert.c",
+    "$scheduler_code_dir/classes.c",
+    "$scheduler_code_dir/client.c",
+    "$scheduler_code_dir/colorman.c",
+    "$scheduler_code_dir/conf.c",
+    "$scheduler_code_dir/dirsvc.c",
+    "$scheduler_code_dir/env.c",
+    "$scheduler_code_dir/file.c",
+    "$scheduler_code_dir/ipp.c",
+    "$scheduler_code_dir/job.c",
+    "$scheduler_code_dir/listen.c",
+    "$scheduler_code_dir/log.c",
+    "$scheduler_code_dir/main.c",
+    "$scheduler_code_dir/network.c",
+    "$scheduler_code_dir/policy.c",
+    "$scheduler_code_dir/printers.c",
+    "$scheduler_code_dir/process.c",
+    "$scheduler_code_dir/quotas.c",
+    "$scheduler_code_dir/select.c",
+    "$scheduler_code_dir/server.c",
+    "$scheduler_code_dir/statbuf.c",
+    "$scheduler_code_dir/subscriptions.c",
+    "$scheduler_code_dir/sysman.c",
+  ]
 
-    deps = [
-        "//third_party/cups:cups",
-        "//third_party/cups:cupsmime",
-    ]
+  deps = [
+    "//third_party/cups:cups",
+    "//third_party/cups:cupsmime",
+  ]
 
-    install_enable = true
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("cupsfilter") {
-    sources = [
-        "$scheduler_code_dir/cupsfilter.c",
-    ]
+  sources = [ "$scheduler_code_dir/cupsfilter.c" ]
 
-    deps = [
-        "//third_party/cups:cups",
-        "//third_party/cups:cupsmime",
-    ]
+  deps = [
+    "//third_party/cups:cups",
+    "//third_party/cups:cupsmime",
+  ]
 
-    install_enable = true
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("cups-deviced") {
-    sources = [
-        "$scheduler_code_dir/cups-deviced.c",
-        "$scheduler_code_dir/util.c",
-    ]
+  sources = [
+    "$scheduler_code_dir/cups-deviced.c",
+    "$scheduler_code_dir/util.c",
+  ]
 
-    deps = [
-        "//third_party/cups:cups",
-        "//third_party/cups:cupsmime",
-    ]
+  deps = [
+    "//third_party/cups:cups",
+    "//third_party/cups:cupsmime",
+  ]
 
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/daemon"
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/daemon"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_executable("cups-exec") {
-    sources = [
-        "$scheduler_code_dir/cups-exec.c",
-    ]
+  sources = [ "$scheduler_code_dir/cups-exec.c" ]
 
-    deps = []
+  deps = []
 
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/daemon"
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/daemon"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_prebuilt_etc("mime.convs") {
-    exec_script("generate_mime_convs.py")
-    source = "$cups_code_dir/conf/mime.convs"
-    relative_install_dir = "cups/share/mime"
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  exec_script("generate_mime_convs.py")
+  source = "$cups_code_dir/conf/mime.convs"
+  relative_install_dir = "cups/share/mime"
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
 
 ohos_prebuilt_etc("mime.types") {
-    source = "$cups_code_dir/conf/mime.types"
-    relative_install_dir = "cups/share/mime"
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+  source = "$cups_code_dir/conf/mime.types"
+  relative_install_dir = "cups/share/mime"
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+#conf
+
+#start of jpeg
+JPEG_CODE_ROOT = "//third_party/libjpeg-turbo"
+jpeg_sources = [
+  "$JPEG_CODE_ROOT/jcapimin.c",
+  "$JPEG_CODE_ROOT/jcapistd.c",
+  "$JPEG_CODE_ROOT/jccoefct.c",
+  "$JPEG_CODE_ROOT/jccolor.c",
+  "$JPEG_CODE_ROOT/jcdctmgr.c",
+  "$JPEG_CODE_ROOT/jchuff.c",
+  "$JPEG_CODE_ROOT/jcicc.c",
+  "$JPEG_CODE_ROOT/jcinit.c",
+  "$JPEG_CODE_ROOT/jcmainct.c",
+  "$JPEG_CODE_ROOT/jcmarker.c",
+  "$JPEG_CODE_ROOT/jcmaster.c",
+  "$JPEG_CODE_ROOT/jcomapi.c",
+  "$JPEG_CODE_ROOT/jcparam.c",
+  "$JPEG_CODE_ROOT/jcphuff.c",
+  "$JPEG_CODE_ROOT/jcprepct.c",
+  "$JPEG_CODE_ROOT/jcsample.c",
+  "$JPEG_CODE_ROOT/jctrans.c",
+  "$JPEG_CODE_ROOT/jdapimin.c",
+  "$JPEG_CODE_ROOT/jdapistd.c",
+  "$JPEG_CODE_ROOT/jdatadst.c",
+  "$JPEG_CODE_ROOT/jdatasrc.c",
+  "$JPEG_CODE_ROOT/jdcoefct.c",
+  "$JPEG_CODE_ROOT/jdcolor.c",
+  "$JPEG_CODE_ROOT/jddctmgr.c",
+  "$JPEG_CODE_ROOT/jdhuff.c",
+  "$JPEG_CODE_ROOT/jdicc.c",
+  "$JPEG_CODE_ROOT/jdinput.c",
+  "$JPEG_CODE_ROOT/jdmainct.c",
+  "$JPEG_CODE_ROOT/jdmarker.c",
+  "$JPEG_CODE_ROOT/jdmaster.c",
+  "$JPEG_CODE_ROOT/jdmerge.c",
+  "$JPEG_CODE_ROOT/jdphuff.c",
+  "$JPEG_CODE_ROOT/jdpostct.c",
+  "$JPEG_CODE_ROOT/jdsample.c",
+  "$JPEG_CODE_ROOT/jdtrans.c",
+  "$JPEG_CODE_ROOT/jerror.c",
+  "$JPEG_CODE_ROOT/jfdctflt.c",
+  "$JPEG_CODE_ROOT/jfdctfst.c",
+  "$JPEG_CODE_ROOT/jfdctint.c",
+  "$JPEG_CODE_ROOT/jidctflt.c",
+  "$JPEG_CODE_ROOT/jidctfst.c",
+  "$JPEG_CODE_ROOT/jidctint.c",
+  "$JPEG_CODE_ROOT/jidctred.c",
+  "$JPEG_CODE_ROOT/jmemmgr.c",
+  "$JPEG_CODE_ROOT/jmemnobs.c",
+  "$JPEG_CODE_ROOT/jquant1.c",
+  "$JPEG_CODE_ROOT/jquant2.c",
+  "$JPEG_CODE_ROOT/jutils.c",
+]
+
+include_dirs = []
+define_config = []
+cflags = []
+
+mkernel = defined(ohos_kernel_type) && ohos_kernel_type == "liteos_m"
+if (mkernel || is_win) {
+  jpeg_sources += [ "jsimd_none.c" ]
+  define_config += [
+    "NO_PUTENV",
+    "NO_GETENV",
+  ]
+} else if (current_cpu == "arm" || current_cpu == "arm64") {
+  jpeg_sources += [
+    "$JPEG_CODE_ROOT/simd/arm/jcgray-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jcphuff-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jcsample-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jdmerge-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jdsample-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jfdctfst-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jidctred-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jquanti-neon.c",
+  ]
+
+  # NEON_INTRINSICS as default
+  jpeg_sources += [
+    "$JPEG_CODE_ROOT/simd/arm/jccolor-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jidctfst-neon.c",
+    "$JPEG_CODE_ROOT/simd/arm/jidctint-neon.c",
+  ]
+  define_config += [ "NEON_INTRINSICS" ]
+  cflags += [ "-DNEON_INTRINSICS" ]
+  include_dirs += [ "//third_party/libjpeg-turbo/simd/arm" ]
+  if (current_cpu == "arm") {
+    jpeg_sources += [
+      "$JPEG_CODE_ROOT/simd/arm/aarch32/jchuff-neon.c",
+      "$JPEG_CODE_ROOT/simd/arm/aarch32/jsimd.c",
+      "$JPEG_CODE_ROOT/simd/arm/jdcolor-neon.c",
+      "$JPEG_CODE_ROOT/simd/arm/jfdctint-neon.c",
+    ]
+    cflags += [
+      "-mfpu=neon",
+      "-mfloat-abi=softfp",
+    ]
+  } else {
+    jpeg_sources += [
+      "$JPEG_CODE_ROOT/simd/arm/aarch64/jchuff-neon.c",
+      "$JPEG_CODE_ROOT/simd/arm/aarch64/jsimd.c",
+      "$JPEG_CODE_ROOT/simd/arm/jdcolor-neon.c",
+      "$JPEG_CODE_ROOT/simd/arm/jfdctint-neon.c",
+    ]
+  }
+} else {
+  jpeg_sources += [ "$JPEG_CODE_ROOT/jsimd_none.c" ]
+}
+
+jpeg_sources += [
+  # enable arith codec
+  "$JPEG_CODE_ROOT/jaricom.c",
+  "$JPEG_CODE_ROOT/jcarith.c",
+  "$JPEG_CODE_ROOT/jdarith.c",
+  "$JPEG_CODE_ROOT/jdatadst-tj.c",
+  "$JPEG_CODE_ROOT/jdatasrc-tj.c",
+  "$JPEG_CODE_ROOT/rdbmp.c",
+  "$JPEG_CODE_ROOT/rdppm.c",
+  "$JPEG_CODE_ROOT/transupp.c",
+
+  # enable turbo
+  "$JPEG_CODE_ROOT/turbojpeg.c",
+  "$JPEG_CODE_ROOT/wrbmp.c",
+  "$JPEG_CODE_ROOT/wrppm.c",
+]
+define_config += [
+  "C_ARITH_CODING_SUPPORTED=1",  #Support arithmetic encoding
+  "D_ARITH_CODING_SUPPORTED=1",  #Support arithmetic decoding
+  "BMP_SUPPORTED=1",  #Support arithmetic decoding
+  "PPM_SUPPORTED=1",  #Support arithmetic decoding
+]
+
+config("turbojpeg_config") {
+  include_dirs += [ "//third_party/libjpeg-turbo" ]
+  defines = define_config
+}
+
+ohos_shared_library("turbojpeg") {
+  sources = jpeg_sources
+  public_configs = [ ":turbojpeg_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
 }
