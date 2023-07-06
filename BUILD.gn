@@ -29,7 +29,6 @@ group("third_party_cups"){
     deps = [
         ":cups",
         ":rastertopwg",
-        ":backend",
         ":ipp",
         ":cupsd",
         ":cupsfilter",
@@ -52,7 +51,7 @@ config("cups_config") {
     cflags = [
         "-w",
         "-std=c99",
-        "-D_PPD_DEPRECATED",
+        "-D_PPD_DEPRECATED=",
         "-Wextra",
         "-Wall",
         "-Wno-unused-parameter",
@@ -60,12 +59,12 @@ config("cups_config") {
         "-Wno-unused-variable",
         "-Wno-unused-value",
         "-Wno-sign-compare",
-        "-Wno-missing-filed-initializers",
+        "-Wno-missing-field-initializers",
         "-Wno-implicit-function-declaration",
-        "-Wno-deprecated-deprecations",
-        "-Wno-deincompatible-pointer-types-discards-qualifiers",
+        "-Wno-deprecated-declarations",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
         "-Wno-implicit-int",
-        "-Wno-implicit-function-deprecation",
+        "-Wno-implicit-function-declaration",
     ]
 }
 
@@ -111,7 +110,7 @@ ohos_shared_library("cups") {
 		"$core_code_dir/transcode.c",
 		"$core_code_dir/usersys.c",
 		"$core_code_dir/util.c",
-        "$core_code_dir/adminutil.c",
+		"$core_code_dir/adminutil.c",
 		"$core_code_dir/backchannel.c",
 		"$core_code_dir/backend.c",
 		"$core_code_dir/getdevices.c",
@@ -208,6 +207,22 @@ ohos_executable("ipp") {
     part_name = "$PART_NAME"
 }
 
+ohos_shared_library("cupsmime") {
+  sources = [
+    "$scheduler_code_dir/filter.c",
+    "$scheduler_code_dir/mime.c",
+    "$scheduler_code_dir/type.c",
+  ]
+
+  deps = [
+    "//third_party/cups:cups",
+  ]
+
+  public_configs = [":cups_config"]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
 ohos_executable("cupsd") {
     sources = [
         "$scheduler_code_dir/auth.c",
@@ -266,8 +281,8 @@ ohos_executable("cupsfilter") {
 
 ohos_executable("cups-deviced") {
     sources = [
-        "$backend_code_dir/cups-deviced.c",
-        "$backend_code_dir/util.c",
+        "$scheduler_code_dir/cups-deviced.c",
+        "$scheduler_code_dir/util.c",
     ]
 
     deps = [
@@ -284,7 +299,7 @@ ohos_executable("cups-deviced") {
 
 ohos_executable("cups-exec") {
     sources = [
-        "$backend_code_dir/cups-exec.c",
+        "$scheduler_code_dir/cups-exec.c",
     ]
 
     deps = []
