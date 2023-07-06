@@ -42,7 +42,7 @@
 #define HAVE_CRYPT_H 1
 #define HAVE_STDINT_H 1
 
-#define HAVE_LONG_LONG
+#define HAVE_LONG_LONG 1
 
 #ifdef HAVE_LONG_LONG
 #  define CUPS_LLFMT	"%lld"
