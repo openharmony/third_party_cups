@@ -57,59 +57,28 @@ Note:If the text contains special characters|please escape them according to the
     <oatconfig>
         <licensefile>LICENSE</licensefile>
         <policylist>
-            <policy
-                desc=""
-                name="projectPolicy">
+            <policy name="projectPolicy" desc="">
             </policy>
         </policylist>
         <filefilterlist>
-            <filefilter
-                desc="Files not to check"
-                name="defaultFilter">
-                <filteritem
-                    desc="spec文件"
-                    name="cups.spec"
-                    type="filename"/>
-                <filteritem
-                    desc="yaml文件"
-                    name="cups.yaml"
-                    type="filename"/>
-                <filteritem
-                    desc="cups文件"
-                    name="macros.cups"
-                    type="filename"/>
+            <filefilter name="defaultFilter" desc="Files not to check">
+				<filteritem type="filename" name="cups.spec" desc="spec文件"/>
+				<filteritem type="filename" name="cups.yaml" desc="yaml文件"/>
+				<filteritem type="filename" name="macros.cups" desc="cups文件"/>
             </filefilter>
-            <filefilter
-                desc="Filters for compatibility，license header policies"
-                name="defaultPolicyFilter">
+            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
             </filefilter>
-            <filefilter
-                desc="Filters for copyright header policies"
-                name="copyrightPolicyFilter">
+            <filefilter name="copyrightPolicyFilter" desc="Filters for copyright header policies">
             </filefilter>
-            <filefilter
-                desc="Filters for LICENSE file policies"
-                name="licenseFileNamePolicyFilter">
+            <filefilter name="licenseFileNamePolicyFilter" desc="Filters for LICENSE file policies">
             </filefilter>
-            <filefilter
-                desc="Filters for README file policies"
-                name="readmeFileNamePolicyFilter">
+            <filefilter name="readmeFileNamePolicyFilter" desc="Filters for README file policies">
             </filefilter>
-            <filefilter
-                desc="Filters for README.OpenSource file policies"
-                name="readmeOpenSourcefileNamePolicyFilter">
+            <filefilter name="readmeOpenSourcefileNamePolicyFilter" desc="Filters for README.OpenSource file policies">
             </filefilter>
-            <filefilter
-                desc="Filters for binary file policies"
-                name="binaryFileTypePolicyFilter">
-                <filteritem
-                    desc="png file"
-                    name="cupsprinter.png"
-                    type="filename"/>
-                <filteritem
-                    desc="源码包来源于上游不扫描"
-                    name="cups-2.4.0-source.tar.gz"
-                    type="filename"/>
+            <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
+				<filteritem type="filename" name="cupsprinter.png" desc="png file"/>
+				<filteritem type="filename" name="cups-2.4.0-source.tar.gz" desc="源码包来源于上游不扫描"/>
             </filefilter>
         </filefilterlist>
         <licensematcherlist>
