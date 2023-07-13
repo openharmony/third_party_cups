@@ -82,8 +82,13 @@
 #define HAVE_EPOLL 1
 #define HAVE_SYS_PARAM_H 1
 
-#define CUPS_RAND() rand()
-#define CUPS_SRAND(v) srand(v)
+#ifdef HAVE_ARC4RANDOM
+#  define CUPS_RAND() arc4random()
+#  define CUPS_SRAND(v) arc4random_stir()
+#else
+#  define CUPS_RAND() rand()
+#  define CUPS_SRAND(v) srand(v)
+#endif /* HAVE_ARC4RANDOM */
 
 #define HAVE_LIBUSB 1
 #define HAVE_STATFS 1
