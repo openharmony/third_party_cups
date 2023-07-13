@@ -92,20 +92,6 @@
 #define HAVE_SYS_STATFS_H 1
 #define HAVE_SYS_STATVFS_H 1
 #define HAVE_SYS_VFS_H 1
-
-#define HAVE_ABS 1
-#if !defined(HAVE_ABS) && !defined(abs)
-#  if defined(__GNUC__) || __STDC_VERSION__ >= 199901L
-#    define abs(x) _cups_abs(x)
-static inline int _cups_abs(int i) { return (i < 0 ? -i : i); }
-#  elif defined(_MSC_VER)
-#    define abs(x) _cups_abs(x)
-static __inline int _cups_abs(int i) { return (i < 0 ? -i : i); }
-#  else
-#    define abs(x) ((x) < 0 ? -(x) : (x))
-#  endif /* __GNUC__ || __STDC_VERSION__ */
-#endif /* !HAVE_ABS && !abs */
-
 #define HAVE_SNAPD_CLIENT_RUN_SNAPCTL2_SYNC 1
 
 #endif /* !_CUPS_CONFIG_H_ */
