@@ -1,14 +1,17 @@
-/* config.h.  Generated from config.h.in by configure.  */
 /*
- * Configuration file for CUPS.
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Copyright © 2020-2021 by OpenPrinting
- * Copyright © 2007-2019 by Apple Inc.
- * Copyright © 1997-2007 by Easy Software Products.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Licensed under Apache License v2.0.  See the file "LICENSE" for more
- * information.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  */
+/* config.h.  Generated from config.h.in by configure.  */
 
 #ifndef _CUPS_CONFIG_H_
 #define _CUPS_CONFIG_H_
@@ -43,19 +46,13 @@
 #define HAVE_STDINT_H 1
 
 #define HAVE_LONG_LONG 1
-
-#ifdef HAVE_LONG_LONG
-#  define CUPS_LLFMT	"%lld"
-#  define CUPS_LLCAST	(long long)
-#else
-#  define CUPS_LLFMT	"%ld"
-#  define CUPS_LLCAST	(long)
-#endif /* HAVE_LONG_LONG */
+#define CUPS_LLFMT	"%lld"
+#define CUPS_LLCAST	(long long)
 
 #define HAVE_STRTOLL 1
 
 #ifndef HAVE_STRTOLL
-#  define strtoll(nptr,endptr,base) strtol((nptr), (endptr), (base))
+#  define strtoll(nptr, endptr, base) strtol((nptr), (endptr), (base))
 #endif /* !HAVE_STRTOLL */
 
 #define HAVE_STRDUP 1
@@ -85,22 +82,8 @@
 #define HAVE_EPOLL 1
 #define HAVE_SYS_PARAM_H 1
 
-#define HAVE_RANDOM 1
-#define HAVE_LRAND48 1
-
-#ifdef HAVE_ARC4RANDOM
-#  define CUPS_RAND() arc4random()
-#  define CUPS_SRAND(v)
-#elif defined(HAVE_RANDOM)
-#  define CUPS_RAND() random()
-#  define CUPS_SRAND(v) srandom(v)
-#elif defined(HAVE_LRAND48)
-#  define CUPS_RAND() lrand48()
-#  define CUPS_SRAND(v) srand48(v)
-#else
-#  define CUPS_RAND() rand()
-#  define CUPS_SRAND(v) srand(v)
-#endif /* HAVE_ARC4RANDOM */
+#define CUPS_RAND() rand()
+#define CUPS_SRAND(v) srand(v)
 
 #define HAVE_LIBUSB 1
 #define HAVE_STATFS 1
