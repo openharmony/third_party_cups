@@ -3,10 +3,6 @@
 #### Introduction & Software Architecture
 - [Refer to the official documentation](ttps://github.com/OpenPrinting/cups)
 
-#### Usage Guidelines
-
-- [Refer to the official API documentation](https://github.com/OpenPrinting/cups/blob/master/DEVELOPING.md)
-
 #### Generates  Header File
 
 The following patches is carried by the openEuler:libnl3 open source library:

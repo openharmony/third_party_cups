@@ -4,10 +4,6 @@
 
 - [参考官方文档](https://github.com/OpenPrinting/cups)
 
-#### 使用说明
-
-- [参考官方API文档](https://github.com/OpenPrinting/cups/blob/master/DEVELOPING.md)
-
 #### patch包说明
 
 以下patch包为openEuler:cups开源库本身携带

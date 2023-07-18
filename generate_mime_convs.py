@@ -14,13 +14,21 @@
 # limitations under the License.
 
 import sys
-import shutil
 import os
+import shutil
 
+def copy_file(dir)
+    src_name = '/mime.convs.in'
+    dest_name = '/mime.convs'
+    src_file = dir + src_name
+    dest_file = dir + dest_name
+    print(f'copy from %s to %s', src_file, dest_file)
+    shutil.copy2(src_file, dest_file)
 
 def main():
-    shutil.copy2("../../../third_party/cups/cups-2.4.0/conf/mime.convs.in",
-        "../../../third_party/cups/cups-2.4.0/conf/mime.convs")
+    args = sys.argv[1:]
+    print(f'args: {args}')
+    copy_file(args[0])
     return 0
 
 if __name__ == '__main__':
