@@ -32,7 +32,6 @@ Openharmony南向生态发展过程中，需要对存量市场的打印机进行
 
 ### 如何使用
 #### 1、头文件引入
-cups打印系统提供的接口在cups/cups/cups.h里声明
 ```c
 #include <cups/cups-private.h>
 ```
