@@ -30,6 +30,65 @@ Openharmony南向生态发展过程中，需要对存量市场的打印机进行
 - generate_mime_convs.py            适配OH编译python脚本文件
 ```
 
+### 如何使用
+#### 1、头文件引入
+cups打印系统提供的接口在cups/cups/cups.h里声明
+```c
+#include <cups/cups-private.h>
+```
+#### 2、添加编译依赖
+在您的 bundle.json 文件 添加
+```json
+"deps": {
+  "third_part": [
+    "cups"
+  ]
+}
+```
+在您的BUILD.gn需要的地方添加依赖
+```json
+deps += [ "//third_party/cups:cups" ]
+```
+#### 3、接口使用示例
+```c
+// 使用cups接口查询打印机能力示例
+ipp_t *request; /* IPP Request */
+ipp_t *response; /* IPP response */
+http_t *http = NULL;
+char scheme[HTTP_MAX_URI]; // 协议类型
+char username[HTTP_MAX_URI]; // 请求用户名
+char host[HTTP_MAX_URI]; // 打印机端口
+int port; // 打印机端口
+// 声明需要查询哪些打印机能力，此处为所有
+static const char * const pattrs[] = {
+    "all"
+};
+
+// 使用打印机ip和端口连接打印机
+http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL);
+if (http == nullptr) {
+    return;
+}
+// 构造获取打印机能力的request
+request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+// 指定请求uri
+ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
+// 指定请求的用户
+ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+// 指定请求哪些打印机属性
+ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",
+(int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+// 调用cups接口发送ipp请求
+response = cupsDoRequest(http, request, "/");
+// 处理请求结果
+if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+    ippDelete(response);
+    return;
+}
+// 关闭http
+httpClose(http);
+```
+
 ### 相关仓
 [third_party_cups-filters](https://gitee.com/openharmony/third_party_cups-filters)
 
