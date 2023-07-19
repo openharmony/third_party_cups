@@ -17,7 +17,7 @@ import sys
 import os
 import shutil
 
-def copy_file(dir)
+def copy_file(dir):
     src_name = '/mime.convs.in'
     dest_name = '/mime.convs'
     src_file = dir + src_name
