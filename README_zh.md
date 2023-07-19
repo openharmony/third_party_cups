@@ -1,13 +1,13 @@
 ## 三方开源软件cups
 ### cups简介
-cups（Common Unix Printing System）是一种开源打印系统，现在由ＯpenＰrinting组织维护。cups主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。cups支持多种打印协议，包括IPP(Internet Printing Protocol) 、ＬＰＤ（Ｌine　Ｐrinter　Ｄaemon　Ｐrotocal）、ＡppＳocket等。
+cups（Common Unix Printing System）是一种开源打印系统，现在由OpenPrinting组织维护。cups主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。cups支持多种打印协议，包括IPP(Internet Printing Protocol) 、LPD（Line　Printer　Daemon　Protocal）、AppSocket等。
 
 cups支持以下类型的打印机：１、AirPrint和IPP Everywhere认证的打印机；２、带打印机应用程序的网络和USB打印机；３、基于PPD(PostScript Printer Definition)打印驱动程序的网络和本地（USB）打印机。 
 
 您也可以通过[cups官网主页](https://github.com/OpenPrinting/cups)了解更多关于cups项目的信息。
 
 ### 引入背景简述
-Openharmony南向生态发展过程中，需要对存量市场的打印机进行兼容。使用cups打印系统能直接对接市场上大部分的打印机，也减少了打印机厂商适配OpenHarmony的难度。
+Openharmony南向生态发展过程中，需要对存量市场的打印机进行兼容。使用cups打印系统能直接对接市场上大部分的打印机，也减少了打印机驱动适配OpenHarmony系统的难度。
 
 ### 目录结构
 ```
@@ -30,11 +30,12 @@ Openharmony南向生态发展过程中，需要对存量市场的打印机进行
 - generate_mime_convs.py            适配OH编译python脚本文件
 ```
 
-#### 相关仓
+### 相关仓
 [third_party_cups-filters](https://gitee.com/openharmony/third_party_cups-filters)
+
 [print_print_fwk](https://gitee.com/openharmony/print_print_fwk)
 
-#### 参与贡献
+### 参与贡献
 [如何贡献](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/contribute/参与贡献.md)
 [Commit message规范](https://gitee.com/openharmony/device_qemu/wikis/Commit%20message%E8%A7%84%E8%8C%83)
 
