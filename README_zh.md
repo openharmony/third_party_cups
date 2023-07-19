@@ -1,8 +1,8 @@
 ## 三方开源软件cups
 ### cups简介
-cups（Common Unix Printing System）是一种开源打印系统，现在由OpenPrinting组织维护。cups主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。cups支持多种打印协议，包括IPP(Internet Printing Protocol) 、LPD（Line　Printer　Daemon　Protocal）、AppSocket等。
+cups（Common Unix Printing System）是一种开源打印系统，现在由OpenPrinting组织维护。cups主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。cups支持多种打印协议，包括IPP（Internet Printing Protocol）、LPD（Line Printer Daemon rotocal）、AppSocket等。
 
-cups支持以下类型的打印机：１、AirPrint和IPP Everywhere认证的打印机；２、带打印机应用程序的网络和USB打印机；３、基于PPD(PostScript Printer Definition)打印驱动程序的网络和本地（USB）打印机。 
+cups支持以下类型的打印机：１、AirPrint和IPP Everywhere认证的打印机；２、带打印机应用程序的网络和USB打印机；３、基于PPD（PostScript Printer Definition）打印驱动程序的网络和本地（USB）打印机。 
 
 您也可以通过[cups官网主页](https://github.com/OpenPrinting/cups)了解更多关于cups项目的信息。
 
@@ -37,5 +37,6 @@ Openharmony南向生态发展过程中，需要对存量市场的打印机进行
 
 ### 参与贡献
 [如何贡献](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/contribute/参与贡献.md)
+
 [Commit message规范](https://gitee.com/openharmony/device_qemu/wikis/Commit%20message%E8%A7%84%E8%8C%83)
 
