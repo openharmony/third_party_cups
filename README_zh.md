@@ -1,11 +1,11 @@
 # 三方开源软件CUPS
 ## CUPS简介
-CUPS（Common Unix Printing System）是一种开源打印系统，现在由OpenPrinting组织维护。cups主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。CUPS支持多种打印协议，包括IPP（Internet Printing Protocol）、LPD（Line Printer Daemon Protocol）、AppSocket等。
+CUPS（Common Unix Printing System）是一种开源打印系统，现在由OpenPrinting组织维护。CUPS主要功能包括打印队列管理、打印驱动程序管理、网络打印支持等。CUPS支持多种打印协议，包括IPP（Internet Printing Protocol）、LPD（Line Printer Daemon Protocol）、AppSocket等。
 
 CUPS支持以下类型的打印机：
-１、AirPrint和IPP Everywhere认证的打印机；
-２、带打印机应用程序的网络和USB打印机；
-３、基于PPD（PostScript Printer Definition）打印驱动程序的网络和本地（USB）打印机。 
+- AirPrint和IPP Everywhere认证的打印机；
+- 带打印机应用程序的网络和USB打印机；
+- 基于PPD（PostScript Printer Definition）打印驱动程序的网络和本地（USB）打印机。
 
 您也可以通过[CUPS官网主页](https://github.com/OpenPrinting/cups)了解更多关于CUPS项目的信息。
 
