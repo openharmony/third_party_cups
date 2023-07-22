@@ -61,7 +61,7 @@ char scheme[HTTP_MAX_URI]; // 协议类型
 char username[HTTP_MAX_URI]; // 请求用户名
 char host[HTTP_MAX_URI]; // 打印机ip
 int port; // 打印机端口
-// 声明需要查询哪些打印机能力，此处为所有
+// 声明需要查询哪些打印机能力
 static const char * const pattrs[] = {
     "all"
 };
