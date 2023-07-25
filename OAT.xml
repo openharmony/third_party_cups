@@ -78,7 +78,7 @@ Note:If the text contains special characters|please escape them according to the
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
 				<filteritem type="filename" name="cupsprinter.png" desc="png file"/>
-				<filteritem type="filename" name="cups-2.4.0-source.tar.gz" desc="源码包来源于上游不扫描"/>
+				<filteritem type="filename" name="cups-2.4.0-source.tar.gz" desc=""/>
             </filefilter>
         </filefilterlist>
         <licensematcherlist>

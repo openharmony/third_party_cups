@@ -5,7 +5,7 @@
         "License File"          : "LICENSE",
         "Version Number"        : "2.4.0",
         "Owner"                 : "dongzhengkuan@huawei.com",
-        "Upstream URL"          : "https://github.com/OpenPrinting/cups",
+        "Upstream URL"          : "https://github.com/",
         "Description"           : "OpenPrinting CUPS is the most current version of CUPS, a standards-based, open source printing system for Linux® and other Unix®-like operating systems"
     }
 ]
