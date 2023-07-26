@@ -3,9 +3,9 @@
         "Name"                  : "cups",
         "License"               : "Apache 2.0 License",
         "License File"          : "LICENSE",
-        "Version Number"        : "2.4.0",
+        "Version Number"        : "2.4.0-4.oe2203sp1",
         "Owner"                 : "dongzhengkuan@huawei.com",
-        "Upstream URL"          : "https://github.com/OpenPrinting/cups",
+        "Upstream URL"          : "https://repo.openeuler.org/openEuler-22.03-LTS-SP1/source/Packages/cups-2.4.0-4.oe2203sp1.src.rpm",
         "Description"           : "OpenPrinting CUPS is the most current version of CUPS, a standards-based, open source printing system for Linux® and other Unix®-like operating systems"
     }
 ]
