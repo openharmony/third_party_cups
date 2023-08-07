@@ -19,7 +19,7 @@ CUPS_SERVICE_DATA_DIR = "/data/service/el1/public/cups"
 
 cups_bin_dir = "bin"
 cups_sbin_dir = "bin"
-cups_serverbin_dir = "/system/bin/cups"
+cups_serverbin_dir = "system/bin/cups"
 cups_data_dir = "$CUPS_SERVICE_DATA_DIR/share"
 init_service_cfg_path = "etc/init"
 
