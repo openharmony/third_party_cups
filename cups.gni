@@ -26,7 +26,7 @@ init_service_cfg_path = "etc/init"
 cups_defines = [
   "CUPS_BINDIR = \"/system/$cups_bin_dir\"",
   "CUPS_SBINDIR = \"/system/$cups_sbin_dir\"",
-  "CUPS_SERVERBIN = \"$cups_serverbin_dir\"",
+  "CUPS_SERVERBIN = \"/system/bin/cups\"",
 
   "CUPS_DATADIR = \"/system/etc/cups/share\"",
   "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
