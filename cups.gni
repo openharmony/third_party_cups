@@ -12,7 +12,7 @@
 # limitations under the License.
 
 cups_path = rebase_path("//third_party/cups")
-exec_script("install.sh", ["$cups_path"])
+exec_script("install.sh", [ "$cups_path" ])
 print("cups installed successfully")
 
 CUPS_SERVICE_DATA_DIR = "/data/service/el1/public/cups"
@@ -24,17 +24,17 @@ cups_data_dir = "$CUPS_SERVICE_DATA_DIR/share"
 init_service_cfg_path = "etc/init"
 
 cups_defines = [
-    "CUPS_BINDIR = \"/system/$cups_bin_dir\"",
-    "CUPS_SBINDIR = \"/system/$cups_sbin_dir\"",
-    "CUPS_SERVERBIN = \"$cups_serverbin_dir\"",
+  "CUPS_BINDIR = \"/system/$cups_bin_dir\"",
+  "CUPS_SBINDIR = \"/system/$cups_sbin_dir\"",
+  "CUPS_SERVERBIN = \"$cups_serverbin_dir\"",
 
-    "CUPS_DATADIR = \"/system/etc/cups/share\"",
-    "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
-    "CUPS_LOCALEDIR = \"$CUPS_SERVICE_DATA_DIR/locale\"",
-    "CUPS_LOGDIR = \"$CUPS_SERVICE_DATA_DIR/log/\"",
+  "CUPS_DATADIR = \"/system/etc/cups/share\"",
+  "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
+  "CUPS_LOCALEDIR = \"$CUPS_SERVICE_DATA_DIR/locale\"",
+  "CUPS_LOGDIR = \"$CUPS_SERVICE_DATA_DIR/log/\"",
 
-    "CUPS_SERVERROOT = \"$CUPS_SERVICE_DATA_DIR/\"",
-    "CUPS_CACHEDIR = \"$CUPS_SERVICE_DATA_DIR/cache\"",
-    "CUPS_REQUESTS = \"$CUPS_SERVICE_DATA_DIR/spool\"",
-    "CUPS_STATEDIR = \"$CUPS_SERVICE_DATA_DIR/run\"",
+  "CUPS_SERVERROOT = \"$CUPS_SERVICE_DATA_DIR/\"",
+  "CUPS_CACHEDIR = \"$CUPS_SERVICE_DATA_DIR/cache\"",
+  "CUPS_REQUESTS = \"$CUPS_SERVICE_DATA_DIR/spool\"",
+  "CUPS_STATEDIR = \"$CUPS_SERVICE_DATA_DIR/run\"",
 ]
