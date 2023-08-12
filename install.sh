@@ -24,4 +24,5 @@ patch -p1 < $1/backport-CVE-2023-32324.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/backport-CVE-2023-34241.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/cups_single_file.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/pthread_cancel.patch --fuzz=0 --no-backup-if-mismatch
+patch -p1 < $1/ohos-tls-opensource.patch --fuzz=0 --no-backup-if-mismatch
 exit 0

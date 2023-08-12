@@ -46,25 +46,14 @@ config("cups_config") {
     "$cups_code_dir",
     "$core_code_dir",
     "//third_party/libusb/libusb",
+    "//third_party/openssl/include",
   ]
 
   cflags = [
-    "-w",
-    "-std=c99",
-    "-D_PPD_DEPRECATED=",
-    "-Wextra",
-    "-Wall",
-    "-Wno-unused-parameter",
     "-Wno-unused-function",
-    "-Wno-unused-variable",
     "-Wno-unused-value",
-    "-Wno-sign-compare",
-    "-Wno-missing-field-initializers",
     "-Wno-implicit-function-declaration",
-    "-Wno-deprecated-declarations",
-    "-Wno-incompatible-pointer-types-discards-qualifiers",
-    "-Wno-implicit-int",
-    "-Wno-implicit-function-declaration",
+    "-Wno-int-conversion",
   ]
 }
 
@@ -126,12 +115,17 @@ ohos_shared_library("cups") {
     "$core_code_dir/tempfile.c",
     "$core_code_dir/thread.c",
     "$core_code_dir/tls.c",
+    "$core_code_dir/tls-openssl.c",
     "$core_code_dir/transcode.c",
     "$core_code_dir/usersys.c",
     "$core_code_dir/util.c",
   ]
 
-  deps = [ "//third_party/zlib:libz" ]
+  deps = [ 
+    "//third_party/zlib:libz",
+    "//third_party/openssl:libcrypto_shared",
+    "//third_party/openssl:libssl_shared",
+  ]
 
   public_configs = [ ":cups_config" ]
 

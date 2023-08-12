@@ -23,7 +23,8 @@
         "deps": {
             "components": [],
             "third_party": [
-                "zlib"
+                "zlib",
+                "openssl"
             ]
         },
         "build": {
