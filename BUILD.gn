@@ -114,17 +114,17 @@ ohos_shared_library("cups") {
     "$core_code_dir/string.c",
     "$core_code_dir/tempfile.c",
     "$core_code_dir/thread.c",
-    "$core_code_dir/tls.c",
     "$core_code_dir/tls-openssl.c",
+    "$core_code_dir/tls.c",
     "$core_code_dir/transcode.c",
     "$core_code_dir/usersys.c",
     "$core_code_dir/util.c",
   ]
 
-  deps = [ 
-    "//third_party/zlib:libz",
+  deps = [
     "//third_party/openssl:libcrypto_shared",
     "//third_party/openssl:libssl_shared",
+    "//third_party/zlib:libz",
   ]
 
   public_configs = [ ":cups_config" ]
@@ -338,7 +338,8 @@ ohos_executable("cups-exec") {
 }
 
 ohos_prebuilt_etc("mime.convs") {
-  exec_script(rebase_path("//third_party/cups/generate_mime_convs.py"), [rebase_path("//third_party/cups/cups-2.4.0/conf")])
+  exec_script(rebase_path("//third_party/cups/generate_mime_convs.py"),
+              [ rebase_path("//third_party/cups/cups-2.4.0/conf") ])
   source = "$cups_code_dir/conf/mime.convs"
   relative_install_dir = "cups/share/mime"
   subsystem_name = "$SUBSYSTEM_NAME"
