@@ -22,6 +22,7 @@ cd $1/cups-2.4.0
 patch -p1 < $1/backport-CVE-2022-26691.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/backport-CVE-2023-32324.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/backport-CVE-2023-34241.patch --fuzz=0 --no-backup-if-mismatch
-patch -p1 < $1/cups_single_file.patch --fuzz=0 --no-backup-if-mismatch
-patch -p1 < $1/pthread_cancel.patch --fuzz=0 --no-backup-if-mismatch
+patch -p1 < $1/ohos-multi-file-print.patch --fuzz=0 --no-backup-if-mismatch
+patch -p1 < $1/ohos-modify-pthread.patch --fuzz=0 --no-backup-if-mismatch
+patch -p1 < $1/ohos-add-openssl.patch --fuzz=0 --no-backup-if-mismatch
 exit 0

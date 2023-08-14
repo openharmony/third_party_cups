@@ -65,6 +65,8 @@
 #define HAVE_WAIT3 1
 #define HAVE_MALLOC_H 1
 #define HAVE_LANGINFO_H 1
+#define HAVE_TLS 1
+#define HAVE_OPENSSL 1
 #define HAVE_SYS_IOCTL_H 1
 #define HAVE_TM_GMTOFF 1
 #define HAVE_RRESVPORT_AF 1
