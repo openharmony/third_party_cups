@@ -15,7 +15,7 @@ cups_path = rebase_path("//third_party/cups")
 exec_script("install.sh", [ "$cups_path" ])
 print("cups installed successfully")
 
-CUPS_SERVICE_DATA_DIR = "/data/service/el1/public/cups"
+CUPS_SERVICE_DATA_DIR = "/data/service/el1/public/print_service/cups"
 
 cups_bin_dir = "bin"
 cups_sbin_dir = "bin"
@@ -26,9 +26,9 @@ init_service_cfg_path = "etc/init"
 cups_defines = [
   "CUPS_BINDIR = \"/system/$cups_bin_dir\"",
   "CUPS_SBINDIR = \"/system/$cups_sbin_dir\"",
-  "CUPS_SERVERBIN = \"/system/bin/cups\"",
+  "CUPS_SERVERBIN = \"$CUPS_SERVICE_DATA_DIR/serverbin\"",
 
-  "CUPS_DATADIR = \"/system/etc/cups/share\"",
+  "CUPS_DATADIR = \"$CUPS_SERVICE_DATA_DIR/datadir\"",
   "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
   "CUPS_LOCALEDIR = \"$CUPS_SERVICE_DATA_DIR/locale\"",
   "CUPS_LOGDIR = \"$CUPS_SERVICE_DATA_DIR/log/\"",

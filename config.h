@@ -34,7 +34,7 @@
 #define CUPS_DEFAULT_BROWSE_LOCAL_PROTOCOLS	""
 #define CUPS_DEFAULT_DEFAULT_SHARED 0
 #define CUPS_DEFAULT_IPP_PORT	1631
-#define CUPS_DEFAULT_PRINTCAP	"/data/service/el1/public/cups/printcap"
+#define CUPS_DEFAULT_PRINTCAP	"/data/service/el1/public/print_service/cups/printcap"
 #define CUPS_DEFAULT_ERROR_POLICY "stop-printer"
 #define CUPS_DEFAULT_MAX_COPIES	9999
 #define CUPS_DEFAULT_WEBIF 0
