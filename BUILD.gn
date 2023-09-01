@@ -29,18 +29,18 @@ group("third_party_cups") {
   deps = [
     ":cups",
     ":cups-deviced",
+    ":cups-driverd",
     ":cups-exec",
     ":cupsd",
     ":cupsfilter",
     ":ipp",
+    ":lp",
+    ":lpadmin",
+    ":lpinfo",
     ":mime.convs",
     ":mime.types",
     ":rastertopwg",
     ":usb",
-    ":lpinfo",
-    ":lpadmin",
-    ":lp",
-    ":cups-driverd"
   ]
 }
 
@@ -195,14 +195,12 @@ ohos_executable("ipp") {
 }
 
 ohos_executable("usb") {
-  sources = [ 
-    "$backend_code_dir/usb.c"
-  ]
+  sources = [ "$backend_code_dir/usb.c" ]
 
   deps = [
     "//third_party/cups:backend",
     "//third_party/cups:cups",
-    "//third_party/libusb:libusb"
+    "//third_party/libusb:libusb",
   ]
 
   install_enable = true
@@ -211,14 +209,13 @@ ohos_executable("usb") {
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
 }
+
 #end of backend
 
 ohos_executable("lpadmin") {
   sources = [ "$cups_code_dir/systemv/lpadmin.c" ]
 
-  deps = [
-    "//third_party/cups:cups",
-  ]
+  deps = [ "//third_party/cups:cups" ]
 
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -229,9 +226,7 @@ ohos_executable("lpadmin") {
 ohos_executable("lpinfo") {
   sources = [ "$cups_code_dir/systemv/lpinfo.c" ]
 
-  deps = [
-    "//third_party/cups:cups",
-  ]
+  deps = [ "//third_party/cups:cups" ]
 
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -242,9 +237,7 @@ ohos_executable("lpinfo") {
 ohos_executable("lp") {
   sources = [ "$cups_code_dir/systemv/lp.c" ]
 
-  deps = [
-    "//third_party/cups:cups",
-  ]
+  deps = [ "//third_party/cups:cups" ]
 
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -403,7 +396,6 @@ ohos_executable("cups-driverd") {
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
 }
-
 
 ohos_executable("cups-exec") {
   sources = [ "$scheduler_code_dir/cups-exec.c" ]
