@@ -20,7 +20,6 @@ CUPS_SERVICE_DATA_DIR = "/data/service/el1/public/print_service/cups"
 cups_bin_dir = "bin"
 cups_sbin_dir = "bin"
 cups_serverbin_dir = "bin/cups"
-cups_data_dir = "$CUPS_SERVICE_DATA_DIR/share"
 init_service_cfg_path = "etc/init"
 
 cups_defines = [
@@ -31,9 +30,9 @@ cups_defines = [
   "CUPS_DATADIR = \"$CUPS_SERVICE_DATA_DIR/datadir\"",
   "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
   "CUPS_LOCALEDIR = \"$CUPS_SERVICE_DATA_DIR/locale\"",
-  "CUPS_LOGDIR = \"$CUPS_SERVICE_DATA_DIR/log/\"",
+  "CUPS_LOGDIR = \"$CUPS_SERVICE_DATA_DIR/log\"",
 
-  "CUPS_SERVERROOT = \"$CUPS_SERVICE_DATA_DIR/\"",
+  "CUPS_SERVERROOT = \"$CUPS_SERVICE_DATA_DIR\"",
   "CUPS_CACHEDIR = \"$CUPS_SERVICE_DATA_DIR/cache\"",
   "CUPS_REQUESTS = \"$CUPS_SERVICE_DATA_DIR/spool\"",
   "CUPS_STATEDIR = \"$CUPS_SERVICE_DATA_DIR/run\"",
