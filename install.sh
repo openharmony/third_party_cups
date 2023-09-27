@@ -25,4 +25,5 @@ patch -p1 < $1/backport-CVE-2023-34241.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/ohos-multi-file-print.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/ohos-modify-pthread.patch --fuzz=0 --no-backup-if-mismatch
 patch -p1 < $1/ohos-add-openssl.patch --fuzz=0 --no-backup-if-mismatch
+patch -p1 < $1/backport-CVE-2023-4504.patch --fuzz=0 --no-backup-if-mismatch
 exit 0
