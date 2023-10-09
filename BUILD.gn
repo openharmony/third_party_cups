@@ -37,7 +37,6 @@ group("third_party_cups") {
     ":mime.convs",
     ":mime.types",
     ":rastertopwg",
-    ":usb",
   ]
 }
 
