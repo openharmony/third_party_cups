@@ -24,7 +24,8 @@
             "components": [],
             "third_party": [
                 "zlib",
-                "openssl"
+                "openssl",
+                "libusb"
             ]
         },
         "build": {

@@ -29,6 +29,7 @@ group("third_party_cups") {
   deps = [
     ":cups",
     ":cups-deviced",
+    ":cups-driverd",
     ":cups-exec",
     ":cupsd",
     ":cupsfilter",
@@ -45,7 +46,7 @@ config("cups_config") {
     "$config_dir",
     "$cups_code_dir",
     "$core_code_dir",
-    "//third_party/libusb/libusb",
+    "//third_party/libusb/libusb-1.0.26/libusb",
     "//third_party/openssl/include",
   ]
 
@@ -189,7 +190,56 @@ ohos_executable("ipp") {
   part_name = "$PART_NAME"
 }
 
+ohos_executable("usb") {
+  sources = [ "$backend_code_dir/usb.c" ]
+
+  deps = [
+    "//third_party/cups:backend",
+    "//third_party/cups:cups",
+    "//third_party/libusb:libusb",
+  ]
+
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/backend"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
 #end of backend
+
+ohos_executable("lpadmin") {
+  sources = [ "$cups_code_dir/systemv/lpadmin.c" ]
+
+  deps = [ "//third_party/cups:cups" ]
+
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+ohos_executable("lpinfo") {
+  sources = [ "$cups_code_dir/systemv/lpinfo.c" ]
+
+  deps = [ "//third_party/cups:cups" ]
+
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+ohos_executable("lp") {
+  sources = [ "$cups_code_dir/systemv/lp.c" ]
+
+  deps = [ "//third_party/cups:cups" ]
+
+  install_enable = true
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
 
 #ppdc
 ohos_shared_library("cupsppdc") {
@@ -316,6 +366,24 @@ ohos_executable("cups-deviced") {
   deps = [
     "//third_party/cups:cups",
     "//third_party/cups:cupsmime",
+  ]
+
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/daemon"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+ohos_executable("cups-driverd") {
+  sources = [
+    "$scheduler_code_dir/cups-driverd.cxx",
+    "$scheduler_code_dir/util.c",
+  ]
+
+  deps = [
+    "//third_party/cups:cups",
+    "//third_party/cups:cupsppdc",
   ]
 
   install_enable = true
