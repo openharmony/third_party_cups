@@ -218,8 +218,8 @@ action("cups_action") {
 }
 
 group("third_party_cups") {
+  public_deps = [ ":cups" ]
   deps = [
-    ":cups",
     ":cups-deviced",
     ":cups-driverd",
     ":cups-exec",
@@ -242,6 +242,7 @@ config("cups_config") {
     "$core_code_dir",
     "//third_party/libusb",
     "//third_party/openssl/include",
+    get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.0",
   ]
 
   cflags = [
