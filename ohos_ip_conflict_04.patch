@@ -94,7 +94,7 @@ index c4b34668..60b867a0 100644
 -  http = httpConnect2(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
 -                      monitor->encryption, 1, 0, NULL);
 +  if (monitor->nic != NULL) {
-+    http = httpConnect2(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
++    http = httpConnect3(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
 +                        monitor->encryption, 1, 0, NULL, monitor->nic);
 +  } else {
 +    http = httpConnect2(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
