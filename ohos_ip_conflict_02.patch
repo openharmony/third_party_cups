@@ -1,0 +1,193 @@
+diff --git a/cups-2.4.0/cups/http.c b/cups-2.4.0/cups/http.c
+index 66dd3b07..e98c0550 100644
+--- a/cups-2.4.0/cups/http.c
++++ b/cups-2.4.0/cups/http.c
+@@ -476,6 +476,53 @@ httpConnect2(
+   return (NULL);
+ }
+ 
++/*
++ * 'httpConnect3()' - Connect to a HTTP server.
++ *
++ * @since CUPS 1.7/macOS 10.9@
++ */
++
++http_t *				/* O - New HTTP connection */
++httpConnect3(
++    const char        *host,		/* I - Host to connect to */
++    int               port,		/* I - Port number */
++    http_addrlist_t   *addrlist,	/* I - List of addresses or @code NULL@ to lookup */
++    int               family,		/* I - Address family to use or @code AF_UNSPEC@ for any */
++    http_encryption_t encryption,	/* I - Type of encryption to use */
++    int               blocking,		/* I - 1 for blocking connection, 0 for non-blocking */
++    int               msec,		/* I - Connection timeout in milliseconds, 0 means don't connect */
++    int               *cancel,		/* I - Pointer to "cancel" variable */
++    const char        *nic)
++{
++  http_t	*http;			/* New HTTP connection */
++
++
++  DEBUG_printf(("httpConnect2(host=\"%s\", port=%d, addrlist=%p, family=%d, encryption=%d, blocking=%d, msec=%d, cancel=%p)", host, port, (void *)addrlist, family, encryption, blocking, msec, (void *)cancel));
++
++ /*
++  * Create the HTTP structure...
++  */
++
++  if ((http = http_create(host, port, addrlist, family, encryption, blocking,
++                          _HTTP_MODE_CLIENT)) == NULL)
++    return (NULL);
++
++ /*
++  * Optionally connect to the remote system...
++  */
++
++  if (msec == 0 || !httpReconnect3(http, msec, cancel, nic))
++    return (http);
++
++ /*
++  * Could not connect to any known address - bail out!
++  */
++
++  httpClose(http);
++
++  return (NULL);
++}
++
+ 
+ /*
+  * 'httpConnectEncrypt()' - Connect to a HTTP server using encryption.
+@@ -2397,7 +2444,133 @@ httpReconnect2(http_t *http,		/* I - HTTP connection */
+                   httpAddrPort(&(current->addr))));
+ #endif /* DEBUG */
+ 
+-  if ((addr = httpAddrConnect2(http->addrlist, &(http->fd), msec, cancel)) == NULL)
++  if ((addr = httpAddrConnect2(http->addrlist, &(http->fd), msec, cancel, NULL)) == NULL)
++  {
++   /*
++    * Unable to connect...
++    */
++
++#ifdef _WIN32
++    http->error  = WSAGetLastError();
++#else
++    http->error  = errno;
++#endif /* _WIN32 */
++    http->status = HTTP_STATUS_ERROR;
++
++    DEBUG_printf(("1httpReconnect2: httpAddrConnect failed: %s",
++                  strerror(http->error)));
++
++    return (-1);
++  }
++
++  DEBUG_printf(("2httpReconnect2: New socket=%d", http->fd));
++
++  if (http->timeout_value > 0)
++    http_set_timeout(http->fd, http->timeout_value);
++
++  http->hostaddr = &(addr->addr);
++  http->error    = 0;
++
++#ifdef HAVE_TLS
++  if (http->encryption == HTTP_ENCRYPTION_ALWAYS)
++  {
++   /*
++    * Always do encryption via SSL.
++    */
++
++    if (_httpTLSStart(http) != 0)
++    {
++      httpAddrClose(NULL, http->fd);
++      http->fd = -1;
++
++      return (-1);
++    }
++  }
++  else if (http->encryption == HTTP_ENCRYPTION_REQUIRED && !http->tls_upgrade)
++    return (http_tls_upgrade(http));
++#endif /* HAVE_TLS */
++
++  DEBUG_printf(("1httpReconnect2: Connected to %s:%d...",
++		httpAddrString(http->hostaddr, temp, sizeof(temp)),
++		httpAddrPort(http->hostaddr)));
++
++  return (0);
++}
++
++/*
++ * 'httpReconnect3()' - Reconnect to a HTTP server with timeout and optional
++ *                      cancel.
++ */
++
++int					/* O - 0 on success, non-zero on failure */
++httpReconnect3(http_t *http,		/* I - HTTP connection */
++	       int    msec,		/* I - Timeout in milliseconds */
++	       int    *cancel,		/* I - Pointer to "cancel" variable */
++         const char *nic)
++{
++  http_addrlist_t	*addr;		/* Connected address */
++#ifdef DEBUG
++  http_addrlist_t	*current;	/* Current address */
++  char			temp[256];	/* Temporary address string */
++#endif /* DEBUG */
++
++
++  DEBUG_printf(("httpReconnect2(http=%p, msec=%d, cancel=%p)", (void *)http, msec, (void *)cancel));
++
++  if (!http)
++  {
++    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
++    return (-1);
++  }
++
++#ifdef HAVE_TLS
++  if (http->tls)
++  {
++    DEBUG_puts("2httpReconnect2: Shutting down SSL/TLS...");
++    _httpTLSStop(http);
++  }
++#endif /* HAVE_TLS */
++
++ /*
++  * Close any previously open socket...
++  */
++
++  if (http->fd >= 0)
++  {
++    DEBUG_printf(("2httpReconnect2: Closing socket %d...", http->fd));
++
++    httpAddrClose(NULL, http->fd);
++
++    http->fd = -1;
++  }
++
++ /*
++  * Reset all state (except fields, which may be reused)...
++  */
++
++  http->state           = HTTP_STATE_WAITING;
++  http->version         = HTTP_VERSION_1_1;
++  http->keep_alive      = HTTP_KEEPALIVE_OFF;
++  memset(&http->_hostaddr, 0, sizeof(http->_hostaddr));
++  http->data_encoding   = HTTP_ENCODING_FIELDS;
++  http->_data_remaining = 0;
++  http->used            = 0;
++  http->data_remaining  = 0;
++  http->hostaddr        = NULL;
++  http->wused           = 0;
++
++ /*
++  * Connect to the server...
++  */
++
++#ifdef DEBUG
++  for (current = http->addrlist; current; current = current->next)
++    DEBUG_printf(("2httpReconnect2: Address %s:%d",
++                  httpAddrString(&(current->addr), temp, sizeof(temp)),
++                  httpAddrPort(&(current->addr))));
++#endif /* DEBUG */
++
++  if ((addr = httpAddrConnect2(http->addrlist, &(http->fd), msec, cancel, NULL)) == NULL)
+   {
+    /*
+     * Unable to connect...

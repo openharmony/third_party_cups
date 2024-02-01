@@ -1,0 +1,13 @@
+diff --git a/cups-2.4.0/tools/ippeveprinter.c b/cups-2.4.0/tools/ippeveprinter.c
+index 2da5ed52..39274b6f 100644
+--- a/cups-2.4.0/tools/ippeveprinter.c
++++ b/cups-2.4.0/tools/ippeveprinter.c
+@@ -6842,7 +6842,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
+ 
+         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
+           fprintf(stderr, "[Job %d] Unable to find \"%s\": %s\n", job->id, host, cupsLastErrorString());
+-        else if (!httpAddrConnect2(addrlist, &mystdout, 30000, &(job->cancel)))
++        else if (!httpAddrConnect2(addrlist, &mystdout, 30000, &(job->cancel), NULL))
+           fprintf(stderr, "[Job %d] Unable to connect to \"%s\": %s\n", job->id, host, cupsLastErrorString());
+ 
+         httpAddrFreeList(addrlist);
