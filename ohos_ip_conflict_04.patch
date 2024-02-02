@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/backend/ipp.c b/cups-2.4.0/backend/ipp.c
+diff --git a/backend/ipp.c b/backend/ipp.c
 index c4b34668..60b867a0 100644
---- a/cups-2.4.0/backend/ipp.c
-+++ b/cups-2.4.0/backend/ipp.c
+--- a/backend/ipp.c
++++ b/backend/ipp.c
 @@ -64,6 +64,7 @@ typedef struct _cups_monitor_s		/**** Monitoring data ****/
    ipp_jstate_t		job_state;	/* Current job state */
    ipp_pstate_t		printer_state;	/* Current printer state */

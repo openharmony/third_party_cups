@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/cups/http-addrlist.c b/cups-2.4.0/cups/http-addrlist.c
+diff --git a/cups/http-addrlist.c b/cups/http-addrlist.c
 index 6e73464c..36b410e8 100644
---- a/cups-2.4.0/cups/http-addrlist.c
-+++ b/cups-2.4.0/cups/http-addrlist.c
+--- a/cups/http-addrlist.c
++++ b/cups/http-addrlist.c
 @@ -39,7 +39,7 @@ httpAddrConnect(
  {
    DEBUG_printf(("httpAddrConnect(addrlist=%p, sock=%p)", (void *)addrlist, (void *)sock));
@@ -16,7 +16,7 @@ index 6e73464c..36b410e8 100644
      int             *sock,		/* O - Socket */
      int             msec,		/* I - Timeout in milliseconds */
 -    int             *cancel)		/* I - Pointer to "cancel" variable */
-+    int             *cancel		/* I - Pointer to "cancel" variable */
++    int             *cancel,		/* I - Pointer to "cancel" variable */
 +    const char      *nic)
  {
    int			val;		/* Socket option value */

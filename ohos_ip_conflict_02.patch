@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/cups/http.c b/cups-2.4.0/cups/http.c
+diff --git a/cups/http.c b/cups/http.c
 index 66dd3b07..e98c0550 100644
---- a/cups-2.4.0/cups/http.c
-+++ b/cups-2.4.0/cups/http.c
+--- a/cups/http.c
++++ b/cups/http.c
 @@ -476,6 +476,53 @@ httpConnect2(
    return (NULL);
  }

@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/tools/ippeveprinter.c b/cups-2.4.0/tools/ippeveprinter.c
+diff --git a/tools/ippeveprinter.c b/tools/ippeveprinter.c
 index 2da5ed52..39274b6f 100644
---- a/cups-2.4.0/tools/ippeveprinter.c
-+++ b/cups-2.4.0/tools/ippeveprinter.c
+--- a/tools/ippeveprinter.c
++++ b/tools/ippeveprinter.c
 @@ -6842,7 +6842,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
  
          if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)

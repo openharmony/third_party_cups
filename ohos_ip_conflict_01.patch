@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/cups/http.h b/cups-2.4.0/cups/http.h
+diff --git a/cups/http.h b/cups/http.h
 index 6c45301e..ac166970 100644
---- a/cups-2.4.0/cups/http.h
-+++ b/cups-2.4.0/cups/http.h
+--- a/cups/http.h
++++ b/cups/http.h
 @@ -556,10 +556,11 @@ extern int		httpSetCredentials(http_t *http, cups_array_t *certs) _CUPS_API_1_5;
  extern void		httpSetTimeout(http_t *http, double timeout, http_timeout_cb_t cb, void *user_data) _CUPS_API_1_5;
  
