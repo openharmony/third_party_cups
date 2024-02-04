@@ -39,11 +39,7 @@ def copy_file(dir):
 
 def move_file(src_path, dst_path):
     files = [
-        "ohos_ip_conflict_01.patch",
-        "ohos_ip_conflict_02.patch",
-        "ohos_ip_conflict_03.patch",
-        "ohos_ip_conflict_04.patch",
-        "ohos_ip_conflict_05.patch",
+        "ohos_ip_conflict.patch",
         "backport-CVE-2022-26691.patch",
         "backport-CVE-2023-32324.patch",
         "backport-CVE-2023-34241.patch",
@@ -79,11 +75,7 @@ def do_patch(target_dir):
         "ohos-modify-pthread.patch",
         "ohos-add-openssl.patch",
         "backport-CVE-2023-4504.patch",
-        "ohos_ip_conflict_01.patch",
-        "ohos_ip_conflict_02.patch",
-        "ohos_ip_conflict_03.patch",
-        "ohos_ip_conflict_04.patch",
-        "ohos_ip_conflict_05.patch"
+        "ohos_ip_conflict.patch"
     ]
 
     for patch in patch_file:
