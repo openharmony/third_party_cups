@@ -16,9 +16,9 @@
 Name:    cups
 Epoch:   1
 Version: 2.4.0
-Release: 8
+Release: 10
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
-License: GPLv2+ and LGPLv2+ with exceptions and AML
+License: Apache-2.0 WITH LLVM-exception
 Url:     https://openprinting.github.io/cups/
 # Apple stopped uploading the new versions into github, use OpenPrinting fork
 Source0: https://github.com/OpenPrinting/cups/releases/download/v%{version}/cups-%{version}-source.tar.gz
@@ -43,6 +43,7 @@ Patch6002: backport-Also-fix-cupsfilter.patch
 Patch6003: backport-CVE-2023-32324.patch
 Patch6004: fix-httpAddrGetList-test-case-fail.patch
 Patch6005: backport-CVE-2023-34241.patch
+Patch6006: backport-CVE-2023-4504.patch
 
 BuildRequires: pam-devel pkgconf-pkg-config pkgconfig(gnutls) libacl-devel openldap-devel pkgconfig(libusb-1.0)
 BuildRequires: krb5-devel pkgconfig(avahi-client) systemd pkgconfig(libsystemd) pkgconfig(dbus-1) python3-cups
@@ -464,6 +465,12 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
+* Fri Sep 22 2023 zhouwenpei <zhouwenpei1@h-partners.com> - 1:2.4.0-10
+- fix CVE-2023-4504
+
+* Wed Jul 19 2023 haomimi <haomimi@uniontech.com> - 1:2.4.0-9
+- DESC:The license is changed to apache 2.0
+
 * Mon Jun 26 2023 zhouwenpei <zhouwenpei@h-partners.com> - 1:2.4.0-8
 - fix CVE-2023-34241
 
