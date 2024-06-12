@@ -32,7 +32,17 @@
             "sub_component": [
                 "//third_party/cups:third_party_cups"
             ],
-            "inner_kits": [],
+            "inner_kits": [
+                {
+                    "name": "//third_party/cups:cups",
+                    "header": {
+                      "header_files": [
+                        "config.h"
+                      ],
+                      "header_base": "//third_party/cups"
+                    }
+                }
+            ],
             "test": []
         }
     }
