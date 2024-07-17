@@ -16,7 +16,7 @@
 Name:    cups
 Epoch:   1
 Version: 2.4.0
-Release: 10
+Release: 11
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
 License: Apache-2.0 WITH LLVM-exception
 Url:     https://openprinting.github.io/cups/
@@ -465,6 +465,9 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
+* Wed Jun 12 2024 baiguo <baiguo@kylinos.cn> - 1:2.4.0-11
+- fix CVE-2024-35235
+
 * Fri Sep 22 2023 zhouwenpei <zhouwenpei1@h-partners.com> - 1:2.4.0-10
 - fix CVE-2023-4504
 

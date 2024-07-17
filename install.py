@@ -47,6 +47,7 @@ def move_file(src_path, dst_path):
         "ohos-modify-pthread.patch",
         "ohos-add-openssl.patch",
         "backport-CVE-2023-4504.patch",
+        "backport-CVE-2024-35235.patch",
         "config.h"
     ]
     for file in files:
@@ -75,6 +76,7 @@ def do_patch(target_dir):
         "ohos-modify-pthread.patch",
         "ohos-add-openssl.patch",
         "backport-CVE-2023-4504.patch",
+        "backport-CVE-2024-35235.patch",
         "ohos_ip_conflict.patch"
     ]
 
