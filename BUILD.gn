@@ -252,6 +252,7 @@ config("cups_config") {
     "-Wno-int-conversion",
     "-D_FORTIFY_SOURCE=2",
     "-fstack-protector-all",
+    "-Os",
   ]
 }
 
