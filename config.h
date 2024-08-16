@@ -93,6 +93,7 @@
 #endif /* HAVE_ARC4RANDOM */
 
 #define HAVE_LIBUSB 1
+#define HAVE_OPENHARMONY 1
 #define HAVE_STATFS 1
 #define HAVE_STATVFS 1
 #define HAVE_SYS_MOUNT_H 1
