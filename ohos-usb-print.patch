@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 0000000..4f313a9
+index 0000000..668ea73
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1817 @@
+@@ -0,0 +1,1818 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -773,6 +773,7 @@ index 0000000..4f313a9
 +	          printer.conf     = conf;
 +	          printer.iface    = iface;
 +	          printer.protocol = protocol;
++            printer.pipe     = NULL;
 +
 +            if (!open_device(&printer, data != NULL))
 +	          {
