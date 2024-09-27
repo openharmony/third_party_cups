@@ -1,6 +1,6 @@
 [
     {
-        "Name"                  : "cups",
+        "Name"                  : "openEuler:cups",
         "License"               : "Apache 2.0 License",
         "License File"          : "LICENSE",
         "Version Number"        : "2.4.0-10.oe2203sp3",
