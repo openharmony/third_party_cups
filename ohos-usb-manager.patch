@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..d75d035
+index 0000000..2604e10
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,643 @@
+@@ -0,0 +1,663 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,6 +57,7 @@ index 0000000..d75d035
 +    USBDevicePipe &usbDevicePipe, USBEndpoint &endpoint, const std::string &sendDataStr, int32_t timeout);
 +int32_t ParseDeviceDescriptor(UsbDevice &usbDevice, ohusb_device_descriptor *devDesc);
 +int32_t ParseConfigDescriptor(USBConfig &usbConfig, ohusb_config_descriptor *confDesc);
++int32_t ParseInterface(std::vector<UsbInterface> &usbIfaces, ohusb_interface *usbInterface, int32_t ifaceIndex);
 +int32_t ParseInterfaceDescriptor(UsbInterface &usbInterface, ohusb_interface_descriptor *ifaceDesc);
 +int32_t ParseEndpointDescriptor(USBEndpoint &usbEndpoint, ohusb_endpoint_descriptor *epDesc);
 +void ReleaseDeviceDescriptor(ohusb_device_descriptor *devDesc);
@@ -276,9 +277,19 @@ index 0000000..d75d035
 +    const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
 +    std::vector<uint8_t> bufferData(length, 0);
 +    auto &usbSrvClient = OHOS::USB::UsbSrvClient::GetInstance();
-+    int32_t ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
++    uint32_t retryNum = 0;
++    int32_t ret = OHUSB_SUCCESS;
++    do {
++        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
++        fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d\n", ret);
++        if (ret == OHUSB_ERROR_TIMEOUT) {
++            std::this_thread::sleep_for(std::chrono::milliseconds(OHUSB_CONTROLTRANSFER_READ_SLEEP));
++            retryNum++;
++            fprintf(stderr, "DEBUG: OH_ControlTransferRead retryCount: %d\n", retryNum);
++        }
++    } while (ret == OHUSB_ERROR_TIMEOUT && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES);
 +    if (ret != 0) {
-+        fprintf(stderr, "DEBUG: OH_ControlTransferRead fail with ret = %d\n", ret);
++        fprintf(stderr, "DEBUG: OH_ControlTransferRead fail\n");
 +        return OHUSB_ERROR_IO;
 +    }
 +    fprintf(stderr, "DEBUG: OH_ControlTransferRead bufferData size = %zu\n", bufferData.size());
@@ -407,10 +418,10 @@ index 0000000..d75d035
 +    confDesc->iConfiguration = usbConfig.GetId();
 +    confDesc->bmAttributes = usbConfig.GetAttributes();
 +    confDesc->MaxPower = usbConfig.GetMaxPower();
-+    uint32_t interfaceCount = usbConfig.GetInterfaceCount();
-+    UsbInterface usbIface;
-+    usbConfig.GetInterface(interfaceCount - 1, usbIface);
-+    int32_t ifaceCount = usbIface.GetId() + 1;
++
++    std::vector<UsbInterface> usbIfaces = usbConfig.GetInterfaces();
++    int32_t ifaceCount = usbIfaces.size() > 0 ? usbIfaces[usbIfaces.size() - 1].GetId() + 1 : 0;
++
 +    confDesc->bNumInterfaces = 0;
 +    ohusb_interface *usbInterface =
 +        (ohusb_interface *)calloc((size_t)ifaceCount, sizeof(ohusb_interface));
@@ -419,29 +430,38 @@ index 0000000..d75d035
 +        return OHUSB_ERROR_NO_MEM;
 +    }
 +    confDesc->interface = usbInterface;
-+    int32_t altsettingNum = usbIface.GetAlternateSetting() + 1;
-+    uint32_t usbInterfaceIndex = 0;
 +    for (int32_t ifaceIndex = 0; ifaceIndex < ifaceCount; ifaceIndex++) {
-+        (usbInterface + ifaceIndex)->num_altsetting = 0;
-+        ohusb_interface_descriptor *altsetting =
-+            (ohusb_interface_descriptor *)calloc(altsettingNum, sizeof(ohusb_interface_descriptor));
-+        if (altsetting == nullptr) {
-+			fprintf(stderr, "DEBUG: ParseInterfaceDescriptor altsetting is nullptr\n");
-+            return OHUSB_ERROR_NO_MEM;
-+        }
-+        (usbInterface + ifaceIndex)->altsetting = altsetting;
-+        for (int32_t altIndex = 0; altIndex < altsettingNum; altIndex++) {
-+            UsbInterface tempUsbInterface;
-+            usbConfig.GetInterface(usbInterfaceIndex++, tempUsbInterface);
-+            if (ParseInterfaceDescriptor(tempUsbInterface, altsetting + altIndex) != OHUSB_SUCCESS) {
-+                return OHUSB_ERROR_IO;
-+            }
-+            ((usbInterface + ifaceIndex)->num_altsetting)++;
++        if (ParseInterface(usbIfaces, usbInterface + ifaceIndex, ifaceIndex) != OHUSB_SUCCESS) {
++            return OHUSB_ERROR_IO;
 +        }
 +        (confDesc->bNumInterfaces)++;
 +    }
 +    DumpConfigDescriptor(confDesc);
 +    fprintf(stderr, "DEBUG: ParseConfigDescriptor out\n");
++    return OHUSB_SUCCESS;
++}
++
++int32_t ParseInterface(std::vector<UsbInterface> &usbIfaces, ohusb_interface *usbInterface, int32_t ifaceIndex)
++{
++    fprintf(stderr, "DEBUG: ParseInterface ifaceIndex=%d\n", ifaceIndex);
++    for (int32_t usbIfacesIndex = 0; usbIfacesIndex < usbIfaces.size(); usbIfacesIndex++) {
++        if (usbIfaces[usbIfacesIndex].GetId() == ifaceIndex) {
++            ohusb_interface_descriptor *altsetting;
++            altsetting = (ohusb_interface_descriptor *)
++                realloc(usbInterface->altsetting, sizeof(*altsetting) * (size_t)(usbInterface->num_altsetting +1));
++            if (altsetting == nullptr) {
++                fprintf(stderr, "DEBUG: ParseInterface altsetting is nullptr\n");
++                return OHUSB_ERROR_NO_MEM;
++            }
++            usbInterface->altsetting = altsetting;
++            if (ParseInterfaceDescriptor(usbIfaces[usbIfacesIndex], altsetting + (usbInterface->num_altsetting))
++                != OHUSB_SUCCESS) {
++                return OHUSB_ERROR_IO;
++            }
++            usbInterface->num_altsetting++;
++        }
++    }
++    fprintf(stderr, "DEBUG: ParseInterface num_altsetting=%d\n", usbInterface->num_altsetting);
 +    return OHUSB_SUCCESS;
 +}
 +
@@ -650,7 +670,7 @@ index 0000000..d75d035
 \ No newline at end of file
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..cb29f74
+index 0000000..30ced79
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,465 @@
@@ -688,9 +708,9 @@ index 0000000..cb29f74
 +const int32_t OHUSB_GET_STRING_DESCRIPTOR_TIMEOUT = 1000;
 +const int32_t OHUSB_STRING_DESCRIPTOR_LENGTH_INDEX = 0;
 +
-+const int32_t OHUSB_READ_RETRY_MAX_TIMES = 200;
-+const int32_t OHUSB_READ_INTERVAL = 50;
 +const int32_t OHUSB_ENDPOINT_MAX_LENGTH = 512;
++const int32_t OHUSB_CONTROLTRANSFER_READ_SLEEP = 100;
++const int32_t OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES = 20;
 +const int32_t OHUSB_BULKTRANSFER_WRITE_SLEEP = 1000;
 +const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 20;
 +const int32_t OHUSB_BULKTRANSFER_READ_TIMEOUT = 5000;
