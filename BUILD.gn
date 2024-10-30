@@ -270,8 +270,8 @@ ohos_shared_library("cups") {
     ":cups_action",
     "//third_party/openssl:libcrypto_shared",
     "//third_party/openssl:libssl_shared",
-    "//third_party/zlib:libz",
   ]
+  external_deps = [ "zlib:libz" ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
