@@ -1,9 +1,9 @@
 diff --git a/cups/tls-openssl.c b/cups/tls-openssl.c
 new file mode 100644
-index 00000000..804e45fd
+index 00000000..cc33e17d
 --- /dev/null
 +++ b/cups-2.4.0/cups/tls-openssl.c
-@@ -0,0 +1,1671 @@
+@@ -0,0 +1,1676 @@
 +/*
 + * TLS support code for CUPS using OpenSSL/LibreSSL.
 + *
@@ -64,7 +64,12 @@ index 00000000..804e45fd
 +			tls_min_version = _HTTP_TLS_1_0,
 +			tls_max_version = _HTTP_TLS_MAX;
 +
-+
++static void setErrorToCups(ipp_status_t status, unsigned long error)
++{
++  char buffer[128] = {0};
++  ERR_error_string_n(error, buffer, sizeof(buffer));
++  _cupsSetError(status, buffer, 0);
++}
 +/*
 + * 'cupsMakeServerCredentials()' - Make a self-signed certificate and private key pair.
 + *
@@ -1112,7 +1117,7 @@ index 00000000..804e45fd
 +      // Unable to load private key or certificate...
 +      DEBUG_puts("4_httpTLSStart: Unable to use private key or certificate chain file.");
 +      if ((error = ERR_get_error()) != 0)
-+        _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, ERR_error_string(error, NULL), 0);
++        setErrorToCups(IPP_STATUS_ERROR_CUPS_PKI, error);
 +
 +      http->status = HTTP_STATUS_ERROR;
 +      http->error  = EIO;
@@ -1167,7 +1172,7 @@ index 00000000..804e45fd
 +    {
 +      // Failed
 +      if ((error = ERR_get_error()) != 0)
-+        _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, ERR_error_string(error, NULL), 0);
++        setErrorToCups(IPP_STATUS_ERROR_CUPS_PKI, error);
 +
 +      http->status = HTTP_STATUS_ERROR;
 +      http->error  = EPIPE;
@@ -1177,7 +1182,7 @@ index 00000000..804e45fd
 +      SSL_free(http->tls);
 +      http->tls = NULL;
 +
-+      DEBUG_printf(("4_httpTLSStart: Returning -1 (%s)", ERR_error_string(error, NULL)));
++      DEBUG_printf(("4_httpTLSStart: Returning -1 (%lu)", error));
 +
 +      return (-1);
 +    }
@@ -1190,7 +1195,7 @@ index 00000000..804e45fd
 +    {
 +      // Failed
 +      if ((error = ERR_get_error()) != 0)
-+        _cupsSetError(IPP_STATUS_ERROR_CUPS_PKI, ERR_error_string(error, NULL), 0);
++        setErrorToCups(IPP_STATUS_ERROR_CUPS_PKI, error);
 +
 +      http->status = HTTP_STATUS_ERROR;
 +      http->error  = EPIPE;
@@ -1200,7 +1205,7 @@ index 00000000..804e45fd
 +      SSL_free(http->tls);
 +      http->tls = NULL;
 +
-+      DEBUG_printf(("4_httpTLSStart: Returning -1 (%s)", ERR_error_string(error, NULL)));
++      DEBUG_printf(("4_httpTLSStart: Returning -1 (%lu)", error));
 +
 +      return (-1);
 +    }
