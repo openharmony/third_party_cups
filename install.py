@@ -50,6 +50,7 @@ def move_file(src_path, dst_path):
         "backport-CVE-2024-35235.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
+        "ohos-ppdfile-not-generated.patch",
         "config.h"
     ]
     for file in files:
@@ -81,7 +82,8 @@ def do_patch(target_dir):
         "backport-CVE-2024-35235.patch",
         "ohos_ip_conflict.patch",
         "ohos-usb-manager.patch",
-        "ohos-usb-print.patch"
+        "ohos-usb-print.patch",
+        "ohos-ppdfile-not-generated.patch"
     ]
 
     for patch in patch_file:
