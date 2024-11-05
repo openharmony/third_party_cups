@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..2604e10
+index 0000000..f903774
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,663 @@
+@@ -0,0 +1,669 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -448,9 +448,15 @@ index 0000000..2604e10
 +        if (usbIfaces[usbIfacesIndex].GetId() == ifaceIndex) {
 +            ohusb_interface_descriptor *altsetting;
 +            altsetting = (ohusb_interface_descriptor *)
-+                realloc(usbInterface->altsetting, sizeof(*altsetting) * (size_t)(usbInterface->num_altsetting +1));
++                calloc((size_t)(usbInterface->num_altsetting + 1), sizeof(*altsetting));
 +            if (altsetting == nullptr) {
 +                fprintf(stderr, "DEBUG: ParseInterface altsetting is nullptr\n");
++                return OHUSB_ERROR_NO_MEM;
++            }
++            if (usbInterface->num_altsetting != 0 &&
++                memcpy_s(altsetting, sizeof(*altsetting) * (size_t)(usbInterface->num_altsetting),
++                usbInterface->altsetting, sizeof(*altsetting) * (size_t)(usbInterface->num_altsetting)) != 0) {
++                fprintf(stderr, "DEBUG: ParseInterface memcpy_s fail.\n");
 +                return OHUSB_ERROR_NO_MEM;
 +            }
 +            usbInterface->altsetting = altsetting;
