@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 0000000..668ea73
+index 0000000..6268f77
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1818 @@
+@@ -0,0 +1,1817 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -892,8 +892,7 @@ index 0000000..668ea73
 +  }
 +
 +  printer->origconf = current;
-+  fprintf(stderr, "DEBUG: open_device OH_ControlTransferRead current = %c, printer->origconf = %d\n",
-+    current, printer->origconf);
++  fprintf(stderr, "DEBUG: open_device OH_ControlTransferRead current = %c\n", current);
 +
 +  confptr = printer->device->config[printer->conf];
 +  number1 = confptr.iConfiguration;
