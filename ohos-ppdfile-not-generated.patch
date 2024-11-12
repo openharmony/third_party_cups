@@ -1,7 +1,7 @@
-diff --git a/cups-2.4.0/scheduler/ipp.c b/cups-2.4.0/scheduler/ipp.c
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
 index 5972b99..9d3cf35 100644
---- a/cups-2.4.0/scheduler/ipp.c
-+++ b/cups-2.4.0/scheduler/ipp.c
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
 @@ -5325,7 +5325,8 @@ create_local_bg_thread(
  
    cupsdLogMessage(CUPSD_LOG_DEBUG, "%s: Get-Printer-Attributes returned %s (%s)", printer->name, ippErrorString(cupsLastError()), cupsLastErrorString());
