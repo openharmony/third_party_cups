@@ -1,6 +1,6 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..f903774
+index 0000000..ef6bd31
 --- /dev/null
 +++ b/backend/usb_manager.cxx
 @@ -0,0 +1,669 @@
@@ -249,9 +249,9 @@ index 0000000..f903774
 +        }
 +        if (ret == OHUSB_ERROR_TIMEOUT) {
 +            std::this_thread::sleep_for(std::chrono::milliseconds(OHUSB_BULKTRANSFER_WRITE_SLEEP));
-+            retryNum++;
 +        }
-+    } while (ret == OHUSB_ERROR_TIMEOUT && retryNum < OHUSB_WRITE_RETRY_MAX_TIMES);
++        retryNum++;
++    } while (ret != OHUSB_SUCCESS && retryNum < OHUSB_WRITE_RETRY_MAX_TIMES);
 +    if (ret != 0) {
 +        fprintf(stderr, "DEBUG: Write data fail\n");
 +        return ret;
@@ -673,10 +673,9 @@ index 0000000..f903774
 +    dest[len] = '\0';
 +    return dest;
 +}
-\ No newline at end of file
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..30ced79
+index 0000000..6b1af93
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,465 @@
@@ -718,7 +717,7 @@ index 0000000..30ced79
 +const int32_t OHUSB_CONTROLTRANSFER_READ_SLEEP = 100;
 +const int32_t OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES = 20;
 +const int32_t OHUSB_BULKTRANSFER_WRITE_SLEEP = 1000;
-+const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 20;
++const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 60;
 +const int32_t OHUSB_BULKTRANSFER_READ_TIMEOUT = 5000;
 +
 +/*
@@ -1145,4 +1144,3 @@ index 0000000..30ced79
 +#endif
 +
 +#endif /* USB_MANAGER_H */
-\ No newline at end of file
