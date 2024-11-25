@@ -51,6 +51,7 @@ def move_file(src_path, dst_path):
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
         "ohos-ppdfile-not-generated.patch",
+        "ohos-hilog-print.patch",
         "config.h"
     ]
     for file in files:
@@ -83,7 +84,8 @@ def do_patch(target_dir):
         "ohos_ip_conflict.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
-        "ohos-ppdfile-not-generated.patch"
+        "ohos-ppdfile-not-generated.patch",
+        "ohos-hilog-print.patch"
     ]
 
     for patch in patch_file:
