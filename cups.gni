@@ -22,6 +22,7 @@ cups_defines = [
   "CUPS_BINDIR = \"/system/$cups_bin_dir\"",
   "CUPS_SBINDIR = \"/system/$cups_sbin_dir\"",
   "CUPS_SERVERBIN = \"$CUPS_SERVICE_DATA_DIR/serverbin\"",
+  "UNI_PRINT_DRIVER_BINDIR = \"/system/bin/uni_print_driver/ghostscript/bin\"",
 
   "CUPS_DATADIR = \"$CUPS_SERVICE_DATA_DIR/datadir\"",
   "CUPS_DOCROOT = \"$CUPS_SERVICE_DATA_DIR/doc\"",
