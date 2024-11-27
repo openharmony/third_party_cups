@@ -1,0 +1,17 @@
+diff --git a/scheduler/env.c b/scheduler/env.c
+index 6e738c6e..6c7171da 100644
+--- a/scheduler/env.c
++++ b/scheduler/env.c
+@@ -220,7 +220,12 @@ cupsdUpdateEnv(void)
+       cupsdSetEnvf("PATH", "%s/filter:%s", ServerBin, path);
+     else
+ #endif /* CUPS_SNAP */
++#ifdef UNI_PRINT_DRIVER_BINDIR
++    cupsdSetEnvf("PATH", "%s/filter:" UNI_PRINT_DRIVER_BINDIR ":" CUPS_BINDIR ":" CUPS_SBINDIR ":/bin:/usr/bin",
++      ServerBin);
++#else
+     cupsdSetEnvf("PATH", "%s/filter:" CUPS_BINDIR ":" CUPS_SBINDIR ":/bin:/usr/bin", ServerBin);
++#endif
+   }
+   set_if_undefined("SERVER_ADMIN", ServerAdmin);
+   set_if_undefined("SHLIB_PATH", NULL);
