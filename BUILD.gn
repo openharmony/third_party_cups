@@ -105,6 +105,7 @@ cupsd_generated_sources = [
   "$scheduler_code_dir/dirsvc.c",
   "$scheduler_code_dir/env.c",
   "$scheduler_code_dir/file.c",
+  "$scheduler_code_dir/hilog-helper.c",
   "$scheduler_code_dir/ipp.c",
   "$scheduler_code_dir/job.c",
   "$scheduler_code_dir/listen.c",
@@ -423,6 +424,7 @@ ohos_executable("cupsd") {
     "//third_party/cups:cupsmime",
   ]
   install_enable = true
+  external_deps = [ "hilog:libhilog" ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
