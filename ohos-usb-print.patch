@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 0000000..6268f77
+index 0000000..3106c11
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1817 @@
+@@ -0,0 +1,1820 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -459,9 +459,12 @@ index 0000000..6268f77
 +
 +      if (g.print_bytes)
 +      {
++        int claimedIfId = g.printer->device->config[g.printer->conf].interface[g.printer->iface].altsetting[g.printer->altset].bInterfaceNumber;
++
 +        ohusb_transfer_pipe tpipe = {
 +          g.printer->iface,
-+          g.printer->write_endp
++          g.printer->write_endp,
++          claimedIfId
 +        };
 +	      iostatus = OH_BulkTransferWrite(g.printer->pipe, &tpipe,
 +          print_buffer, g.print_bytes, &bytes, 0);

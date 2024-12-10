@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..ef6bd31
+index 0000000..6080a7b
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,669 @@
+@@ -0,0 +1,681 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -218,6 +218,14 @@ index 0000000..ef6bd31
 +        size_t len = leftDataLen > OHUSB_ENDPOINT_MAX_LENGTH ? OHUSB_ENDPOINT_MAX_LENGTH : leftDataLen;
 +        std::string sendDataStr(reinterpret_cast<char *>(data), len);
 +        ret = BulkTransferWriteData(usbDevicePipe, endpoint, sendDataStr, timeout);
++        if (ret == OHUSB_ERROR_IO) {
++            fprintf(stderr, "DEBUG: OH_BulkTransferWrite OHUSB_ERROR_IO\n");
++            int32_t claimRet = OH_ClaimInterface(pipe, tpipe->bClaimedInterfaceId, true);
++            if (claimRet >= 0) {
++                fprintf(stderr, "DEBUG: OH_BulkTransferWrite OH_ClaimInterface success ret = %d\n", claimRet);
++                continue;
++            }
++        }
 +        if (ret != 0) {
 +            return ret;
 +        }
@@ -246,6 +254,10 @@ index 0000000..ef6bd31
 +        if (ret == HDF_DEV_ERR_NO_DEVICE) {
 +            fprintf(stderr, "DEBUG: BulkTransferWriteData no device\n");
 +            return OHUSB_ERROR_NO_DEVICE;
++        }
++        if (ret == OHUSB_ERROR_IO) {
++            fprintf(stderr, "DEBUG: BulkTransferWriteData OHUSB_ERROR_IO\n");
++            return OHUSB_ERROR_IO;
 +        }
 +        if (ret == OHUSB_ERROR_TIMEOUT) {
 +            std::this_thread::sleep_for(std::chrono::milliseconds(OHUSB_BULKTRANSFER_WRITE_SLEEP));
@@ -675,10 +687,10 @@ index 0000000..ef6bd31
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..6b1af93
+index 0000000..e5e39fc
 --- /dev/null
 +++ b/backend/usb_manager.h
-@@ -0,0 +1,465 @@
+@@ -0,0 +1,468 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1120,6 +1132,9 @@ index 0000000..6b1af93
 +
 +    /** The endpoint address to transfer data. */
 +    uint8_t bEndpointAddress;
++
++    /** The interface id to be claimed. */
++    int32_t bClaimedInterfaceId;
 +} ohusb_transfer_pipe;
 +
 +extern int32_t OH_GetDevices(ohusb_device_descriptor** list, ssize_t *numdevs);
