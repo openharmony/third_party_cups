@@ -22,7 +22,10 @@
         "ram": "",
         "deps": {
             "components": [
-                "hilog"
+                "c_utils",
+                "drivers_interface_usb",
+                "hilog",
+                "usb_manager"
             ],
             "third_party": [
                 "zlib",

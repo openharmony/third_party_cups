@@ -127,7 +127,10 @@ cupsfilter_generated_sources = [ "$scheduler_code_dir/cupsfilter.c" ]
 
 ipp_generated_sources = [ "$backend_code_dir/ipp.c" ]
 
-usb_generated_sources = [ "$backend_code_dir/usb.c" ]
+usb_generated_sources = [
+  "$backend_code_dir/usb.c",
+  "$backend_code_dir/usb_manager.cxx",
+]
 
 lp_generated_sources = [ "$cups_code_dir/systemv/lp.c" ]
 
@@ -331,6 +334,12 @@ ohos_executable("usb") {
     "//third_party/cups:backend",
     "//third_party/cups:cups",
     "//third_party/libusb:libusb",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hilog:libhilog",
+    "usb_manager:usbsrv_client",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/backend"
