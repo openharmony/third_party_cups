@@ -48,6 +48,8 @@ def move_file(src_path, dst_path):
         "ohos-add-openssl.patch",
         "backport-CVE-2023-4504.patch",
         "backport-CVE-2024-35235.patch",
+        "ohos-usb-manager.patch",
+        "ohos-usb-print.patch",
         "ohos-hilog-print.patch",
         "config.h"
     ]
@@ -79,6 +81,8 @@ def do_patch(target_dir):
         "backport-CVE-2023-4504.patch",
         "backport-CVE-2024-35235.patch",
         "ohos_ip_conflict.patch",
+        "ohos-usb-manager.patch",
+        "ohos-usb-print.patch",
         "ohos-hilog-print.patch"
     ]
 
