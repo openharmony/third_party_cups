@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..6080a7b
+index 0000000..f1bf8c4
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,681 @@
+@@ -0,0 +1,683 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -192,10 +192,12 @@ index 0000000..6080a7b
 +        return OHUSB_ERROR_NO_DEVICE;
 +    }
 +    readSize = readTempBuffer.size();
++    fprintf(stderr, "DEBUG: OH_BulkTransferRead readSize = %zu\n", readSize);
 +    if (ret == OHUSB_SUCCESS) {
-+        std::copy(readTempBuffer.begin(), readTempBuffer.begin() + readSize, data);
-+        fprintf(stderr, "DEBUG: OH_BulkTransferRead readSize = %zu\n", readSize);
-+        *transferred = readSize;
++        if (readSize < 512) {
++            std::copy(readTempBuffer.begin(), readTempBuffer.begin() + readSize, data);
++            *transferred = readSize;
++        }
 +        return OHUSB_SUCCESS;
 +    }
 +
