@@ -53,6 +53,7 @@ def move_file(src_path, dst_path):
         "ohos-ppdfile-not-generated.patch",
         "ohos-hilog-print.patch",
         "ohos-uni-print-driver-path.patch",
+        "ohos-cups-badfd.patch",
         "config.h"
     ]
     for file in files:
@@ -87,7 +88,8 @@ def do_patch(target_dir):
         "ohos-usb-print.patch",
         "ohos-ppdfile-not-generated.patch",
         "ohos-hilog-print.patch",
-        "ohos-uni-print-driver-path.patch"
+        "ohos-uni-print-driver-path.patch",
+        "ohos-cups-badfd.patch"
     ]
 
     for patch in patch_file:

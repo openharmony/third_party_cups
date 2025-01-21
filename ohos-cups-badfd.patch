@@ -1,0 +1,27 @@
+diff --git a/scheduler/cups-exec.c b/scheduler/cups-exec.c
+index 7b851d3..d9df71c 100644
+--- a/scheduler/cups-exec.c
++++ b/scheduler/cups-exec.c
+@@ -116,7 +116,22 @@ main(int  argc,				/* I - Number of command-line args */
+   * Make sure side and back channel FDs are non-blocking...
+   */
+ 
++  FILE *file = fopen("/dev/null", "r+");
++  int fd = fileno(file);
++  if (fd > 3)
++  {
++    dup2(fd, 3);
++    fclose(file);
++  }
+   fcntl(3, F_SETFL, O_NDELAY);
++
++  file = fopen("/dev/null", "r+");
++  fd = fileno(file);
++  if (fd > 4)
++  {
++    dup2(fd, 4);
++    fclose(file);
++  }
+   fcntl(4, F_SETFL, O_NDELAY);
+ 
+  /*
