@@ -51,6 +51,7 @@ def move_file(src_path, dst_path):
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
         "ohos-hilog-print.patch",
+        "ohos-cups-badfd.patch",
         "config.h"
     ]
     for file in files:
@@ -66,7 +67,7 @@ def apply_patch(patch_file, target_dir):
         patch_cmd = ['patch', '-p1', "--fuzz=0", "--no-backup-if-mismatch", '-i', patch_file, '-d', target_dir]
         subprocess.run(patch_cmd, check=True)
     except Exception as e:
-        print("apply_patch error!")
+        print(f"apply_patch error! patch: {patch_file}")
         return
 
 
@@ -83,7 +84,8 @@ def do_patch(target_dir):
         "ohos_ip_conflict.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
-        "ohos-hilog-print.patch"
+        "ohos-hilog-print.patch",
+        "ohos-cups-badfd.patch"
     ]
 
     for patch in patch_file:
