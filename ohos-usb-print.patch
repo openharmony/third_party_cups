@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 0000000..89f93d0
+index 0000000..a28c78b
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1820 @@
+@@ -0,0 +1,1824 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1703,7 +1703,11 @@ index 0000000..89f93d0
 +  * Report the printer...
 +  */
 +
-+  cupsBackendReport("direct", device_uri, make_model, make_model, device_id, NULL);
++  char result[10];
++  snprintf(result, sizeof(result), "%04x-%04x", printer->device->idVendor, printer->device->idProduct);
++  fprintf(stderr, "DEBUG: list_cb vid-pid:%s.\n", result);
++
++  cupsBackendReport("direct", device_uri, make_model, make_model, device_id, result);
 +
 + /*
 +  * Keep going...
