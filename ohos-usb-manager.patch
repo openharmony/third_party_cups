@@ -1,6 +1,6 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..f1bf8c4
+index 0000000..baf329a
 --- /dev/null
 +++ b/backend/usb_manager.cxx
 @@ -0,0 +1,683 @@
@@ -295,18 +295,18 @@ index 0000000..f1bf8c4
 +    int32_t ret = OHUSB_SUCCESS;
 +    do {
 +        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
-+        fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d\n", ret);
-+        if (ret == OHUSB_ERROR_TIMEOUT) {
-+            std::this_thread::sleep_for(std::chrono::milliseconds(OHUSB_CONTROLTRANSFER_READ_SLEEP));
-+            retryNum++;
-+            fprintf(stderr, "DEBUG: OH_ControlTransferRead retryCount: %d\n", retryNum);
-+        }
-+    } while (ret == OHUSB_ERROR_TIMEOUT && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES);
++        retryNum++;
++    } while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES);
++    fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d, retryCount: %d\n", ret, retryNum);
 +    if (ret != 0) {
 +        fprintf(stderr, "DEBUG: OH_ControlTransferRead fail\n");
 +        return OHUSB_ERROR_IO;
 +    }
 +    fprintf(stderr, "DEBUG: OH_ControlTransferRead bufferData size = %zu\n", bufferData.size());
++    
++    if (bufferData.size() == 0) {
++        return 0;
++    }
 +
 +    if ((value >> 8) == OHUSB_DT_STRING) {
 +        int bufferLen = bufferData.size();
@@ -353,7 +353,7 @@ index 0000000..f1bf8c4
 +        return OHUSB_ERROR_IO;
 +    }
 +
-+    fprintf(stderr, "DEBUG: OH_ControlTransferRead out\n");
++    fprintf(stderr, "DEBUG: OH_ControlTransferWrite out\n");
 +    return length;
 +}
 +
@@ -371,7 +371,7 @@ index 0000000..f1bf8c4
 +        OHUSB_GET_STRING_DESCRIPTOR_TIMEOUT
 +    };
 +    auto ret = OH_ControlTransferRead(pipe, &ctrlParam, descriptor, length);
-+    if (ret < 0) {
++    if (ret <= 0) {
 +        fprintf(stderr, "DEBUG: OH_GetStringDescriptor OH_ControlTransferRead failed\n");
 +        return ret;
 +    }
