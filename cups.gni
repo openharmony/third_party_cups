@@ -34,3 +34,7 @@ cups_defines = [
   "CUPS_REQUESTS = \"$CUPS_SERVICE_DATA_DIR/spool\"",
   "CUPS_STATEDIR = \"$CUPS_SERVICE_DATA_DIR/run\"",
 ]
+
+declare_args() {
+  third_party_cups_feature_pstops_filter = false
+}
