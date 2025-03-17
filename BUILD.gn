@@ -140,6 +140,13 @@ lpinfo_generated_sources = [ "$cups_code_dir/systemv/lpinfo.c" ]
 
 rastertopwg_generated_sources = [ "$filter_code_dir/rastertopwg.c" ]
 
+if (third_party_cups_feature_pstops_filter) {
+  pstops_generated_sources = [
+    "$filter_code_dir/common.c",
+    "$filter_code_dir/pstops.c",
+  ]
+}
+
 cupsmime_generated_sources = [
   "$scheduler_code_dir/filter.c",
   "$scheduler_code_dir/mime.c",
@@ -210,6 +217,10 @@ action("cups_action") {
   outputs += [ mime_convs_generated_source ]
   outputs += [ mime_types_generated_source ]
 
+  if (third_party_cups_feature_pstops_filter) {
+    outputs += pstops_generated_sources
+  }
+
   inputs = [ "//third_party/cups/cups-2.4.0-source.tar.gz" ]
   cups_path = rebase_path("${target_gen_dir}", root_build_dir)
   cups_source_path = rebase_path("//third_party/cups", root_build_dir)
@@ -236,6 +247,9 @@ group("third_party_cups") {
     ":rastertopwg",
     ":usb",
   ]
+  if (third_party_cups_feature_pstops_filter) {
+    deps += [ ":pstops" ]
+  }
 }
 
 config("cups_config") {
@@ -300,6 +314,21 @@ ohos_executable("rastertopwg") {
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
+}
+
+if (third_party_cups_feature_pstops_filter) {
+  ohos_executable("pstops") {
+    sources = pstops_generated_sources
+    deps = [
+      ":cups",
+      ":cups_action",
+    ]
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/filter"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+  }
 }
 
 ohos_shared_library("backend") {
