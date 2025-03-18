@@ -36,5 +36,5 @@ cups_defines = [
 ]
 
 declare_args() {
-  third_party_cups_feature_pstops_filter = false
+  cups_feature_pstops_filter = false
 }

@@ -16,7 +16,7 @@
         "name": "cups",
         "subsystem": "thirdparty",
         "syscap": [],
-        "features": [],
+        "features": [ "cups_feature_pstops_filter" ],
         "adapted_system_type": [ "standard" ],
         "rom": "",
         "ram": "",

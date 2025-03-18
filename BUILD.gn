@@ -140,7 +140,7 @@ lpinfo_generated_sources = [ "$cups_code_dir/systemv/lpinfo.c" ]
 
 rastertopwg_generated_sources = [ "$filter_code_dir/rastertopwg.c" ]
 
-if (third_party_cups_feature_pstops_filter) {
+if (cups_feature_pstops_filter) {
   pstops_generated_sources = [
     "$filter_code_dir/common.c",
     "$filter_code_dir/pstops.c",
@@ -217,7 +217,7 @@ action("cups_action") {
   outputs += [ mime_convs_generated_source ]
   outputs += [ mime_types_generated_source ]
 
-  if (third_party_cups_feature_pstops_filter) {
+  if (cups_feature_pstops_filter) {
     outputs += pstops_generated_sources
   }
 
@@ -247,7 +247,7 @@ group("third_party_cups") {
     ":rastertopwg",
     ":usb",
   ]
-  if (third_party_cups_feature_pstops_filter) {
+  if (cups_feature_pstops_filter) {
     deps += [ ":pstops" ]
   }
 }
@@ -316,7 +316,7 @@ ohos_executable("rastertopwg") {
   part_name = "$PART_NAME"
 }
 
-if (third_party_cups_feature_pstops_filter) {
+if (cups_feature_pstops_filter) {
   ohos_executable("pstops") {
     sources = pstops_generated_sources
     deps = [
