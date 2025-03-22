@@ -1,24 +1,11 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 %global cups_serverbin %{_exec_prefix}/lib/cups
 
 Name:    cups
 Epoch:   1
-Version: 2.4.0
-Release: 11
+Version: 2.4.7
+Release: 6
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
-License: Apache-2.0 WITH LLVM-exception
+License: Apache-2.0
 Url:     https://openprinting.github.io/cups/
 # Apple stopped uploading the new versions into github, use OpenPrinting fork
 Source0: https://github.com/OpenPrinting/cups/releases/download/v%{version}/cups-%{version}-source.tar.gz
@@ -36,14 +23,17 @@ Patch7:  cups-uri-compat.patch
 Patch8:  cups-freebind.patch
 Patch9:  cups-ipp-multifile.patch
 Patch10: cups-web-devices-timeout.patch
+Patch11: cups-lspp.patch
 
-Patch6000: backport-CVE-2022-26691.patch
-Patch6001: backport-Remove-legacy-code-for-RIP_MAX_CACHE-environment-variable.patch
-Patch6002: backport-Also-fix-cupsfilter.patch
-Patch6003: backport-CVE-2023-32324.patch
 Patch6004: fix-httpAddrGetList-test-case-fail.patch
-Patch6005: backport-CVE-2023-34241.patch
-Patch6006: backport-CVE-2023-4504.patch
+Patch6005: backport-Fix-CVE-2024-35235.patch
+Patch6006: backport-Fix-CVE-2024-35235-regression.patch
+Patch6007: backport-delay-creating-driverless-printer-until-ppd-generated.patch
+Patch6008: backport-0001-CVE-2024-47175.patch
+Patch6009: backport-0002-CVE-2024-47175.patch
+Patch6010: backport-0003-CVE-2024-47175.patch
+Patch6011: backport-0004-CVE-2024-47175.patch
+Patch6012: backport-0005-CVE-2024-47175.patch
 
 BuildRequires: pam-devel pkgconf-pkg-config pkgconfig(gnutls) libacl-devel openldap-devel pkgconfig(libusb-1.0)
 BuildRequires: krb5-devel pkgconfig(avahi-client) systemd pkgconfig(libsystemd) pkgconfig(dbus-1) python3-cups
@@ -67,7 +57,7 @@ Protocol (IPP) to support printing to local and network printers.
 
 %package client
 Summary: CUPS printing system - client programs
-License: GPLv2
+License: Apache-2.0
 Requires: %{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}
 Provides: /usr/bin/lpq /usr/bin/lpr /usr/bin/lp /usr/bin/cancel /usr/bin/lprm /usr/bin/lpstat
 Requires: /usr/sbin/alternatives
@@ -80,9 +70,9 @@ programs.
 
 %package devel
 Summary: CUPS printing system - development environment
-License: LGPLv2
+License: Apache-2.0
 Requires: %{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}
-Requires: gnutls-devel krb5-devel zlib-devel
+Requires: gnutls-devel krb5-devel zlib-devel pkgconf-pkg-config
 
 %description devel
 CUPS is the standards-based, open source printing system developed by Apple Inc.
@@ -91,7 +81,7 @@ package to develop other printer drivers.
 
 %package libs
 Summary: CUPS libs
-License: LGPLv2 and zlib
+License: Apache-2.0
 
 %description libs
 CUPS printing system provides a portable printing layer for
@@ -164,20 +154,20 @@ export CFLAGS="$RPM_OPT_FLAGS -fstack-protector-all -DLDAP_DEPRECATED=1"
 # --enable-debug to avoid stripping binaries
 %configure --with-docdir=%{_datadir}/%{name}/www --enable-debug \
     --enable-lspp \
+    --enable-webif \
+    --enable-relro \
+    --enable-page-logging \
+    --enable-sync-on-close \
     --with-exe-file-perm=0755 \
     --with-cupsd-file-perm=0755 \
     --with-log-file-perm=0600 \
-    --enable-relro \
     --with-dbusdir=%{_sysconfdir}/dbus-1 \
-    --enable-avahi \
-    --enable-threads \
-    --enable-gnutls \
-    --enable-webif \
     --with-xinetd=no \
     --with-access-log-level=actions \
-    --enable-page-logging \
+    --with-pkgconfpath=%{_libdir}/pkgconfig \
+    --with-dnssd=avahi \
+    --with-tls=gnutls \
     --with-rundir=%{_rundir}/cups \
-    --enable-sync-on-close \
     localedir=%{_datadir}/locale
 
 %make_build
@@ -352,21 +342,6 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %dir %attr(1770,root,lp) %{_localstatedir}/spool/cups/tmp
 %dir %attr(0710,root,lp) %{_localstatedir}/spool/cups
 %dir %attr(0755,root,lp) %{_localstatedir}/log/cups
-# client subpackage
-%exclude %{_mandir}/man1/lp*.1.gz
-%exclude %{_mandir}/man1/cancel-cups.1.gz
-%exclude %{_mandir}/man8/lpc-cups.8.gz
-# devel subpackage
-%exclude %{_mandir}/man1/cups-config.1.gz
-# ipptool subpackage
-%exclude %{_mandir}/man1/ipptool.1.gz
-%exclude %{_mandir}/man5/ipptoolfile.5.gz
-# lpd subpackage
-%exclude %{_mandir}/man8/cups-lpd.8.gz
-# printerapp
-%exclude %{_mandir}/man1/ippeveprinter.1.gz
-%exclude %{_mandir}/man7/ippevepcl.7.gz
-%exclude %{_mandir}/man7/ippeveps.7.gz
 %dir %attr(0755,root,lp) %{_rundir}/cups
 %dir %attr(0511,lp,sys) %{_rundir}/cups/certs
 %dir %attr(0755,root,lp) %{_sysconfdir}/cups
@@ -395,9 +370,6 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %{_bindir}/cancel*
 %{_bindir}/lp*
 %{_sbindir}/lpc.cups
-%{_mandir}/man1/cancel-cups.1.gz
-%{_mandir}/man1/lp*.1.gz
-%{_mandir}/man8/lpc-cups.8.gz
  
 %files libs
 %{license} LICENSE
@@ -422,12 +394,12 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %{_bindir}/cups-config
 %{_includedir}/cups
 %{_libdir}/*.so
+%{_libdir}/pkgconfig/cups.pc
 %{_rpmconfigdir}/macros.d/macros.cups
-%{_prefix}/lib/pkgconfig/cups.pc
+
  
 %files lpd
 %{cups_serverbin}/daemon/cups-lpd
-%{_mandir}/man8/cups-lpd.8.gz
 %attr(0644, root, root)%{_unitdir}/cups-lpd.socket
 %attr(0644, root, root)%{_unitdir}/cups-lpd@.service
  
@@ -436,21 +408,15 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %{_bindir}/ipptool
 %dir %{_datadir}/cups/ipptool
 %{_datadir}/cups/ipptool/*
-%{_mandir}/man1/ipptool.1.gz
-%{_mandir}/man5/ipptoolfile.5.gz
  
 %files printerapp
 %{_bindir}/ippeveprinter
 %dir %{cups_serverbin}/command
 %{cups_serverbin}/command/ippevepcl
 %{cups_serverbin}/command/ippeveps
-%{_mandir}/man1/ippeveprinter.1.gz
-%{_mandir}/man7/ippevepcl.7.gz
-%{_mandir}/man7/ippeveps.7.gz
 
 %files help
-%{_mandir}/man[1578]/*
-%{_mandir}/man1/cups-config.1.gz
+%{_mandir}/man?/*
 %doc README.md CREDITS.md CHANGES.md
 %doc %{_datadir}/%{name}/www/index.html
 %doc %{_datadir}/%{name}/www/help
@@ -465,14 +431,31 @@ rm -f %{_exec_prefix}/lib/cups/backend/smb
 %doc %{_datadir}/%{name}/www/apple-touch-icon.png
 
 %changelog
-* Wed Jun 12 2024 baiguo <baiguo@kylinos.cn> - 1:2.4.0-11
+* Sat Oct 12 2024 Funda Wang <fundawang@yeah.net> - 1:2.4.7-6
+- fix file conflicts regarding man pages
+- add back lspp patch
+
+* Tue Oct 8 2024 zhangpan <zhangpan103@h-partners.com> - 1:2.4.7-5
+- fix CVE-2024-47175
+
+* Wed Aug 14 2024 Funda Wang <fundawang@yeah.net> - 1:2.4.7-4
+- Fix regression of fixing CVE-2024-35235 (upstream issue#985)
+
+* Wed Jun 12 2024 baiguo <baiguo@kylinos.cn> - 1:2.4.7-3
 - fix CVE-2024-35235
+
+* Tue Mar 26 2024 zhaojunfei <junfei.oerv@isrc.iscas.ac.cn> - 1:2.4.7-2
+- fix pkgconfig file generating
+- eliminate deprecated configure parameters
+
+* Fri Dec 29 2023 wangrui <wangrui.oerv@isrc.iscas.ac.cn> - 1:2.4.7-1
+- update to 2.4.7 version
 
 * Fri Sep 22 2023 zhouwenpei <zhouwenpei1@h-partners.com> - 1:2.4.0-10
 - fix CVE-2023-4504
 
-* Wed Jul 19 2023 haomimi <haomimi@uniontech.com> - 1:2.4.0-9
-- DESC:The license is changed to apache 2.0
+* Thu Aug 3 2023 dongjinguang <dongjinguang@huawei.com> - 1:2.4.0-9
+- DESC: The license is changed to Apache V2.0
 
 * Mon Jun 26 2023 zhouwenpei <zhouwenpei@h-partners.com> - 1:2.4.0-8
 - fix CVE-2023-34241

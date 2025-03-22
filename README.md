@@ -19,7 +19,7 @@ In the process of OpenHarmony's southward ecological development, it is necessar
 Add in the bundle. json file
 ```json
 "deps": {
-  "third_part": [
+  "third_party": [
     "cups"
   ]
 }
