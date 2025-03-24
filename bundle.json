@@ -1,7 +1,7 @@
 {
     "name": "@ohos/cups",
     "description": "OpenPrinting CUPS is the most current version of CUPS, a standards-based, open source printing system for Linux® and other Unix®-like operating systems.",
-    "version": "4.0",
+    "version": "5.1",
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
     "segment": {
@@ -26,10 +26,10 @@
                 "drivers_interface_usb",
                 "hilog",
                 "usb_manager",
+                "openssl",
                 "zlib"
             ],
             "third_party": [
-                "openssl",
                 "libusb"
             ]
         },

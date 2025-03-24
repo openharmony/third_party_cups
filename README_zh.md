@@ -19,15 +19,13 @@ OpenHarmony南向生态发展过程中，需要对存量市场的打印机进行
 - README.OpenSource                 项目README.OpenSource文件
 - README.md                         英文说明
 - README_zh.md                      中文说明
-- backport-CVE-2022-26691.patch     CVE修复补丁
-- backport-CVE-2023-32324.patch     CVE修复补丁
-- backport-CVE-2023-34241.patch     CVE修复补丁
-- cups-2.4.0-source.tar.gz          cups2.4.0源码压缩tar包
+- backport-CVE-xxx.patch     CVE修复补丁
+- cups-x.x.x-source.tar.gz          cups源码压缩tar包
 - backport-xxx.patch                上游更新补丁列表
 - cups-xxx.patch                    上游更新补丁列表
 - cups.spec                         上游更新记录说明
 - cups.yaml                         上游yaml文件
-- cups_single_file.patch            适配OpenHarmony编译补丁文件
+- ohos-xxx.patch            适配OpenHarmony编译补丁文件
 - pthread_cancel.patch              适配OpenHarmony编译补丁文件
 - install.sh                        适配OpenHarmony编译sh脚本文件
 - generate_mime_convs.py            适配OpenHarmony编译python脚本文件
@@ -42,7 +40,7 @@ OpenHarmony南向生态发展过程中，需要对存量市场的打印机进行
 在您的 bundle.json 文件 添加
 ```json
 "deps": {
-  "third_part": [
+  "third_party": [
     "cups"
   ]
 }

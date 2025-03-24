@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("./cups.gni")
 
 config_dir = "${target_gen_dir}"
-cups_code_dir = "${target_gen_dir}/cups-2.4.0"
+cups_code_dir = "${target_gen_dir}/cups-2.4.7"
 core_code_dir = "$cups_code_dir/cups/"
 filter_code_dir = "$cups_code_dir/filter"
 backend_code_dir = "$cups_code_dir/backend"
@@ -79,7 +79,6 @@ cups_generated_sources = [
   "$core_code_dir/string.c",
   "$core_code_dir/tempfile.c",
   "$core_code_dir/thread.c",
-  "$core_code_dir/tls-openssl.c",
   "$core_code_dir/tls.c",
   "$core_code_dir/transcode.c",
   "$core_code_dir/usersys.c",
@@ -221,7 +220,7 @@ action("cups_action") {
     outputs += pstops_generated_sources
   }
 
-  inputs = [ "//third_party/cups/cups-2.4.0-source.tar.gz" ]
+  inputs = [ "//third_party/cups/cups-2.4.7-source.tar.gz" ]
   cups_path = rebase_path("${target_gen_dir}", root_build_dir)
   cups_source_path = rebase_path("//third_party/cups", root_build_dir)
   args = [
@@ -260,7 +259,7 @@ config("cups_config") {
     "$core_code_dir",
     "//third_party/libusb",
     "//third_party/openssl/include",
-    get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.0",
+    get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.7",
   ]
 
   cflags = [
@@ -281,12 +280,12 @@ config("cups_config") {
 ohos_shared_library("cups") {
   sources = cups_generated_sources
   sources += cupsimage_generated_sources
-  deps = [
-    ":cups_action",
-    "//third_party/openssl:libcrypto_shared",
-    "//third_party/openssl:libssl_shared",
+  deps = [ ":cups_action" ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+    "zlib:libz",
   ]
-  external_deps = [ "zlib:libz" ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -308,6 +307,10 @@ ohos_executable("rastertopwg") {
   deps = [
     ":cups_action",
     "//third_party/cups:cups",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/filter"
@@ -337,6 +340,10 @@ ohos_shared_library("backend") {
     ":cups_action",
     "//third_party/cups:cups",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -348,6 +355,10 @@ ohos_executable("ipp") {
     ":cups_action",
     "//third_party/cups:backend",
     "//third_party/cups:cups",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/backend"
@@ -368,6 +379,8 @@ ohos_executable("usb") {
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
     "usb_manager:usbsrv_client",
   ]
   install_enable = true
@@ -422,6 +435,10 @@ ohos_shared_library("cupsppdc") {
     ":cups_action",
     "//third_party/cups:cups",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -461,7 +478,11 @@ ohos_executable("cupsd") {
     "//third_party/cups:cups",
     "//third_party/cups:cupsmime",
   ]
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
   install_enable = true
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -474,6 +495,10 @@ ohos_executable("cupsfilter") {
     ":cups_action",
     "//third_party/cups:cups",
     "//third_party/cups:cupsmime",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -489,6 +514,10 @@ ohos_executable("cups-deviced") {
     "//third_party/cups:cups",
     "//third_party/cups:cupsmime",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"
   public_configs = [ ":cups_config" ]
@@ -503,6 +532,10 @@ ohos_executable("cups-driverd") {
     ":cups_action",
     "//third_party/cups:cups",
     "//third_party/cups:cupsppdc",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"
