@@ -129,7 +129,9 @@ ipp_generated_sources = [ "$backend_code_dir/ipp.c" ]
 
 usb_generated_sources = [
   "$backend_code_dir/usb.c",
+  "$backend_code_dir/usb_ipp_manager.cpp",
   "$backend_code_dir/usb_manager.cxx",
+  "$backend_code_dir/usb_monitor.cpp",
 ]
 
 lp_generated_sources = [ "$cups_code_dir/systemv/lp.c" ]
@@ -258,8 +260,6 @@ config("cups_config") {
     "$config_dir",
     "$cups_code_dir",
     "$core_code_dir",
-    "//third_party/libusb",
-    "//third_party/openssl/include",
     get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.0",
   ]
 
@@ -281,12 +281,12 @@ config("cups_config") {
 ohos_shared_library("cups") {
   sources = cups_generated_sources
   sources += cupsimage_generated_sources
-  deps = [
-    ":cups_action",
-    "//third_party/openssl:libcrypto_shared",
-    "//third_party/openssl:libssl_shared",
+  deps = [ ":cups_action" ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+    "zlib:libz",
   ]
-  external_deps = [ "zlib:libz" ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -295,8 +295,8 @@ ohos_shared_library("cups") {
 ohos_shared_library("cupsimage") {
   sources = cupsimage_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -306,8 +306,8 @@ ohos_shared_library("cupsimage") {
 ohos_executable("rastertopwg") {
   sources = rastertopwg_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/filter"
@@ -334,8 +334,8 @@ if (cups_feature_pstops_filter) {
 ohos_shared_library("backend") {
   sources = backend_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -345,9 +345,9 @@ ohos_shared_library("backend") {
 ohos_executable("ipp") {
   sources = ipp_generated_sources
   deps = [
+    ":backend",
+    ":cups",
     ":cups_action",
-    "//third_party/cups:backend",
-    "//third_party/cups:cups",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/backend"
@@ -359,15 +359,17 @@ ohos_executable("ipp") {
 ohos_executable("usb") {
   sources = usb_generated_sources
   deps = [
+    ":backend",
+    ":cups",
     ":cups_action",
-    "//third_party/cups:backend",
-    "//third_party/cups:cups",
-    "//third_party/libusb:libusb",
   ]
   external_deps = [
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
+    "libusb:libusb",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
     "usb_manager:usbsrv_client",
   ]
   install_enable = true
@@ -382,8 +384,8 @@ ohos_executable("usb") {
 ohos_executable("lpadmin") {
   sources = lpadmin_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -394,8 +396,8 @@ ohos_executable("lpadmin") {
 ohos_executable("lpinfo") {
   sources = lpinfo_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -406,8 +408,8 @@ ohos_executable("lpinfo") {
 ohos_executable("lp") {
   sources = lp_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -419,8 +421,8 @@ ohos_executable("lp") {
 ohos_shared_library("cupsppdc") {
   sources = cupsppdc_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -430,9 +432,9 @@ ohos_shared_library("cupsppdc") {
 ohos_executable("ppdc") {
   sources = ppdc_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
-    "//third_party/cups:cupsppdc",
+    ":cupsppdc",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -446,8 +448,8 @@ ohos_executable("ppdc") {
 ohos_shared_library("cupsmime") {
   sources = cupsmime_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
   ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -457,9 +459,9 @@ ohos_shared_library("cupsmime") {
 ohos_executable("cupsd") {
   sources = cupsd_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
-    "//third_party/cups:cupsmime",
+    ":cupsmime",
   ]
   external_deps = [ "hilog:libhilog" ]
   install_enable = true
@@ -471,9 +473,9 @@ ohos_executable("cupsd") {
 ohos_executable("cupsfilter") {
   sources = cupsfilter_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
-    "//third_party/cups:cupsmime",
+    ":cupsmime",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -485,9 +487,9 @@ ohos_executable("cups-deviced") {
   sources = cups_deviced_generated_sources
   sources += scheduler_util_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
-    "//third_party/cups:cupsmime",
+    ":cupsmime",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"
@@ -500,9 +502,9 @@ ohos_executable("cups-driverd") {
   sources = cups_driverd_generated_sources
   sources += scheduler_util_generated_sources
   deps = [
+    ":cups",
     ":cups_action",
-    "//third_party/cups:cups",
-    "//third_party/cups:cupsppdc",
+    ":cupsppdc",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"

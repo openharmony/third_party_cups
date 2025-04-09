@@ -55,13 +55,25 @@ def move_file(src_path, dst_path):
         "ohos-uni-print-driver-path.patch",
         "ohos-cups-badfd.patch",
         "ohos-verify-backend.patch",
-        "config.h"
+        "config.h",
+        "cups-usb-job-state-monitor.patch"
     ]
     for file in files:
         src_file = os.path.join(src_path, file)
         dst_file = os.path.join(dst_path, file)
         shutil.copy(src_file, dst_file)
-
+    backend_files = [
+        "usb_ipp_manager.h",
+        "usb_ipp_manager.cpp",
+        "usb_monitor.h",
+        "usb_monitor.cpp"
+    ]
+    move_files_dir = "move_files"
+    backend_dir = "backend"
+    for file in backend_files:
+        src_file = os.path.join(src_path, move_files_dir, file)
+        dst_file = os.path.join(dst_path, backend_dir, file)
+        shutil.copy(src_file, dst_file)
 
 def apply_patch(patch_file, target_dir):
     try:
@@ -91,7 +103,8 @@ def do_patch(target_dir):
         "ohos-hilog-print.patch",
         "ohos-uni-print-driver-path.patch",
         "ohos-cups-badfd.patch",
-        "ohos-verify-backend.patch"
+        "ohos-verify-backend.patch",
+        "cups-usb-job-state-monitor.patch"
     ]
 
     for patch in patch_file:

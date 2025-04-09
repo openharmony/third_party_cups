@@ -26,9 +26,7 @@
                 "drivers_interface_usb",
                 "hilog",
                 "usb_manager",
-                "zlib"
-            ],
-            "third_party": [
+                "zlib",
                 "openssl",
                 "libusb"
             ]
