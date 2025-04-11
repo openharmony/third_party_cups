@@ -33,7 +33,7 @@ IppUsbManager::IppUsbManager()
 IppUsbManager::~IppUsbManager()
 {
     std::lock_guard<std::mutex> autoLock(lock_);
-    for (auto [uri ,ippPrinter] : ippPrinterMap_) {
+    for (auto [uri, ippPrinter] : ippPrinterMap_) {
         if (ippPrinter.isOpened) {
             usbSrvClient.Close(ippPrinter.ippPipe);
         }
@@ -203,7 +203,7 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
                 writeDataRetryCount++;
                 fprintf(stderr, "DEBUG: USB_MONITOR retrwriteDataRetryCounty = %d fail\n", writeDataRetryCount);
             }
-        } while(ret == EORROR_HDF_DEV_ERR_TIME_OUT && writeDataRetryCount < WRITE_RETRY_MAX_TIMES);
+        } while (ret == EORROR_HDF_DEV_ERR_TIME_OUT && writeDataRetryCount < WRITE_RETRY_MAX_TIMES);
         if (ret != UEC_OK) {
             fprintf(stderr, "DEBUG: USB_MONITOR BulkTransferWrite fail, ret = %d\n", ret);
             break;
@@ -222,7 +222,7 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
         }
         loopCount++;
         std::this_thread::sleep_for(std::chrono::seconds(INDEX_1));
-    } while(loopCount < MAX_LOOP_TIME && !isTerminated_.load());
+    } while (loopCount < MAX_LOOP_TIME && !isTerminated_.load());
     fprintf(stderr, "DEBUG: USB_MONITOR endtWriteDataToPrinterLooper\n");
     return false;
 }
@@ -405,7 +405,8 @@ std::vector<uint8_t> IppUsbManager::BuildIppRequest()
     static const std::string LOCAL_URI = "ipp://127.0.0.1:60000/ipp/print";
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, LOCAL_URI.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, DEFAULT_USER.c_str());
-    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", sizeof(jattrs) / sizeof(jattrs[0]), nullptr, jattrs);
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",
+        sizeof(jattrs) / sizeof(jattrs[0]), nullptr, jattrs);
     
     std::vector<uint8_t> ippdata;
     ippWriteIO(&ippdata, (ipp_iocb_t)IppUsbManager::WriteToBuffer, true, nullptr, request);

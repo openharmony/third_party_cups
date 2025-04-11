@@ -17,7 +17,6 @@
 #define USB_MONITOR_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <cups/ipp.h>
 
 #ifdef __cplusplus
@@ -35,7 +34,7 @@ bool StartMonitorIppPrinter(MonitorPrinterCallback callback, const char* uri);
 
 bool IsSupportIppOverUsb(const char* uri);
 
-void SetTerminalSingal();
+void SetTerminalSingal(void);
 #ifdef __cplusplus
 }
 #endif
