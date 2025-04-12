@@ -177,7 +177,7 @@ bool IppUsbManager::DisConnectUsbPinter(const std::string& uri)
     return true;
 }
 
-bool IppUsbManager::IsPrintJobAbortNormally(PrinterStatus& printerStatus)
+bool IppUsbManager::IsPrinterStateIdle(PrinterStatus& printerStatus)
 {
     fprintf(stderr, "DEBUG: USB_MONITOR printerStateReasons = %s, printerState = %d\n",
         printerStatus.printerStateReasons, static_cast<int32_t>(printerStatus.printerState));
@@ -193,6 +193,7 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
     int32_t ret = 0;
     constexpr uint32_t MAX_LOOP_TIME = 60 * 60 * 24 * 30; // 30 days
     uint32_t loopCount = 0;
+    bool isPrinterStarted = false;
     do {
         int32_t writeDataRetryCount = 0;
         do {
@@ -212,9 +213,14 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
         if (ProcessDataFromDevice(uri, printerStatus)) {
             fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice success\n");
             callback(&printerStatus);
-            if (IsPrintJobAbortNormally(printerStatus)) {
-                fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter job is completed\n");
-                return true;
+            if (IsPrinterStateIdle(printerStatus)) {
+                if (isPrinterStarted) {
+                    fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter job is completed\n");
+                    return true;
+                }
+            } else {
+                isPrinterStarted = true;
+                fprintf(stderr, "DEBUG: USB_MONITOR Printer is Started\n");
             }
         } else {
             fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice false\n");
