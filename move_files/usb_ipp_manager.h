@@ -99,7 +99,6 @@ private:
     std::map<std::string, UsbPrinter> ippPrinterMap_;
     std::atomic<bool> isTerminated_;
     std::mutex lock_;
-    
 };
 } // namespace OHOS::CUPS
 #endif // USB_IPP_MANAGER_H
