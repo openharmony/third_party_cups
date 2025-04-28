@@ -177,24 +177,46 @@ bool IppUsbManager::DisConnectUsbPinter(const std::string& uri)
     return true;
 }
 
-bool IppUsbManager::IsPrinterStateIdle(PrinterStatus& printerStatus)
+void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& printerStatus,
+    MonitorPrinterCallback callback)
 {
-    fprintf(stderr, "DEBUG: USB_MONITOR printerStateReasons = %s, printerState = %d\n",
-        printerStatus.printerStateReasons, static_cast<int32_t>(printerStatus.printerState));
-    if (printerStatus.printerState == IPP_PSTATE_IDLE) {
-        fprintf(stderr, "DEBUG: USB_MONITOR print job is abort normally\n");
-        return true;
+    if (callback == nullptr) {
+        fprintf(stderr, "DEBUG: USB_MONITOR callback is nullptr\n");
+        return;
     }
-    return false;
+    ipp_pstate_t printerState = printerStatus.printerState;
+    if (!isPrinterStarted && printerState == IPP_PSTATE_IDLE &&
+        strcmp(printerStatus.printerStateReasons, "none") != 0) {
+        callback(&printerStatus); // report faults before the printer is started
+    }
+    if (!isPrinterStarted && printerState != IPP_PSTATE_IDLE) {
+        isPrinterStarted = true;
+    }
+    constexpr int32_t bufferSize = 1024;
+    if (isPrinterStarted && printerState == IPP_PSTATE_IDLE &&
+        strcmp(printerStatus.printerStateReasons, "none") != 0 &&
+        memset_s(printerStatus.printerStateReasons, bufferSize, 0, bufferSize) == 0 &&
+        sprintf_s(printerStatus.printerStateReasons, bufferSize, "none") < 0) {
+            fprintf(stderr, "DEBUG: USB_MONITOR memset_s printerStateReasons fail\n");
+    }
+    static int32_t tryTime = 0;
+    constexpr int32_t maxTryTime = 1;
+    if (strcmp(printerStatus.printerStateReasons, "none") != 0 && tryTime < maxTryTime) {
+        tryTime++;
+        return;
+    }
+    if (isPrinterStarted) {
+        callback(&printerStatus); // report processing or stopped state
+    }
 }
 
 bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinterCallback callback)
 {
     int32_t ret = 0;
     constexpr uint32_t MAX_LOOP_TIME = 60 * 60 * 24 * 30; // 30 days
-    uint32_t loopCount = 0;
     bool isPrinterStarted = false;
-    do {
+    for (uint32_t loopCount = 0; loopCount < MAX_LOOP_TIME && !isTerminated_.load(); loopCount++) {
+        std::this_thread::sleep_for(std::chrono::seconds(INDEX_1));
         int32_t writeDataRetryCount = 0;
         do {
             auto ippdata = BuildIppRequest();
@@ -210,25 +232,16 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
             break;
         }
         PrinterStatus printerStatus;
-        if (ProcessDataFromDevice(uri, printerStatus)) {
-            fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice success\n");
-            callback(&printerStatus);
-            if (IsPrinterStateIdle(printerStatus)) {
-                if (isPrinterStarted) {
-                    fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter job is completed\n");
-                    return true;
-                }
-            } else {
-                isPrinterStarted = true;
-                fprintf(stderr, "DEBUG: USB_MONITOR Printer is Started\n");
-            }
-        } else {
+        if (!ProcessDataFromDevice(uri, printerStatus)) {
             fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice false\n");
             break;
         }
-        loopCount++;
-        std::this_thread::sleep_for(std::chrono::seconds(INDEX_1));
-    } while (loopCount < MAX_LOOP_TIME && !isTerminated_.load());
+        ReportPrinterState(isPrinterStarted, printerStatus, callback);
+        if (isPrinterStarted && printerStatus.printerState == IPP_PSTATE_IDLE) {
+            fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter job is completed\n");
+            return true;
+        }
+    }
     fprintf(stderr, "DEBUG: USB_MONITOR endtWriteDataToPrinterLooper\n");
     return false;
 }
@@ -503,6 +516,8 @@ bool IppUsbManager::ParseIppResponse(std::vector<uint8_t>& responseData, Printer
     if ((attr = ippFindAttribute(response, "printer-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
         ippAttributeString(attr, printerStatus.printerStateReasons, sizeof(printerStatus.printerStateReasons));
     }
+    fprintf(stderr, "DEBUG: USB_MONITOR printerStateReasons = %s, printerState = %d\n",
+        printerStatus.printerStateReasons, static_cast<int32_t>(printerStatus.printerState));
     ippDelete(response);
     return true;
 }
