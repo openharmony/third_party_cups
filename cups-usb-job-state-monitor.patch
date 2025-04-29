@@ -18,7 +18,7 @@ index 50c1bc3..22dc7d7 100644
 +        fprintf(stderr, "DEBUG: USB_MONITOR UpdatePrinterState fail, jobData is NULL\n");
 +        return;
 +    }
-+    if (jobData->printerState == IPP_PSTATE_STOPPED) {
++    if (strcmp(jobData->printerStateReasons, "none") != 0) {
 +        fprintf(stderr, "STATE: +%s\nSTATE: -none\n", jobData->printerStateReasons);
 +    } else {
 +        fprintf(stderr, "STATE: processing\n");
