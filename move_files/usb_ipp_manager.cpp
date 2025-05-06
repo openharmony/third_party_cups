@@ -188,6 +188,7 @@ void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& pr
     if (!isPrinterStarted && printerState == IPP_PSTATE_IDLE &&
         strcmp(printerStatus.printerStateReasons, "none") != 0) {
         callback(&printerStatus); // report faults before the printer is started
+        return;
     }
     if (!isPrinterStarted && printerState != IPP_PSTATE_IDLE) {
         isPrinterStarted = true;
@@ -198,12 +199,6 @@ void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& pr
         memset_s(printerStatus.printerStateReasons, bufferSize, 0, bufferSize) == 0 &&
         sprintf_s(printerStatus.printerStateReasons, bufferSize, "none") < 0) {
             fprintf(stderr, "DEBUG: USB_MONITOR memset_s printerStateReasons fail\n");
-    }
-    static int32_t tryTime = 0;
-    constexpr int32_t maxTryTime = 1;
-    if (strcmp(printerStatus.printerStateReasons, "none") != 0 && tryTime < maxTryTime) {
-        tryTime++;
-        return;
     }
     if (isPrinterStarted) {
         callback(&printerStatus); // report processing or stopped state
@@ -251,43 +246,43 @@ void IppUsbManager::SetTerminalSingal()
     isTerminated_.store(true);
 }
 
-bool IppUsbManager::IsContainsHttpHeader(const std::vector<uint8_t>& data)
-{
-    const uint8_t pattern[] = { '\r', '\n', '\r', '\n' };
-    return std::search(
-        data.begin(), data.end(),
-        std::begin(pattern), std::end(pattern)
-    ) != data.end();
+bool IppUsbManager::IsContainsHttpHeader(const std::vector<uint8_t>& data) {
+    constexpr char HTTP_HEADER_PREFIX[] = "HTTP";
+    return data.size() >= strlen(HTTP_HEADER_PREFIX) &&
+           memcmp(data.data(), HTTP_HEADER_PREFIX, strlen(HTTP_HEADER_PREFIX)) == 0;
 }
 
 bool IppUsbManager::ProcessDataFromDevice(const std::string& uri, PrinterStatus& printerStatus)
 {
-    int32_t readCount = 0;
     constexpr int32_t MAX_TIME = 50;
-    std::vector<uint8_t> accumulatedData;
-    do {
-        std::vector<uint8_t> readTempBuffer;
+    std::vector<uint8_t> readTempBuffer;
+    for (int32_t readCount = 0; readCount < MAX_TIME; readCount++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(USB_WRITE_INTERVAL));
+        readTempBuffer.clear();
         int32_t readFromUsbRes = BulkTransferRead(uri, readTempBuffer);
         if (readFromUsbRes != UEC_OK && readFromUsbRes != EORROR_HDF_DEV_ERR_TIME_OUT) {
             fprintf(stderr, "DEBUG: USB_MONITOR BulkTransferRead fail, ret = %d\n", readFromUsbRes);
             break;
+        }
+        if (readTempBuffer.empty()) {
+            fprintf(stderr, "DEBUG: USB_MONITOR readTempBuffer is empty, try read again\n");
+            continue;
         }
         if (IsContainsHttpHeader(readTempBuffer)) {
             fprintf(stderr, "DEBUG: USB_MONITOR IsContainsHttpHeader\n");
             readTempBuffer.clear();
             continue;
         }
-        int32_t readSize = static_cast<int32_t>(readTempBuffer.size());
-        if (readSize > 0) {
-            accumulatedData.insert(accumulatedData.end(), readTempBuffer.begin(), readTempBuffer.end());
+        if (!ParseIppResponse(readTempBuffer, printerStatus)) {
+            fprintf(stderr, "DEBUG: USB_MONITOR ParseIppResponse fail, try read again\n");
+            continue;
+        } else {
+            fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice success\n");
+            return true;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(USB_WRITE_INTERVAL));
-    } while (readCount++ < MAX_TIME && accumulatedData.empty());
-    if (accumulatedData.empty()) {
-        fprintf(stderr, "DEBUG: USB_MONITOR accumulatedData is empty\n");
-        return false;
     }
-    return ParseIppResponse(accumulatedData, printerStatus);
+    fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice fail\n");
+    return false;
 }
 
 int32_t IppUsbManager::BulkTransferRead(const std::string& uri, std::vector<uint8_t>& readTempBuffer)

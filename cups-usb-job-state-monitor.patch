@@ -21,7 +21,7 @@ index 50c1bc3..22dc7d7 100644
 +    if (strcmp(jobData->printerStateReasons, "none") != 0) {
 +        fprintf(stderr, "STATE: +%s\nSTATE: -none\n", jobData->printerStateReasons);
 +    } else {
-+        fprintf(stderr, "STATE: processing\n");
++        fprintf(stderr, "STATE: cups-waiting-for-job-completed\n");
 +    }
 +}
 +
@@ -59,7 +59,7 @@ index 50c1bc3..22dc7d7 100644
  
 +#ifdef HAVE_USB_MONITOR
 +signal(SIGTERM, HandleTerm);
-+fprintf(stderr, "STATE: processing\n");
++fprintf(stderr, "STATE: cups-waiting-for-job-completed\n");
 +char* uriCopy = strdup(uri);
 +pthread_t monitorThread = _cupsThreadCreate((_cups_thread_func_t)MonitorPrinterThread, uriCopy);
 +#endif /* HAVE_USB_MONITOR */
