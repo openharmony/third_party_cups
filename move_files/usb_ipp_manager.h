@@ -93,8 +93,9 @@ private:
     std::vector<uint8_t> BuildIppRequest();
     static ssize_t ReadFromBuffer(void* ctx, void* data, size_t len);
     static ssize_t WriteToBuffer(void* ctx, const void* data, size_t len);
-    bool IsContainsHttpHeader(const std::vector<uint8_t>& data);
+    bool IsNeedToReadAgain(const std::vector<uint8_t>& data);
     void ReportPrinterState(bool& isPrinterStarted, PrinterStatus& printerStatus, MonitorPrinterCallback callback);
+    void SetPrinterStateReasons(PrinterStatus& printerStatus);
 
     std::map<std::string, UsbPrinter> ippPrinterMap_;
     std::atomic<bool> isTerminated_;
