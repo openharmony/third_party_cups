@@ -177,6 +177,42 @@ bool IppUsbManager::DisConnectUsbPinter(const std::string& uri)
     return true;
 }
 
+void IppUsbManager::SetPrinterStateReasons(PrinterStatus& printerStatus)
+{
+    static const char* const ippPrinterErrorReason[] = {
+        "other",
+        "cover-open",
+        "input-tray-missing",
+        "marker-supply-empty",
+        "marker-supply-low",
+        "marker-waste-almost-full",
+        "marker-waste-full",
+        "media-empty",
+        "media-jam",
+        "media-low",
+        "media-needed",
+        "moving-to-paused",
+        "paused",
+        "spool-area-full",
+        "toner-empty",
+        "toner-low"
+    };
+
+    for (const char* reason : ippPrinterErrorReason) {
+        if (strstr(printerStatus.printerStateReasons, reason) != nullptr) {
+            int ret = snprintf_s(
+                printerStatus.printerStateReasons,
+                sizeof(printerStatus.printerStateReasons),
+                sizeof(printerStatus.printerStateReasons) - 1,
+                "%s-error", reason);
+            if (ret < 0) {
+                fprintf(stderr, "DEBUG: USB_MONITOR snprintf_s printerStateReasons error\n");
+            }
+            break;
+        }
+    }
+}
+
 void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& printerStatus,
     MonitorPrinterCallback callback)
 {
@@ -184,6 +220,7 @@ void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& pr
         fprintf(stderr, "DEBUG: USB_MONITOR callback is nullptr\n");
         return;
     }
+    SetPrinterStateReasons(printerStatus);
     ipp_pstate_t printerState = printerStatus.printerState;
     if (!isPrinterStarted && printerState == IPP_PSTATE_IDLE &&
         strcmp(printerStatus.printerStateReasons, "none") != 0) {
@@ -246,37 +283,36 @@ void IppUsbManager::SetTerminalSingal()
     isTerminated_.store(true);
 }
 
-bool IppUsbManager::IsContainsHttpHeader(const std::vector<uint8_t>& data) {
+bool IppUsbManager::IsNeedToReadAgain(const std::vector<uint8_t>& data)
+{
+    if (data.empty()) {
+        fprintf(stderr, "DEBUG: USB_MONITOR readTempBuffer is empty, try read again\n");
+        return true;
+    }
     constexpr char HTTP_HEADER_PREFIX[] = "HTTP";
-    return data.size() >= strlen(HTTP_HEADER_PREFIX) &&
-           memcmp(data.data(), HTTP_HEADER_PREFIX, strlen(HTTP_HEADER_PREFIX)) == 0;
+    if (data.size() >= strlen(HTTP_HEADER_PREFIX) &&
+        memcmp(data.data(), HTTP_HEADER_PREFIX, strlen(HTTP_HEADER_PREFIX)) == 0) {
+            fprintf(stderr, "DEBUG: USB_MONITOR read the http header\n");
+        return true;
+    }
+    return false;
 }
 
 bool IppUsbManager::ProcessDataFromDevice(const std::string& uri, PrinterStatus& printerStatus)
 {
     constexpr int32_t MAX_TIME = 50;
-    std::vector<uint8_t> readTempBuffer;
     for (int32_t readCount = 0; readCount < MAX_TIME; readCount++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(USB_WRITE_INTERVAL));
-        readTempBuffer.clear();
+        std::vector<uint8_t> readTempBuffer;
         int32_t readFromUsbRes = BulkTransferRead(uri, readTempBuffer);
         if (readFromUsbRes != UEC_OK && readFromUsbRes != EORROR_HDF_DEV_ERR_TIME_OUT) {
             fprintf(stderr, "DEBUG: USB_MONITOR BulkTransferRead fail, ret = %d\n", readFromUsbRes);
             break;
         }
-        if (readTempBuffer.empty()) {
-            fprintf(stderr, "DEBUG: USB_MONITOR readTempBuffer is empty, try read again\n");
+        if (IsNeedToReadAgain(readTempBuffer)) {
             continue;
         }
-        if (IsContainsHttpHeader(readTempBuffer)) {
-            fprintf(stderr, "DEBUG: USB_MONITOR IsContainsHttpHeader\n");
-            readTempBuffer.clear();
-            continue;
-        }
-        if (!ParseIppResponse(readTempBuffer, printerStatus)) {
-            fprintf(stderr, "DEBUG: USB_MONITOR ParseIppResponse fail, try read again\n");
-            continue;
-        } else {
+        if (ParseIppResponse(readTempBuffer, printerStatus)) {
             fprintf(stderr, "DEBUG: USB_MONITOR ProcessDataFromDevice success\n");
             return true;
         }
