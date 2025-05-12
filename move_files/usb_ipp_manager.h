@@ -93,7 +93,7 @@ private:
     std::vector<uint8_t> BuildIppRequest();
     static ssize_t ReadFromBuffer(void* ctx, void* data, size_t len);
     static ssize_t WriteToBuffer(void* ctx, const void* data, size_t len);
-    bool IsNeedToReadAgain(const std::vector<uint8_t>& data);
+    void RemoveHttpHeader(std::vector<uint8_t>& readTempBuffer);
     void ReportPrinterState(bool& isPrinterStarted, PrinterStatus& printerStatus, MonitorPrinterCallback callback);
     void SetPrinterStateReasons(PrinterStatus& printerStatus);
 
