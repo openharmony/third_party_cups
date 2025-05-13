@@ -283,19 +283,17 @@ void IppUsbManager::SetTerminalSingal()
     isTerminated_.store(true);
 }
 
-bool IppUsbManager::IsNeedToReadAgain(const std::vector<uint8_t>& data)
+void IppUsbManager::RemoveHttpHeader(std::vector<uint8_t>& readTempBuffer)
 {
-    if (data.empty()) {
-        fprintf(stderr, "DEBUG: USB_MONITOR readTempBuffer is empty, try read again\n");
-        return true;
+    auto it = std::search(
+        readTempBuffer.begin(), readTempBuffer.end(),
+        reinterpret_cast<const uint8_t*>("\r\n\r\n"),
+        reinterpret_cast<const uint8_t*>("\r\n\r\n") + 4
+    );
+
+    if (it != readTempBuffer.end()) {
+        readTempBuffer.erase(readTempBuffer.begin(), it + 4);
     }
-    constexpr char HTTP_HEADER_PREFIX[] = "HTTP";
-    if (data.size() >= strlen(HTTP_HEADER_PREFIX) &&
-        memcmp(data.data(), HTTP_HEADER_PREFIX, strlen(HTTP_HEADER_PREFIX)) == 0) {
-            fprintf(stderr, "DEBUG: USB_MONITOR read the http header\n");
-        return true;
-    }
-    return false;
 }
 
 bool IppUsbManager::ProcessDataFromDevice(const std::string& uri, PrinterStatus& printerStatus)
@@ -309,7 +307,8 @@ bool IppUsbManager::ProcessDataFromDevice(const std::string& uri, PrinterStatus&
             fprintf(stderr, "DEBUG: USB_MONITOR BulkTransferRead fail, ret = %d\n", readFromUsbRes);
             break;
         }
-        if (IsNeedToReadAgain(readTempBuffer)) {
+        RemoveHttpHeader(readTempBuffer);
+        if (readTempBuffer.empty()) {
             continue;
         }
         if (ParseIppResponse(readTempBuffer, printerStatus)) {
