@@ -195,7 +195,10 @@ void IppUsbManager::SetPrinterStateReasons(PrinterStatus& printerStatus)
         "paused",
         "spool-area-full",
         "toner-empty",
-        "toner-low"
+        "toner-low",
+        "offline",
+        "marker-ink-almost-empty",
+        "door-open"
     };
 
     for (const char* reason : ippPrinterErrorReason) {
