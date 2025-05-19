@@ -29,25 +29,19 @@ def untar_file(tar_file_path, extract_path):
         print("tar error!")
         return
 
-def copy_file(dir):
+def copy_file(dir, dest):
     src_name = '/mime.convs.in'
     dest_name = '/mime.convs'
     src_file = dir + src_name
-    dest_file = dir + dest_name
+    dest_file = dest + dest_name
     print(f'copy from %s to %s', src_file, dest_file)
     shutil.copy2(src_file, dest_file)
 
 def move_file(src_path, dst_path):
     files = [
         "ohos_ip_conflict.patch",
-        "backport-CVE-2022-26691.patch",
-        "backport-CVE-2023-32324.patch",
-        "backport-CVE-2023-34241.patch",
         "ohos-multi-file-print.patch",
         "ohos-modify-pthread.patch",
-        "ohos-add-openssl.patch",
-        "backport-CVE-2023-4504.patch",
-        "backport-CVE-2024-35235.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
         "ohos-ppdfile-not-generated.patch",
@@ -88,14 +82,8 @@ def apply_patch(patch_file, target_dir):
 
 def do_patch(target_dir):
     patch_file = [
-        "backport-CVE-2022-26691.patch",
-        "backport-CVE-2023-32324.patch",
-        "backport-CVE-2023-34241.patch",
         "ohos-multi-file-print.patch",
         "ohos-modify-pthread.patch",
-        "ohos-add-openssl.patch",
-        "backport-CVE-2023-4504.patch",
-        "backport-CVE-2024-35235.patch",
         "ohos_ip_conflict.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
@@ -116,14 +104,10 @@ def main():
     cups_path.add_argument('--gen-dir', help='generate path of log', required=True)
     cups_path.add_argument('--source-dir', help='generate path of log', required=True)
     args = cups_path.parse_args()
-    tar_file_path = os.path.join(args.source_dir, "cups-2.4.0-source.tar.gz")
-    target_dir = os.path.join(args.gen_dir, "cups-2.4.0")
-    convs_dir = os.path.join(target_dir, "conf")
+    convs_dir = os.path.join(args.source_dir, "conf")
 
-    untar_file(tar_file_path, args.gen_dir)
-    move_file(args.source_dir, target_dir)
-    do_patch(target_dir)
-    copy_file(convs_dir)
+    do_patch(args.source_dir)
+    copy_file(convs_dir, args.gen_dir)
     return 0
 
 if __name__ == '__main__':

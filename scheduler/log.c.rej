@@ -1,0 +1,20 @@
+--- scheduler/log.c
++++ scheduler/log.c
+@@ -22,7 +22,7 @@
+ #  include <systemd/sd-journal.h>
+ #endif /* HAVE_ASL_H */
+ #include <syslog.h>
+-
++#include "hilog-helper.h"
+ 
+ /*
+  * Constants for log keys from PWG 5110.3 (PWG Common Log Format)...
+@@ -1267,7 +1267,7 @@ cupsdWriteErrorLog(int        level,	/* I - Log level */
+    /*
+     * Write the log message...
+     */
+-
++    hilogPrint(level, message);
+     cupsFilePrintf(ErrorFile, "%c %s %s\n", levels[level],
+                    cupsdGetDateTime(NULL, LogTimeFormat), message);
+     cupsFileFlush(ErrorFile);

@@ -1,0 +1,38 @@
+--- scheduler/job.c
++++ scheduler/job.c
+@@ -1355,7 +1355,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+ 
+   cupsdRemoveSelect(job->status_pipes[0]);
+   cupsdClosePipe(job->status_pipes);
+-  cupsdStatBufDelete(job->status_buffer);
++  cupsdStatBufDeleteForJob(job->status_buffer);
+   job->status_buffer = NULL;
+ 
+  /*
+@@ -3144,7 +3144,7 @@ finalize_job(cupsd_job_t *job,		/* I - Job */
+ 
+   cupsdRemoveSelect(job->status_pipes[0]);
+   cupsdClosePipe(job->status_pipes);
+-  cupsdStatBufDelete(job->status_buffer);
++  cupsdStatBufDeleteForJob(job->status_buffer);
+   job->status_buffer = NULL;
+ 
+  /*
+@@ -4919,7 +4919,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+ 		     "back-channel pipes.");
+ 
+     cupsdClosePipe(job->status_pipes);
+-    cupsdStatBufDelete(job->status_buffer);
++    cupsdStatBufDeleteForJob(job->status_buffer);
+     job->status_buffer = NULL;
+ 
+     cupsdDestroyProfile(job->profile);
+@@ -4950,7 +4950,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+     cupsdClosePipe(job->back_pipes);
+ 
+     cupsdClosePipe(job->status_pipes);
+-    cupsdStatBufDelete(job->status_buffer);
++    cupsdStatBufDeleteForJob(job->status_buffer);
+     job->status_buffer = NULL;
+ 
+     cupsdDestroyProfile(job->profile);

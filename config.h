@@ -16,8 +16,8 @@
 #ifndef _CUPS_CONFIG_H_
 #define _CUPS_CONFIG_H_
 
-#define CUPS_SVERSION	"CUPS v2.4.0"
-#define CUPS_MINIMAL	"CUPS/2.4.0"
+#define CUPS_SVERSION	"CUPS v2.4.12"
+#define CUPS_MINIMAL	"CUPS/2.4.12"
 #define CUPS_LITE	0
 #define CUPS_DEFAULT_USER	"cups"
 #define CUPS_DEFAULT_GROUP	"cups"
