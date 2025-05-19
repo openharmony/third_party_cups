@@ -104,9 +104,11 @@ def main():
     cups_path.add_argument('--gen-dir', help='generate path of log', required=True)
     cups_path.add_argument('--source-dir', help='generate path of log', required=True)
     args = cups_path.parse_args()
+    target_dir = os.path.join(args.gen_dir, "cups-2.4.12")
     convs_dir = os.path.join(args.source_dir, "conf")
 
-    do_patch(args.source_dir)
+    move_file(args.source_dir, target_dir)
+    do_patch(target_dir)
     copy_file(convs_dir)
     return 0
 
