@@ -29,11 +29,11 @@ def untar_file(tar_file_path, extract_path):
         print("tar error!")
         return
 
-def copy_file(dir, dest):
+def copy_file(dir):
     src_name = '/mime.convs.in'
     dest_name = '/mime.convs'
     src_file = dir + src_name
-    dest_file = dest + dest_name
+    dest_file = dir + dest_name
     print(f'copy from %s to %s', src_file, dest_file)
     shutil.copy2(src_file, dest_file)
 
@@ -107,7 +107,7 @@ def main():
     convs_dir = os.path.join(args.source_dir, "conf")
 
     do_patch(args.source_dir)
-    copy_file(convs_dir, args.gen_dir)
+    copy_file(convs_dir)
     return 0
 
 if __name__ == '__main__':
