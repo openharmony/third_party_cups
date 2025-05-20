@@ -60,7 +60,6 @@ typedef struct _cups_monitor_s		/**** Monitoring data ****/
   ipp_jstate_t		job_state;	/* Current job state */
   ipp_pstate_t		printer_state;	/* Current printer state */
   int			retryable;	/* Is this a job that should be retried? */
-  const char *nic;
 } _cups_monitor_t;
 
 
@@ -272,7 +271,6 @@ main(int  argc,				/* I - Number of command-line args */
   ppd_file_t	*ppd = NULL;		/* PPD file */
   _ppd_cache_t	*pc = NULL;		/* PPD cache and mapping data */
   fd_set	input;			/* Input set for select() */
-  const char *nic = NULL;
 
 
  /*
@@ -665,10 +663,6 @@ main(int  argc,				/* I - Number of command-line args */
     password = getenv("AUTH_PASSWORD");
   }
 
-  num_options = cupsParseOptions(argv[5], 0, &options);
-  nic = cupsGetOption("nic", num_options, options);
-  fprintf(stderr, "DEBUG: nic %s\n", nic);
-
  /*
   * Try finding the remote server...
   */
@@ -677,11 +671,8 @@ main(int  argc,				/* I - Number of command-line args */
 
   addrlist = backendLookup(hostname, port, &job_canceled);
 
-  if (nic != NULL) {
-    http = httpConnect3(hostname, port, addrlist, AF_UNSPEC, cupsEncryption(), 1, 0, NULL, nic);
-  } else {
-    http = httpConnect2(hostname, port, addrlist, AF_UNSPEC, cupsEncryption(), 1, 0, NULL);
-  }
+  http = httpConnect2(hostname, port, addrlist, AF_UNSPEC, cupsEncryption(), 1,
+                      0, NULL);
   httpSetTimeout(http, 30.0, timeout_cb, NULL);
 
  /*
@@ -722,7 +713,7 @@ main(int  argc,				/* I - Number of command-line args */
     fprintf(stderr, "DEBUG: Connecting to %s:%d\n", hostname, port);
     _cupsLangPrintFilter(stderr, "INFO", _("Connecting to printer."));
 
-    if (nic != NULL ? httpReconnect3(http, 30000, NULL, nic) : httpReconnect2(http, 30000, NULL))
+    if (httpReconnect2(http, 30000, NULL))
     {
       int error = errno;		/* Connection error */
 
@@ -1007,7 +998,7 @@ main(int  argc,				/* I - Number of command-line args */
 	  version = 10;
         }
 
-	nic != NULL ? httpReconnect3(http, 30000, NULL, nic) : httpReconnect2(http, 30000, NULL);
+	httpReconnect2(http, 30000, NULL);
       }
       else if (ipp_status == IPP_STATUS_ERROR_NOT_FOUND)
       {
@@ -1039,7 +1030,7 @@ main(int  argc,				/* I - Number of command-line args */
 	                     _("Unable to get printer status."));
         sleep(10);
 
-	nic != NULL ? httpReconnect3(http, 30000, NULL, nic) : httpReconnect2(http, 30000, NULL);
+	httpReconnect2(http, 30000, NULL);
       }
 
       ippDelete(supported);
@@ -1481,7 +1472,6 @@ main(int  argc,				/* I - Number of command-line args */
   monitor.job_state     = IPP_JSTATE_PENDING;
   monitor.printer_state = IPP_PSTATE_IDLE;
   monitor.retryable     = argc == 6 && document_format && strcmp(document_format, "image/pwg-raster") && strcmp(document_format, "image/urf");
-  monitor.nic           = nic;
 
   fprintf(stderr, "DEBUG: retryable=%d\n", monitor.retryable);
 
@@ -2099,7 +2089,7 @@ main(int  argc,				/* I - Number of command-line args */
       * Do the request...
       */
 
-      nic != NULL ? httpReconnect3(http, 30000, NULL, nic) : httpReconnect2(http, 30000, NULL);
+      httpReconnect2(http, 30000, NULL);
       response   = cupsDoRequest(http, request, resource);
       ipp_status = cupsLastError();
 
@@ -2546,13 +2536,8 @@ monitor_printer(
   * Make a copy of the printer connection...
   */
 
-  if (monitor->nic != NULL) {
-    http = httpConnect3(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
-                        monitor->encryption, 1, 0, NULL, monitor->nic);
-  } else {
-    http = httpConnect2(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
-                        monitor->encryption, 1, 0, NULL);
-  }
+  http = httpConnect2(monitor->hostname, monitor->port, NULL, AF_UNSPEC,
+                      monitor->encryption, 1, 0, NULL);
   httpSetTimeout(http, 30.0, timeout_cb, NULL);
   if (username[0])
     cupsSetUser(username);
@@ -2574,7 +2559,7 @@ monitor_printer(
     */
 
     if (httpGetFd(http) < 0)
-      monitor->nic != NULL ? httpReconnect3(http, 30000, NULL, monitor->nic) : httpReconnect2(http, 30000, NULL);
+      httpReconnect2(http, 30000, NULL);
 
     if (httpGetFd(http) >= 0)
     {
@@ -2796,7 +2781,7 @@ monitor_printer(
   if (job_canceled > 0 && monitor->job_id > 0)
   {
     if (httpGetFd(http) < 0)
-      monitor->nic != NULL ? httpReconnect3(http, 30000, NULL, monitor->nic) : httpReconnect2(http, 30000, NULL);
+      httpReconnect2(http, 30000, NULL);
 
     if (httpGetFd(http) >= 0)
     {

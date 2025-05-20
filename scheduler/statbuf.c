@@ -41,50 +41,6 @@ cupsdStatBufDelete(cupsd_statbuf_t *sb)	/* I - Status buffer */
 
 
 /*
- * 'cupsdStatBufDeleteForJob()' - Destroy a status buffer.
- */
-
-void
-cupsdStatBufDeleteForJob(cupsd_statbuf_t *sb)	/* I - Status buffer */
-{
- /*
-  * Range check input...
-  */
-
-  if (!sb)
-    return;
-
- /*
-  * Free memory used...
-  */
-
-  free(sb);
-}
-
-
-/*
- * 'cupsdStatBufDeleteForJob()' - Destroy a status buffer.
- */
-
-void
-cupsdStatBufDeleteForJob(cupsd_statbuf_t *sb)	/* I - Status buffer */
-{
- /*
-  * Range check input...
-  */
-
-  if (!sb)
-    return;
-
- /*
-  * Free memory used...
-  */
-
-  free(sb);
-}
-
-
-/*
  * 'cupsdStatBufNew()' - Create a new status buffer.
  */
 

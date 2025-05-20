@@ -308,6 +308,9 @@ ohos_executable("rastertopwg") {
     ":cups",
     ":cups_action",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+  ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/filter"
   public_configs = [ ":cups_config" ]
@@ -336,6 +339,9 @@ ohos_shared_library("backend") {
     ":cups",
     ":cups_action",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+  ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -347,6 +353,9 @@ ohos_executable("ipp") {
     ":backend",
     ":cups",
     ":cups_action",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/backend"
@@ -423,6 +432,9 @@ ohos_shared_library("cupsppdc") {
     ":cups",
     ":cups_action",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+  ]
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
@@ -462,7 +474,10 @@ ohos_executable("cupsd") {
     ":cups_action",
     ":cupsmime",
   ]
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "openssl:libcrypto_shared"
+  ]
   install_enable = true
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
@@ -475,6 +490,9 @@ ohos_executable("cupsfilter") {
     ":cups",
     ":cups_action",
     ":cupsmime",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
   ]
   install_enable = true
   public_configs = [ ":cups_config" ]
@@ -490,6 +508,9 @@ ohos_executable("cups-deviced") {
     ":cups_action",
     ":cupsmime",
   ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+  ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"
   public_configs = [ ":cups_config" ]
@@ -504,6 +525,9 @@ ohos_executable("cups-driverd") {
     ":cups",
     ":cups_action",
     ":cupsppdc",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/daemon"

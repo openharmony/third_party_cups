@@ -39,7 +39,7 @@ httpAddrConnect(
 {
   DEBUG_printf(("httpAddrConnect(addrlist=%p, sock=%p)", (void *)addrlist, (void *)sock));
 
-  return (httpAddrConnect2(addrlist, sock, 30000, NULL, NULL));
+  return (httpAddrConnect2(addrlist, sock, 30000, NULL));
 }
 
 
@@ -55,8 +55,7 @@ httpAddrConnect2(
     http_addrlist_t *addrlist,		/* I - List of potential addresses */
     int             *sock,		/* O - Socket */
     int             msec,		/* I - Timeout in milliseconds */
-    int             *cancel,		/* I - Pointer to "cancel" variable */
-    const char      *nic)
+    int             *cancel)		/* I - Pointer to "cancel" variable */
 {
   int			val;		/* Socket option value */
 #ifndef _WIN32
@@ -164,11 +163,6 @@ httpAddrConnect2(
       val = 1;
       setsockopt(fds[nfds], SOL_SOCKET, SO_NOSIGPIPE, CUPS_SOCAST &val, sizeof(val));
 #endif /* SO_NOSIGPIPE */
-
-      if (nic != NULL) {
-        val = 1;
-        setsockopt(fds[nfds], SOL_SOCKET, SO_BINDTODEVICE, nic, sizeof(nic));
-      }
 
      /*
       * Using TCP_NODELAY improves responsiveness, especially on systems

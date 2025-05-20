@@ -43,9 +43,7 @@ int	print_device(const char *uri, const char *hostname,
  * Include the vendor-specific USB implementation...
  */
 
-#ifdef HAVE_OPENHARMONY
-#  include "usb-oh.c"
-#elif defined(HAVE_LIBUSB)
+#ifdef HAVE_LIBUSB
 #  include "usb-libusb.c"
 #elif defined(__APPLE__)
 #  include "usb-darwin.c"
@@ -110,50 +108,6 @@ print_device(const char *uri,		/* I - Device URI */
 }
 #endif /* HAVE_LIBUSB */
 
-#define HAVE_USB_MONITOR
-#define BEGIN_WAIT_TIME 2
-
-#ifdef HAVE_USB_MONITOR
-#include "usb_monitor.h"
-
-void UpdatePrinterState(PrinterStatus* jobData)
-{
-    if (jobData == NULL) {
-        fprintf(stderr, "DEBUG: USB_MONITOR UpdatePrinterState fail, jobData is NULL\n");
-        return;
-    }
-    if (strcmp(jobData->printerStateReasons, "none") != 0) {
-        fprintf(stderr, "STATE: +%s\nSTATE: -none\n", jobData->printerStateReasons);
-    } else {
-        fprintf(stderr, "STATE: processing\n");
-    }
-}
-
-static void HandleTerm(int32_t sig)
-{
-    fprintf(stderr, "DEBUG: USB_MONITOR HandleTerm, set terminal singal\n");
-    SetTerminalSingal();
-}
-
-static void* MonitorPrinterThread(void* arg)
-{
-    if (arg == NULL) {
-        fprintf(stderr, "DEBUG: USB_MONITOR arg is nullptr\n");
-        return NULL;
-    }
-    sleep(BEGIN_WAIT_TIME);
-    char* uri = (char*)arg;
-    if (IsSupportIppOverUsb(uri)) {
-        if (StartMonitorIppPrinter(UpdatePrinterState, uri)) {
-            fprintf(stderr, "DEBUG: USB_MONITOR StartMonitorIppPrinter finished\n");
-        } else {
-            fprintf(stderr, "STATE: none\n");
-        }
-    }
-    free(uri);
-    return NULL;
-}
-#endif /* HAVE_USB_MONITOR */
 
 /*
  * 'main()' - Send a file to the specified USB port.
@@ -275,13 +229,6 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
     copies = atoi(argv[4]);
   }
 
-#ifdef HAVE_USB_MONITOR
-signal(SIGTERM, HandleTerm);
-fprintf(stderr, "STATE: processing\n");
-char* uriCopy = strdup(uri);
-pthread_t monitorThread = _cupsThreadCreate((_cups_thread_func_t)MonitorPrinterThread, uriCopy);
-#endif /* HAVE_USB_MONITOR */
-
  /*
   * Finally, send the print file...
   */
@@ -295,16 +242,6 @@ pthread_t monitorThread = _cupsThreadCreate((_cups_thread_func_t)MonitorPrinterT
 
   if (print_fd != 0)
     close(print_fd);
-
-#ifdef HAVE_USB_MONITOR
-if (status != CUPS_BACKEND_OK) {
-    fprintf(stderr, "DEBUG: USB_MONITOR print_device fail, status = %d\n", (int)status);
-    SetTerminalSingal();
-    status = CUPS_BACKEND_FAILED;
-    fprintf(stderr, "STATE: stopped\n");
-}
-pthread_join(monitorThread, NULL);
-#endif /* HAVE_USB_MONITOR */
 
   return (status);
 }

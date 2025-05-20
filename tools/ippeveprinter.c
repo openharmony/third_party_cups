@@ -6861,7 +6861,7 @@ process_job(ippeve_job_t *job)		/* I - Job */
 
         if ((addrlist = httpAddrGetList(host, AF_UNSPEC, service)) == NULL)
           fprintf(stderr, "[Job %d] Unable to find \"%s\": %s\n", job->id, host, cupsLastErrorString());
-        else if (!httpAddrConnect2(addrlist, &mystdout, 30000, &(job->cancel), NULL))
+        else if (!httpAddrConnect2(addrlist, &mystdout, 30000, &(job->cancel)))
           fprintf(stderr, "[Job %d] Unable to connect to \"%s\": %s\n", job->id, host, cupsLastErrorString());
 
         httpAddrFreeList(addrlist);

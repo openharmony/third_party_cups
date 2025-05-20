@@ -5357,8 +5357,7 @@ create_local_bg_thread(
 
   cupsdLogMessage(CUPSD_LOG_DEBUG, "%s: Get-Printer-Attributes returned %s (%s)", printer->name, ippErrorString(cupsLastError()), cupsLastErrorString());
 
-  if (status == IPP_STATUS_ERROR_BAD_REQUEST || status == IPP_STATUS_ERROR_VERSION_NOT_SUPPORTED ||
-    (attr = ippFindAttribute(response,	"document-format-supported",	IPP_TAG_MIMETYPE)) == NULL)
+  if (status == IPP_STATUS_ERROR_BAD_REQUEST || status == IPP_STATUS_ERROR_VERSION_NOT_SUPPORTED)
   {
    /*
     * Try request using IPP/1.1, in case we are talking to an old CUPS server or

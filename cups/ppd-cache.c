@@ -1846,8 +1846,7 @@ _ppdCacheCreateWithPPD(ppd_file_t *ppd)	/* I - PPD file */
 
   if ((ppd_attr = ppdFindAttr(ppd, "cupsSingleFile", NULL)) != NULL)
     pc->single_file = !_cups_strcasecmp(ppd_attr->value, "true");
-  else
-    pc->single_file = 1;
+
  /*
   * Copy the product string, if any...
   */

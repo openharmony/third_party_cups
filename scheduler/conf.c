@@ -3085,8 +3085,10 @@ read_cupsd_conf(cups_file_t *fp)	/* I - File to read from */
 #ifdef HAVE_ONDEMAND
       if (*value == '/' && OnDemand)
       {
+#ifdef CUPS_DEFAULT_DOMAINSOCKET
         if (strcmp(value, CUPS_DEFAULT_DOMAINSOCKET))
           cupsdLogMessage(CUPSD_LOG_INFO, "Ignoring %s address %s at line %d - only using domain socket from launchd/systemd.", line, value, linenum);
+#endif /* CUPS_DEFAULT_DOMAINSOCKET */
         continue;
       }
 #endif // HAVE_ONDEMAND

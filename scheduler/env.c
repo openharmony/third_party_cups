@@ -220,19 +220,7 @@ cupsdUpdateEnv(void)
       cupsdSetEnvf("PATH", "%s/filter:%s", ServerBin, path);
     else
 #endif /* CUPS_SNAP */
-#ifdef UNI_PRINT_DRIVER_BINDIR
-    if (access(UNI_PRINT_DRIVER_BINDIR, 0)) {
-      cupsdSetEnvf("PATH", "%s/filter:" CUPS_BINDIR ":" CUPS_SBINDIR ":/bin:/usr/bin", ServerBin);
-      set_if_undefined("BSUNI_GHOSTSCRIPT", "false");
-    } else {
-      cupsdSetEnvf("PATH", "%s/filter:" UNI_PRINT_DRIVER_BINDIR ":" CUPS_BINDIR ":" CUPS_SBINDIR ":/bin:/usr/bin",
-        ServerBin);
-      set_if_undefined("BSUNI_GHOSTSCRIPT", "true");
-    }
-#else
     cupsdSetEnvf("PATH", "%s/filter:" CUPS_BINDIR ":" CUPS_SBINDIR ":/bin:/usr/bin", ServerBin);
-    set_if_undefined("BSUNI_GHOSTSCRIPT", "false");
-#endif
   }
   set_if_undefined("SERVER_ADMIN", ServerAdmin);
   set_if_undefined("SHLIB_PATH", NULL);

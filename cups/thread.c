@@ -154,7 +154,7 @@ _cupsRWUnlock(_cups_rwlock_t *rwlock)	/* I - Reader/writer lock */
 void
 _cupsThreadCancel(_cups_thread_t thread)/* I - Thread ID */
 {
-  pthread_kill(thread, 10);
+  pthread_cancel(thread);
 }
 
 

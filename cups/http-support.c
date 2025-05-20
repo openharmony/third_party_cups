@@ -1028,7 +1028,7 @@ httpSeparateURI(
          *uri && *uri != ':' && ptr < end;)
       if (strchr("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                  "abcdefghijklmnopqrstuvwxyz"
-		 "0123456789-+._", *uri) != NULL)
+		 "0123456789-+.", *uri) != NULL)
         *ptr++ = *uri++;
       else
         break;

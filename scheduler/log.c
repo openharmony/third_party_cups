@@ -1270,7 +1270,7 @@ cupsdWriteErrorLog(int        level,	/* I - Log level */
    /*
     * Write the log message...
     */
-    hilogPrint(level, message);
+
     cupsFilePrintf(ErrorFile, "%c %s %s\n", levels[level],
                    cupsdGetDateTime(NULL, LogTimeFormat), message);
     cupsFileFlush(ErrorFile);

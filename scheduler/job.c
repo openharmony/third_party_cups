@@ -1359,7 +1359,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
 
   cupsdRemoveSelect(job->status_pipes[0]);
   cupsdClosePipe(job->status_pipes);
-  cupsdStatBufDeleteForJob(job->status_buffer);
+  cupsdStatBufDelete(job->status_buffer);
   job->status_buffer = NULL;
 
  /*
@@ -3170,7 +3170,7 @@ finalize_job(cupsd_job_t *job,		/* I - Job */
 
   cupsdRemoveSelect(job->status_pipes[0]);
   cupsdClosePipe(job->status_pipes);
-  cupsdStatBufDeleteForJob(job->status_buffer);
+  cupsdStatBufDelete(job->status_buffer);
   job->status_buffer = NULL;
 
  /*
@@ -4968,7 +4968,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
 		     "back-channel pipes.");
 
     cupsdClosePipe(job->status_pipes);
-    cupsdStatBufDeleteForJob(job->status_buffer);
+    cupsdStatBufDelete(job->status_buffer);
     job->status_buffer = NULL;
 
     cupsdDestroyProfile(job->profile);
@@ -4999,7 +4999,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
     cupsdClosePipe(job->back_pipes);
 
     cupsdClosePipe(job->status_pipes);
-    cupsdStatBufDeleteForJob(job->status_buffer);
+    cupsdStatBufDelete(job->status_buffer);
     job->status_buffer = NULL;
 
     cupsdDestroyProfile(job->profile);
