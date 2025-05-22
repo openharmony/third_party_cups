@@ -12,6 +12,6 @@
 # limitations under the License.
 
 version_control: github
-src_repo: apple/cups
+src_repo: OpenPrinting/cups
 tag_prefix: ^v
-seperator: .
+separator: .

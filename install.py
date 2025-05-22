@@ -19,15 +19,8 @@ import os
 import subprocess
 import sys
 import shutil
+from pathlib import Path
 
-
-def untar_file(tar_file_path, extract_path):
-    try:
-        tar_cmd = ['tar', '-zxf', tar_file_path, '-C', extract_path]
-        subprocess.run(tar_cmd, check=True)
-    except Exception as e:
-        print("tar error!")
-        return
 
 def copy_file(dir):
     src_name = '/mime.convs.in'
@@ -37,31 +30,17 @@ def copy_file(dir):
     print(f'copy from %s to %s', src_file, dest_file)
     shutil.copy2(src_file, dest_file)
 
-def move_file(src_path, dst_path):
-    files = [
-        "ohos_ip_conflict.patch",
-        "backport-CVE-2022-26691.patch",
-        "backport-CVE-2023-32324.patch",
-        "backport-CVE-2023-34241.patch",
-        "ohos-multi-file-print.patch",
-        "ohos-modify-pthread.patch",
-        "ohos-add-openssl.patch",
-        "backport-CVE-2023-4504.patch",
-        "backport-CVE-2024-35235.patch",
-        "ohos-usb-manager.patch",
-        "ohos-usb-print.patch",
-        "ohos-ppdfile-not-generated.patch",
-        "ohos-hilog-print.patch",
-        "ohos-uni-print-driver-path.patch",
-        "ohos-cups-badfd.patch",
-        "ohos-verify-backend.patch",
-        "config.h",
-        "cups-usb-job-state-monitor.patch"
-    ]
-    for file in files:
-        src_file = os.path.join(src_path, file)
-        dst_file = os.path.join(dst_path, file)
-        shutil.copy(src_file, dst_file)
+def move_cups_files(src_dir, dst_dir):
+    source_dir = Path(src_dir)
+    dest_dir = Path(dst_dir)
+    for src_path in source_dir.rglob("*"):
+        if src_path.is_file():
+            rel_path = src_path.relative_to(source_dir)
+            dst_path = dest_dir / rel_path
+            dst_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(src_path, dst_path)
+            print(f"bao Copied: {src_path} -> {dst_path}")
+
     backend_files = [
         "usb_ipp_manager.h",
         "usb_ipp_manager.cpp",
@@ -71,8 +50,8 @@ def move_file(src_path, dst_path):
     move_files_dir = "move_files"
     backend_dir = "backend"
     for file in backend_files:
-        src_file = os.path.join(src_path, move_files_dir, file)
-        dst_file = os.path.join(dst_path, backend_dir, file)
+        src_file = os.path.join(src_dir, move_files_dir, file)
+        dst_file = os.path.join(dst_dir, backend_dir, file)
         shutil.copy(src_file, dst_file)
 
 def apply_patch(patch_file, target_dir):
@@ -88,14 +67,8 @@ def apply_patch(patch_file, target_dir):
 
 def do_patch(target_dir):
     patch_file = [
-        "backport-CVE-2022-26691.patch",
-        "backport-CVE-2023-32324.patch",
-        "backport-CVE-2023-34241.patch",
         "ohos-multi-file-print.patch",
         "ohos-modify-pthread.patch",
-        "ohos-add-openssl.patch",
-        "backport-CVE-2023-4504.patch",
-        "backport-CVE-2024-35235.patch",
         "ohos_ip_conflict.patch",
         "ohos-usb-manager.patch",
         "ohos-usb-print.patch",
@@ -116,12 +89,10 @@ def main():
     cups_path.add_argument('--gen-dir', help='generate path of log', required=True)
     cups_path.add_argument('--source-dir', help='generate path of log', required=True)
     args = cups_path.parse_args()
-    tar_file_path = os.path.join(args.source_dir, "cups-2.4.0-source.tar.gz")
-    target_dir = os.path.join(args.gen_dir, "cups-2.4.0")
+    target_dir = os.path.join(args.gen_dir, "cups-2.4.12")
     convs_dir = os.path.join(target_dir, "conf")
 
-    untar_file(tar_file_path, args.gen_dir)
-    move_file(args.source_dir, target_dir)
+    move_cups_files(args.source_dir, target_dir)
     do_patch(target_dir)
     copy_file(convs_dir)
     return 0
