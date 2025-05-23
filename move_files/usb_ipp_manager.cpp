@@ -19,11 +19,34 @@
 #include <securec.h>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 #include "usb_manager.h"
 #include "usb_errors.h"
 #include "usb_ipp_manager.h"
 
 namespace OHOS::CUPS {
+constexpr int32_t errorReasonCount = 19;
+static constexpr std::array<const char*, errorReasonCount> ippPrinterErrorReason = {
+    "other",
+    "cover-open",
+    "input-tray-missing",
+    "marker-supply-empty",
+    "marker-supply-low",
+    "marker-waste-almost-full",
+    "marker-waste-full",
+    "media-empty",
+    "media-jam",
+    "media-low",
+    "media-needed",
+    "moving-to-paused",
+    "paused",
+    "spool-area-full",
+    "toner-empty",
+    "toner-low",
+    "offline",
+    "marker-ink-almost-empty",
+    "door-open"
+};
 static auto &usbSrvClient = UsbSrvClient::GetInstance();
 IppUsbManager::IppUsbManager()
 {
@@ -179,39 +202,33 @@ bool IppUsbManager::DisConnectUsbPinter(const std::string& uri)
 
 void IppUsbManager::SetPrinterStateReasons(PrinterStatus& printerStatus)
 {
-    static const char* const ippPrinterErrorReason[] = {
-        "other",
-        "cover-open",
-        "input-tray-missing",
-        "marker-supply-empty",
-        "marker-supply-low",
-        "marker-waste-almost-full",
-        "marker-waste-full",
-        "media-empty",
-        "media-jam",
-        "media-low",
-        "media-needed",
-        "moving-to-paused",
-        "paused",
-        "spool-area-full",
-        "toner-empty",
-        "toner-low",
-        "offline",
-        "marker-ink-almost-empty",
-        "door-open"
-    };
+    std::vector<int> errorReasonIndex;
+    for (size_t i = 0; i < ippPrinterErrorReason.size(); i++) {
+        if (strstr(printerStatus.printerStateReasons, ippPrinterErrorReason[i]) != nullptr) {
+            errorReasonIndex.push_back(i);
+        }
+    }
 
-    for (const char* reason : ippPrinterErrorReason) {
-        if (strstr(printerStatus.printerStateReasons, reason) != nullptr) {
-            int ret = snprintf_s(
-                printerStatus.printerStateReasons,
-                sizeof(printerStatus.printerStateReasons),
-                sizeof(printerStatus.printerStateReasons) - 1,
-                "%s-error", reason);
-            if (ret < 0) {
-                fprintf(stderr, "DEBUG: USB_MONITOR snprintf_s printerStateReasons error\n");
-            }
-            break;
+    std::ostringstream errorReasonStream;
+    bool first = true;
+    for (const auto index : errorReasonIndex) {
+        if (!first) {
+            errorReasonStream << ",";
+        }
+        errorReasonStream << ippPrinterErrorReason[index] << "-error";
+        first = false;
+    }
+
+    const std::string errorReason = errorReasonStream.str();
+    if (!errorReason.empty()) {
+        int ret = snprintf_s(
+            printerStatus.printerStateReasons,
+            sizeof(printerStatus.printerStateReasons),
+            sizeof(printerStatus.printerStateReasons) - 1,
+            "%s",
+            errorReason.c_str());
+        if (ret < 0) {
+            fprintf(stderr, "DEBUG: USB_MONITOR snprintf_s printerStateReasons error\n");
         }
     }
 }
