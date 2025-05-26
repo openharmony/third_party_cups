@@ -57,19 +57,18 @@ index 0000000..7baa470
 +void hilogPrint(int level, const char *message);
 \ No newline at end of file
 diff --git a/scheduler/log.c b/scheduler/log.c
-index 0fe7f3a..6eb66fe 100644
+index 8a2996e..9278934 100644
 --- a/scheduler/log.c
 +++ b/scheduler/log.c
-@@ -22,7 +22,7 @@
- #  include <systemd/sd-journal.h>
- #endif /* HAVE_ASL_H */
- #include <syslog.h>
--
+@@ -25,6 +25,7 @@
+ #ifndef va_copy
+ #  define va_copy(__list1, __list2) ((void)(__list1 = __list2))
+ #endif
 +#include "hilog-helper.h"
  
+ 
  /*
-  * Constants for log keys from PWG 5110.3 (PWG Common Log Format)...
-@@ -1267,7 +1267,7 @@ cupsdWriteErrorLog(int        level,	/* I - Log level */
+@@ -1270,7 +1271,7 @@ cupsdWriteErrorLog(int        level,	/* I - Log level */
     /*
      * Write the log message...
      */
