@@ -3,7 +3,7 @@
 
 Name:    cups
 Epoch:   1
-Version: 2.4.0
+Version: 2.4.12
 Release: 11
 Summary: CUPS is the standards-based, open source printing system for linux operating systems.
 License: Apache-2.0 WITH LLVM-exception
