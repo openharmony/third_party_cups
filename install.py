@@ -77,7 +77,8 @@ def do_patch(target_dir):
         "ohos-uni-print-driver-path.patch",
         "ohos-cups-badfd.patch",
         "ohos-verify-backend.patch",
-        "cups-usb-job-state-monitor.patch"
+        "cups-usb-job-state-monitor.patch",
+        "ohos-filetypes-crash.patch"
     ]
 
     for patch in patch_file:
