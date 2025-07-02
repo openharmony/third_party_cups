@@ -1,8 +1,8 @@
 diff --git a/scheduler/job.c b/scheduler/job.c
-index fd69f71..f44c522 100644
+index 11579875..c4e058e6 100644
 --- a/scheduler/job.c
 +++ b/scheduler/job.c
-@@ -1355,7 +1355,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+@@ -1359,7 +1359,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
  
    cupsdRemoveSelect(job->status_pipes[0]);
    cupsdClosePipe(job->status_pipes);
@@ -11,7 +11,7 @@ index fd69f71..f44c522 100644
    job->status_buffer = NULL;
  
   /*
-@@ -3144,7 +3144,7 @@ finalize_job(cupsd_job_t *job,		/* I - Job */
+@@ -3170,7 +3170,7 @@ finalize_job(cupsd_job_t *job,		/* I - Job */
  
    cupsdRemoveSelect(job->status_pipes[0]);
    cupsdClosePipe(job->status_pipes);
@@ -20,7 +20,7 @@ index fd69f71..f44c522 100644
    job->status_buffer = NULL;
  
   /*
-@@ -4919,7 +4919,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+@@ -4968,7 +4968,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
  		     "back-channel pipes.");
  
      cupsdClosePipe(job->status_pipes);
@@ -29,7 +29,7 @@ index fd69f71..f44c522 100644
      job->status_buffer = NULL;
  
      cupsdDestroyProfile(job->profile);
-@@ -4950,7 +4950,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+@@ -4999,7 +4999,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
      cupsdClosePipe(job->back_pipes);
  
      cupsdClosePipe(job->status_pipes);
@@ -38,11 +38,30 @@ index fd69f71..f44c522 100644
      job->status_buffer = NULL;
  
      cupsdDestroyProfile(job->profile);
+diff --git a/scheduler/process.c b/scheduler/process.c
+index 7f05a90a..ff45d831 100644
+--- a/scheduler/process.c
++++ b/scheduler/process.c
+@@ -639,6 +639,14 @@ cupsdStartProcess(
+ 
+   cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: Calling posix_spawn.");
+ 
++  int flag = fcntl(4, F_GETFD);
++  cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: sidefd flag=%d.", flag);
++
++  if (flag == 1)
++  {
++    fcntl(4, F_SETFD, 0);
++  }
++
+   if (posix_spawn(pid, exec_path, &actions, &attrs, argv, envp ? envp : environ))
+   {
+     cupsdLogMessage(CUPSD_LOG_ERROR, "Unable to fork %s - %s.", command, strerror(errno));
 diff --git a/scheduler/statbuf.c b/scheduler/statbuf.c
-index db9d98d..18eb7b8 100644
+index 5a2530e4..9b71037e 100644
 --- a/scheduler/statbuf.c
 +++ b/scheduler/statbuf.c
-@@ -39,6 +39,28 @@ cupsdStatBufDelete(cupsd_statbuf_t *sb)	/* I - Status buffer */
+@@ -40,6 +40,28 @@ cupsdStatBufDelete(cupsd_statbuf_t *sb)	/* I - Status buffer */
  }
  
  
@@ -72,10 +91,10 @@ index db9d98d..18eb7b8 100644
   * 'cupsdStatBufNew()' - Create a new status buffer.
   */
 diff --git a/scheduler/statbuf.h b/scheduler/statbuf.h
-index 4ac7c81..196cd6d 100644
+index 45fa904b..e78d2ed5 100644
 --- a/scheduler/statbuf.h
 +++ b/scheduler/statbuf.h
-@@ -33,6 +33,7 @@ typedef struct				/**** Status buffer */
+@@ -34,6 +34,7 @@ typedef struct				/**** Status buffer */
   */
  
  extern void		cupsdStatBufDelete(cupsd_statbuf_t *sb);
