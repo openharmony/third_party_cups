@@ -28,7 +28,8 @@
                 "usb_manager",
                 "zlib",
                 "openssl",
-                "libusb"
+                "libusb",
+                "ipc"
             ]
         },
         "build": {
