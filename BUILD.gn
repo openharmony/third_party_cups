@@ -379,6 +379,7 @@ ohos_executable("usb") {
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
     "usb_manager:usbsrv_client",
+    "ipc:ipc_core",
   ]
   install_enable = true
   module_install_dir = "$cups_serverbin_dir/backend"
