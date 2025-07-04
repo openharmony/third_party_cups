@@ -1,0 +1,19 @@
+diff --git a/scheduler/job.c b/scheduler/job.c
+index c4e058e..041476c 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -2248,9 +2248,14 @@ cupsdSaveAllJobs(void)
+     cupsFilePrintf(fp, "DestType %d\n", job->dtype);
+     cupsFilePrintf(fp, "KOctets %d\n", job->koctets);
+     cupsFilePrintf(fp, "NumFiles %d\n", job->num_files);
+-    for (i = 0; i < job->num_files; i ++)
++    for (i = 0; i < job->num_files; i ++) {
++      if (job->filetypes == NULL || job->filetypes[i] == NULL) {
++        cupsdLogMessage(CUPSD_LOG_WARN, "find empty filetypes: %d", i);
++        continue;
++      }
+       cupsFilePrintf(fp, "File %d %s/%s %d\n", i + 1, job->filetypes[i]->super,
+                      job->filetypes[i]->type, job->compressions[i]);
++    }
+     cupsFilePuts(fp, "</Job>\n");
+   }
