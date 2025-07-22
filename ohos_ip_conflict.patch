@@ -212,7 +212,7 @@ index 66dd3b07..e98c0550 100644
 +                  httpAddrPort(&(current->addr))));
 +#endif /* DEBUG */
 +
-+  if ((addr = httpAddrConnect2(http->addrlist, &(http->fd), msec, cancel, NULL)) == NULL)
++  if ((addr = httpAddrConnect2(http->addrlist, &(http->fd), msec, cancel, nic)) == NULL)
    {
     /*
      * Unable to connect...
@@ -245,7 +245,7 @@ index 6e73464c..36b410e8 100644
  
 +      if (nic != NULL) {
 +        val = 1;
-+        setsockopt(fds[nfds], SOL_SOCKET, SO_BINDTODEVICE, nic, sizeof(nic));
++        setsockopt(fds[nfds], SOL_SOCKET, SO_BINDTODEVICE, nic, strlen(nic));
 +      }
 +
       /*

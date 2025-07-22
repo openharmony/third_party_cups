@@ -39,7 +39,6 @@ def move_cups_files(src_dir, dst_dir):
             dst_path = dest_dir / rel_path
             dst_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(src_path, dst_path)
-            print(f"bao Copied: {src_path} -> {dst_path}")
 
     backend_files = [
         "usb_ipp_manager.h",
