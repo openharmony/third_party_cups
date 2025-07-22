@@ -310,9 +310,8 @@ void IppUsbManager::RemoveHttpHeader(std::vector<uint8_t>& readTempBuffer)
         reinterpret_cast<const uint8_t*>("\r\n\r\n"),
         reinterpret_cast<const uint8_t*>("\r\n\r\n") + 4
     );
-
     if (it != readTempBuffer.end()) {
-        readTempBuffer.erase(readTempBuffer.begin(), it + 4);
+        readTempBuffer.erase(readTempBuffer.begin(), it + INDEX_4);
     }
 }
 

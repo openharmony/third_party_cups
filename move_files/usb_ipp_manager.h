@@ -43,6 +43,7 @@ constexpr int32_t USB_DEVICE_PROTOCOL_PRINT = 4;
 constexpr int32_t USB_READ_INTERVAL = 50;
 constexpr int32_t INDEX_0 = 0;
 constexpr int32_t INDEX_1 = 1;
+constexpr int32_t INDEX_4 = 4;
 constexpr int32_t CLAIM_INTERFACE_RETRY_MAX_TIMES = 5;
 constexpr int32_t EORROR_HDF_DEV_ERR_IO_FAILURE = -1;
 
