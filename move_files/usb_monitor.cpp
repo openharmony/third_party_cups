@@ -18,12 +18,15 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <thread>
+#include <unordered_set>
 #include "usb_monitor.h"
 #include "usb_ipp_manager.h"
 
 using namespace OHOS::CUPS;
 
 static IppUsbManager& usbManager = IppUsbManager::GetInstance();
+
+static char* AllocateAndStrCpy(const std::string& str);
 
 bool IsSupportIppOverUsb(const char* uri)
 {
@@ -61,4 +64,80 @@ void SetTerminalSingal()
 {
     fprintf(stderr, "DEBUG: USB_MONITOR enter SetTerminalSingal\n");
     usbManager.SetTerminalSingal();
+}
+
+void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
+    char** addedReasons, char** deletedReasons)
+{
+    if (oldReasons == nullptr || newReasons == nullptr ||
+        addedReasons == nullptr || deletedReasons == nullptr) {
+        fprintf(stderr, "DEBUG: USB_MONITOR ComparePrinterStateReasons nullptr\n");
+        return;       
+    }
+    if (strcmp(oldReasons, newReasons) == 0) {
+        return;
+    }
+    std::vector<std::string> oldReasonsVec, newReasonsVec;
+    std::stringstream ssOldReasons(oldReasons), ssNewReasons(newReasons);
+    std::string token;
+    while (std::getline(ssOldReasons, token, ',')) {
+        oldReasonsVec.push_back(token);
+    }
+    while (std::getline(ssNewReasons, token, ',')) {
+        newReasonsVec.push_back(token);
+    }
+    std::unordered_set<std::string> setOldReasons(oldReasonsVec.begin(), oldReasonsVec.end());
+    std::unordered_set<std::string> setNewReasons(newReasonsVec.begin(), newReasonsVec.end());
+    std::vector<std::string> addedVec, deletedVec;
+    for (const auto& item : setNewReasons) {
+        if (setOldReasons.find(item) == setOldReasons.end()) {
+            addedVec.push_back(item);
+        }
+    }
+    for (const auto& item : setOldReasons) {
+        if (setNewReasons.find(item) == setNewReasons.end()) {
+            deletedVec.push_back(item);
+        }
+    }
+    std::string addedStr, deletedStr;
+    for (size_t i = 0; i < addedVec.size(); ++i) {
+        if (i != 0) {
+            addedStr += ",";
+        }
+        addedStr += addedVec[i];
+    }
+    for (size_t i = 0; i < deletedVec.size(); ++i) {
+        if (i != 0) {
+            deletedStr += ",";
+        }
+        deletedStr += deletedVec[i];
+    }
+    *addedReasons = AllocateAndStrCpy(addedStr);
+    *deletedReasons = AllocateAndStrCpy(deletedStr);
+}
+
+void FreeCompareStringsResult(char* addedReasons, char* deletedReasons)
+{
+    if (addedReasons != nullptr) {
+        delete[] addedReasons;
+    }
+    if (deletedReasons != nullptr) {
+        delete[] deletedReasons;
+    }
+}
+
+char* AllocateAndStrCpy(const std::string& str)
+{
+    int32_t len = str.size() + 1;
+    char* cStr = new (std::nothrow) char[len]{};
+    if (cStr == nullptr) {
+        fprintf(stderr, "DEBUG: USB_MONITOR cStr new fail\n");
+        return nullptr;
+    }
+    if (strcpy_s(cStr, len, str.c_str()) != 0) {
+        fprintf(stderr, "DEBUG: USB_MONITOR AllocateAndStrCpy strcpy_s fail\n");
+        delete[] cStr;
+        return nullptr;
+    }
+    return cStr;
 }

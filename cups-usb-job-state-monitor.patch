@@ -8,20 +8,33 @@ index 50c1bc3..22dc7d7 100644
  
 +#define HAVE_USB_MONITOR
 +#define BEGIN_WAIT_TIME 2
-+
+
 +#ifdef HAVE_USB_MONITOR
 +#include "usb_monitor.h"
-+
++static char oldReasons[PRINTER_STATE_REASONS_SIZE] = {0};
+
 +void UpdatePrinterState(PrinterStatus* jobData)
 +{
 +    if (jobData == NULL) {
 +        fprintf(stderr, "DEBUG: USB_MONITOR UpdatePrinterState fail, jobData is NULL\n");
 +        return;
 +    }
-+    if (strcmp(jobData->printerStateReasons, "none") != 0) {
-+        fprintf(stderr, "STATE: +%s\nSTATE: -none\n", jobData->printerStateReasons);
-+    } else {
++    char* addedReasons = NULL;
++    char* deletedReasons = NULL; 
++    ComparePrinterStateReasons(oldReasons, jobData->printerStateReasons, &addedReasons, &deletedReasons);
++    if (addedReasons != NULL) {
++        fprintf(stderr, "STATE: +%s\nSTATE: -none\n", addedReasons);
++    }
++    if (deletedReasons != NULL) {
++        fprintf(stderr, "STATE: -%s\nSTATE: -none\n", deletedReasons);
++    }
++    FreeCompareStringsResult(addedReasons, deletedReasons);
++    if (strcpy_s(oldReasons, PRINTER_STATE_REASONS_SIZE, jobData->printerStateReasons) != 0) {
++        fprintf(stderr, "DEBUG: USB_MONITOR UpdatePrinterState strcpy_s fail\n");
++    }
++    if (strcmp(jobData->printerStateReasons, "none") == 0) {
 +        fprintf(stderr, "STATE: cups-waiting-for-job-completed\n");
++        return;
 +    }
 +}
 +

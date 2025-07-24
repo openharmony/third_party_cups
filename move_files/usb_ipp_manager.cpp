@@ -250,7 +250,7 @@ void IppUsbManager::ReportPrinterState(bool& isPrinterStarted, PrinterStatus& pr
     if (!isPrinterStarted && printerState != IPP_PSTATE_IDLE) {
         isPrinterStarted = true;
     }
-    constexpr int32_t bufferSize = 1024;
+    constexpr int32_t bufferSize = PRINTER_STATE_REASONS_SIZE;
     if (isPrinterStarted && printerState == IPP_PSTATE_IDLE &&
         strcmp(printerStatus.printerStateReasons, "none") != 0 &&
         memset_s(printerStatus.printerStateReasons, bufferSize, 0, bufferSize) == 0 &&
@@ -552,7 +552,7 @@ bool IppUsbManager::ParseIppResponse(std::vector<uint8_t>& responseData, Printer
         return false;
     }
     ipp_attribute_t *attr = nullptr;
-    constexpr int32_t bufferSize = 1024;
+    constexpr int32_t bufferSize = PRINTER_STATE_REASONS_SIZE;
     printerStatus.printerState = IPP_PSTATE_IDLE;
     if (memset_s(printerStatus.printerStateReasons, bufferSize, 0, bufferSize) != 0) {
         fprintf(stderr, "DEBUG: USB_MONITOR memset_s printerStateReasons fail\n");
