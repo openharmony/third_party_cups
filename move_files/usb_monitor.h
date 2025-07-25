@@ -19,13 +19,15 @@
 #include <stdint.h>
 #include <cups/ipp.h>
 
+#define PRINTER_STATE_REASONS_SIZE 512
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct {
     ipp_pstate_t printerState;
-    char printerStateReasons[1024];
+    char printerStateReasons[PRINTER_STATE_REASONS_SIZE];
 } PrinterStatus;
 
 typedef void (MonitorPrinterCallback)(PrinterStatus* jobData);
@@ -35,6 +37,11 @@ bool StartMonitorIppPrinter(MonitorPrinterCallback callback, const char* uri);
 bool IsSupportIppOverUsb(const char* uri);
 
 void SetTerminalSingal(void);
+
+void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
+    char** addedReasons, char** deletedReasons);
+
+void FreeCompareStringsResult(char* addedReasons, char* deletedReasons);
 #ifdef __cplusplus
 }
 #endif
