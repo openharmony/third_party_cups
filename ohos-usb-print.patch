@@ -1,6 +1,6 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 0000000..a28c78b
+index 00000000..69a3d69d
 --- /dev/null
 +++ b/backend/usb-oh.c
 @@ -0,0 +1,1824 @@
@@ -467,7 +467,7 @@ index 0000000..a28c78b
 +          claimedIfId
 +        };
 +	      iostatus = OH_BulkTransferWrite(g.printer->pipe, &tpipe,
-+          print_buffer, g.print_bytes, &bytes, 0);
++          print_buffer, g.print_bytes, &bytes, 2000);
 +       /*
 +	      * Ignore timeout errors, but retain the number of bytes written to
 +	      * avoid sending duplicate data...
@@ -489,7 +489,7 @@ index 0000000..a28c78b
 +	        fputs("DEBUG: Got USB return aborted during write.\n", stderr);
 +
 +	        iostatus = OH_BulkTransferWrite(g.printer->pipe, &tpipe,
-+            print_buffer, g.print_bytes, &bytes, 0);
++            print_buffer, g.print_bytes, &bytes, 2000);
 +        }
 +
 +	      if (iostatus)
@@ -938,12 +938,12 @@ index 0000000..a28c78b
 +  * printers (e.g., Samsung) don't like usb_set_altinterface.
 +  */
 +
-+  if (confptr.interface[printer->iface].num_altsetting > 1)
++  number2 = confptr.interface[printer->iface].
++                 altsetting[printer->altset].bAlternateSetting;
++  if (confptr.interface[printer->iface].num_altsetting > 1 && number2 > 0)
 +  {
 +    number1 = confptr.interface[printer->iface].
 +                 altsetting[printer->altset].bInterfaceNumber;
-+    number2 = confptr.interface[printer->iface].
-+                 altsetting[printer->altset].bAlternateSetting;
 +    while ((errcode = OH_SetInterface(printer->pipe, number1, number2)) < 0)
 +    {
 +      if (errcode != OHUSB_ERROR_BUSY)
@@ -1830,10 +1830,10 @@ index 0000000..a28c78b
 +}
 \ No newline at end of file
 diff --git a/backend/usb.c b/backend/usb.c
-index e1b2c03..50c1bc3 100644
+index 04c62023..a4dfbc0b 100644
 --- a/backend/usb.c
 +++ b/backend/usb.c
-@@ -42,7 +42,9 @@ int	print_device(const char *uri, const char *hostname,
+@@ -43,7 +43,9 @@ int	print_device(const char *uri, const char *hostname,
   * Include the vendor-specific USB implementation...
   */
  
