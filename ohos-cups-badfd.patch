@@ -39,14 +39,22 @@ index 11579875..c4e058e6 100644
  
      cupsdDestroyProfile(job->profile);
 diff --git a/scheduler/process.c b/scheduler/process.c
-index 7f05a90a..ff45d831 100644
+index 7f05a90a..b6a80a67 100644
 --- a/scheduler/process.c
 +++ b/scheduler/process.c
-@@ -639,6 +639,14 @@ cupsdStartProcess(
+@@ -639,6 +639,22 @@ cupsdStartProcess(
  
    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: Calling posix_spawn.");
  
-+  int flag = fcntl(4, F_GETFD);
++  int flag = fcntl(3, F_GETFD);
++  cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: backfd flag=%d.", flag);
++
++  if (flag == 1)
++  {
++    fcntl(3, F_SETFD, 0);
++  }
++
++  flag = fcntl(4, F_GETFD);
 +  cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: sidefd flag=%d.", flag);
 +
 +  if (flag == 1)
