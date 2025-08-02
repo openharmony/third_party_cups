@@ -26,7 +26,8 @@ index 0000000..28d986d
 +
 +void hilogPrint(int level, const char *message)
 +{
-+    if (strchr(message, '.') || strchr(message, '/')) {
++    if (strchr(message, '.') || strchr(message, '/') || strstr(message, "job-name") ||
++         strstr(message, "uuid") || strstr(message, "argv" || strstr(message, "document-name"))) {
 +        HiLogPrint(LOG_CORE, LOG_INFO, 0xD0050B0, "cupslog", "%{private}s", message);
 +    } else {
 +        HiLogPrint(LOG_CORE, LOG_INFO, 0xD0050B0, "cupslog", "%{public}s", message);
