@@ -1,6 +1,6 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 00000000..69a3d69d
+index 00000000..0da99b23
 --- /dev/null
 +++ b/backend/usb-oh.c
 @@ -0,0 +1,1824 @@
@@ -895,7 +895,7 @@ index 00000000..69a3d69d
 +  }
 +
 +  printer->origconf = current;
-+  fprintf(stderr, "DEBUG: open_device OH_ControlTransferRead current = %c\n", current);
++  fprintf(stderr, "DEBUG: open_device OH_ControlTransferRead current = %02x\n", current);
 +
 +  confptr = printer->device->config[printer->conf];
 +  number1 = confptr.iConfiguration;

@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..baf329a
+index 00000000..9c0b5e24
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,683 @@
+@@ -0,0 +1,704 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -294,6 +294,9 @@ index 0000000..baf329a
 +    uint32_t retryNum = 0;
 +    int32_t ret = OHUSB_SUCCESS;
 +    do {
++        if (retryNum) {
++            OH_ResetDevice(pipe);
++        }
 +        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
 +        retryNum++;
 +    } while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES);
@@ -378,6 +381,24 @@ index 0000000..baf329a
 +
 +    fprintf(stderr, "DEBUG: OH_GetStringDescriptor out\n");
 +    return ret;
++}
++
++int32_t OH_ResetDevice(ohusb_pipe *pipe)
++{
++    if (pipe == nullptr) {
++        fprintf(stderr, "DEBUG: OH_ResetDevice pipe is nullptr\n");
++        return OHUSB_ERROR_NO_MEM;
++    }
++    auto &usbSrvClient = OHOS::USB::UsbSrvClient::GetInstance();
++    USBDevicePipe usbDevicePipe = {pipe->busNum, pipe->devAddr};
++    int32_t ret = usbSrvClient.ResetDevice(usbDevicePipe);
++    if (ret != ERR_OK) {
++        fprintf(stderr, "DEBUG: OH_ResetDevice fail with ret = %d\n", ret);
++        return ret;
++    }
++    fprintf(stderr, "DEBUG: OH_ResetDevice busNum=%d, devAddr=%d\n",
++        usbDevicePipe.GetBusNum(), usbDevicePipe.GetDevAddr());
++    return OHUSB_SUCCESS;
 +}
 +
 +int32_t ParseDeviceDescriptor(UsbDevice &usbDevice, ohusb_device_descriptor *devDesc)
@@ -689,10 +710,10 @@ index 0000000..baf329a
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..e5e39fc
+index 00000000..72b693c3
 --- /dev/null
 +++ b/backend/usb_manager.h
-@@ -0,0 +1,468 @@
+@@ -0,0 +1,469 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1155,6 +1176,7 @@ index 0000000..e5e39fc
 +extern int32_t OH_GetStringDescriptor(ohusb_pipe *pipe, int descId, unsigned char *descriptor, int length);
 +extern int32_t OH_SetConfiguration(ohusb_pipe *pipe, int configIndex);
 +extern int32_t OH_SetInterface(ohusb_pipe *pipe, int interfaceId, int altIndex);
++extern int32_t OH_ResetDevice(ohusb_pipe *pipe);
 +
 +#ifdef __cplusplus
 +} // extern "C"
