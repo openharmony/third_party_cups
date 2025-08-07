@@ -1,3 +1,44 @@
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 1252437..8443f65 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -8796,12 +8796,11 @@ print_job(cupsd_client_t  *con,		/* I - Client connection */
+ 
+     if (!filetype)
+       filetype = mimeType(MimeDatabase, super, type);
+-
+-    cupsdLogMessage(CUPSD_LOG_INFO, "[Job ???] Request file type is %s/%s.",
+-		    filetype->super, filetype->type);
+-
+-    snprintf(mimetype, sizeof(mimetype), "%s/%s", filetype->super, filetype->type);
+-    ippAddString(con->request, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-detected", NULL, mimetype);
++    if (filetype) {
++      cupsdLogMessage(CUPSD_LOG_INFO, "[Job ???] Request file type is %s/%s.", filetype->super, filetype->type);
++      snprintf(mimetype, sizeof(mimetype), "%s/%s", filetype->super, filetype->type);
++      ippAddString(con->request, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-detected", NULL, mimetype);
++    }
+   }
+   else
+     filetype = mimeType(MimeDatabase, super, type);
+@@ -10047,13 +10046,11 @@ send_document(cupsd_client_t  *con,	/* I - Client connection */
+ 
+     if (!filetype)
+       filetype = mimeType(MimeDatabase, super, type);
+-
+-    if (filetype)
+-      cupsdLogJob(job, CUPSD_LOG_DEBUG, "Request file type is %s/%s.",
+-		  filetype->super, filetype->type);
+-
+-    snprintf(mimetype, sizeof(mimetype), "%s/%s", filetype->super, filetype->type);
+-    ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-detected", NULL, mimetype);
++    if (filetype) {
++      cupsdLogJob(job, CUPSD_LOG_DEBUG, "Request file type is %s/%s.", filetype->super, filetype->type);
++      snprintf(mimetype, sizeof(mimetype), "%s/%s", filetype->super, filetype->type);
++      ippAddString(job->attrs, IPP_TAG_JOB, IPP_TAG_MIMETYPE, "document-format-detected", NULL, mimetype);
++    }
+   }
+   else
+     filetype = mimeType(MimeDatabase, super, type);
 diff --git a/scheduler/job.c b/scheduler/job.c
 index c4e058e..041476c 100644
 --- a/scheduler/job.c
@@ -17,3 +58,5 @@ index c4e058e..041476c 100644
 +    }
      cupsFilePuts(fp, "</Job>\n");
    }
+ 
+-- 
