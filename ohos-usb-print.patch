@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 00000000..0da99b23
+index 00000000..65675f3b
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1824 @@
+@@ -0,0 +1,1831 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -919,41 +919,48 @@ index 00000000..0da99b23
 +  }
 +
 + /*
-+  * Claim interfaces as needed...
++  * Claim interfaces when printing...
 +  */
 +
-+  number1 = confptr.interface[printer->iface].altsetting[printer->altset].bInterfaceNumber;
-+
-+  if ((errcode = OH_ClaimInterface(printer->pipe, number1, true)) < 0)
++  if (verbose)
 +  {
-+    fprintf(stderr,
-+            "DEBUG: Failed to claim interface %d for %04x:%04x: %s\n",
-+            number1, printer->device->idVendor, printer->device->idProduct, strerror(errno));
++   /*
++    * Claim interfaces as needed...
++    */
 +
-+    goto error;
-+  }
++    number1 = confptr.interface[printer->iface].altsetting[printer->altset].bInterfaceNumber;
 +
-+ /*
-+  * Set alternate setting, but only if there is more than one option.  Some
-+  * printers (e.g., Samsung) don't like usb_set_altinterface.
-+  */
-+
-+  number2 = confptr.interface[printer->iface].
-+                 altsetting[printer->altset].bAlternateSetting;
-+  if (confptr.interface[printer->iface].num_altsetting > 1 && number2 > 0)
-+  {
-+    number1 = confptr.interface[printer->iface].
-+                 altsetting[printer->altset].bInterfaceNumber;
-+    while ((errcode = OH_SetInterface(printer->pipe, number1, number2)) < 0)
++    if ((errcode = OH_ClaimInterface(printer->pipe, number1, true)) < 0)
 +    {
-+      if (errcode != OHUSB_ERROR_BUSY)
-+      {
-+        fprintf(stderr,
-+                "DEBUG: Failed to set alternate interface %d for %04x:%04x: "
-+                "%s\n",
-+                number2, printer->device->idVendor, printer->device->idProduct, strerror(errno));
++      fprintf(stderr,
++              "DEBUG: Failed to claim interface %d for %04x:%04x: %s\n",
++              number1, printer->device->idVendor, printer->device->idProduct, strerror(errno));
 +
-+	      goto error;
++      goto error;
++    }
++
++   /*
++    * Set alternate setting, but only if there is more than one option.  Some
++    * printers (e.g., Samsung) don't like usb_set_altinterface.
++    */
++
++    number2 = confptr.interface[printer->iface].
++                   altsetting[printer->altset].bAlternateSetting;
++    if (confptr.interface[printer->iface].num_altsetting > 1 && number2 > 0)
++    {
++      number1 = confptr.interface[printer->iface].
++                   altsetting[printer->altset].bInterfaceNumber;
++      while ((errcode = OH_SetInterface(printer->pipe, number1, number2)) < 0)
++      {
++        if (errcode != OHUSB_ERROR_BUSY)
++        {
++          fprintf(stderr,
++                  "DEBUG: Failed to set alternate interface %d for %04x:%04x: "
++                  "%s\n",
++                  number2, printer->device->idVendor, printer->device->idProduct, strerror(errno));
++
++	        goto error;
++        }
 +      }
 +    }
 +  }
