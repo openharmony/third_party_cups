@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 00000000..65675f3b
+index 00000000..d1821dfb
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1831 @@
+@@ -0,0 +1,1835 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,7 +133,7 @@ index 00000000..65675f3b
 + * Local functions...
 + */
 +
-+static int		close_device(usb_printer_t *printer);
++static int		close_device(usb_printer_t *printer, int discoveryMode);
 +static int		compare_quirks(usb_quirk_t *a, usb_quirk_t *b);
 +static usb_printer_t  *find_device(usb_cb_t cb, const void *data);
 +static unsigned   find_quirks(int vendor_id, int product_id);
@@ -262,7 +262,7 @@ index 00000000..65675f3b
 +      fprintf(stderr, "DEBUG: Fatal USB error.\n");
 +      _cupsLangPrintFilter(stderr, "ERROR", _("There was an unrecoverable USB error."));
 +      fputs("DEBUG: Couldn't create side-channel thread.\n", stderr);
-+      close_device(g.printer);
++      close_device(g.printer, 0);
 +      return (CUPS_BACKEND_STOP);
 +    }
 +  }
@@ -313,7 +313,7 @@ index 00000000..65675f3b
 +      fprintf(stderr, "DEBUG: Fatal USB error.\n");
 +      _cupsLangPrintFilter(stderr, "ERROR", _("There was an unrecoverable USB error."));
 +      fputs("DEBUG: Couldn't create read thread.\n", stderr);
-+      close_device(g.printer);
++      close_device(g.printer, 0);
 +      return (CUPS_BACKEND_STOP);
 +    }
 +  }
@@ -396,14 +396,14 @@ index 00000000..65675f3b
 +	      {
 +	        fputs("DEBUG: Received an interrupt before any bytes were "
 +	              "written, aborting.\n", stderr);
-+	        close_device(g.printer);
++	        close_device(g.printer, 0);
 +          return (CUPS_BACKEND_OK);
 +	      }
 +	      else if (errno != EAGAIN && errno != EINTR)
 +	      {
 +	        _cupsLangPrintFilter(stderr, "ERROR", _("Unable to read print data."));
 +	        perror("DEBUG: select");
-+	        close_device(g.printer);
++	        close_device(g.printer, 0);
 +          return (CUPS_BACKEND_FAILED);
 +	      }
 +      }
@@ -437,7 +437,7 @@ index 00000000..65675f3b
 +	        {
 +	          _cupsLangPrintFilter(stderr, "ERROR", _("Unable to read print data."));
 +	          perror("DEBUG: read");
-+	          close_device(g.printer);
++	          close_device(g.printer, 0);
 +	          return (CUPS_BACKEND_FAILED);
 +	        }
 +
@@ -616,7 +616,7 @@ index 00000000..65675f3b
 +  if (g.printer->quirks & USB_QUIRK_DELAY_CLOSE)
 +    sleep(1);
 +
-+  close_device(g.printer);
++  close_device(g.printer, 0);
 +
 +  fputs("DEBUG: print_device out\n", stderr);
 +  return (status);
@@ -819,7 +819,7 @@ index 00000000..65675f3b
 +		            return (&printer);
 +              }
 +
-+              close_device(&printer);
++              close_device(&printer, data == NULL);
 +	          }
 +	        }
 +	      }
@@ -1214,7 +1214,8 @@ index 00000000..65675f3b
 + */
 +
 +static int				/* I - 0 on success, -1 on failure */
-+close_device(usb_printer_t *printer)	/* I - Printer */
++close_device(usb_printer_t *printer,   /* I - Printer */
++             int           discoveryMode)   /* I - Discovery mode */
 +{
 +  ohusb_config_descriptor confptr;    /* Pointer to current configuration */
 +
@@ -1234,7 +1235,10 @@ index 00000000..65675f3b
 +      confptr = printer->device->config[printer->conf];
 +      number1 = confptr.interface[printer->iface].
 +	              altsetting[printer->altset].bInterfaceNumber;
-+      OH_ReleaseInterface(printer->pipe, number1);
++      if (!discoveryMode)
++      {
++        OH_ReleaseInterface(printer->pipe, number1);
++      }
 +
 +      number2 = confptr.iConfiguration;
 +
