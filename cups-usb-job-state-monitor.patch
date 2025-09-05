@@ -1,18 +1,18 @@
 diff --git a/backend/usb.c b/backend/usb.c
-index 50c1bc3..22dc7d7 100644
+index a4dfbc0b..79050681 100644
 --- a/backend/usb.c
 +++ b/backend/usb.c
-@@ -109,6 +109,50 @@ print_device(const char *uri,		/* I - Device URI */
+@@ -110,6 +110,63 @@ print_device(const char *uri,		/* I - Device URI */
  }
  #endif /* HAVE_LIBUSB */
  
 +#define HAVE_USB_MONITOR
 +#define BEGIN_WAIT_TIME 2
-
++
 +#ifdef HAVE_USB_MONITOR
 +#include "usb_monitor.h"
 +static char oldReasons[PRINTER_STATE_REASONS_SIZE] = {0};
-
++
 +void UpdatePrinterState(PrinterStatus* jobData)
 +{
 +    if (jobData == NULL) {
@@ -28,7 +28,7 @@ index 50c1bc3..22dc7d7 100644
 +    if (deletedReasons != NULL) {
 +        fprintf(stderr, "STATE: -%s\nSTATE: -none\n", deletedReasons);
 +    }
-+    FreeCompareStringsResult(addedReasons, deletedReasons);
++    FreeCompareStringsResult(&addedReasons, &deletedReasons);
 +    if (strcpy_s(oldReasons, PRINTER_STATE_REASONS_SIZE, jobData->printerStateReasons) != 0) {
 +        fprintf(stderr, "DEBUG: USB_MONITOR UpdatePrinterState strcpy_s fail\n");
 +    }
@@ -66,7 +66,7 @@ index 50c1bc3..22dc7d7 100644
  
  /*
   * 'main()' - Send a file to the specified USB port.
-@@ -230,6 +274,13 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
+@@ -231,6 +288,13 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
      copies = atoi(argv[4]);
    }
  
@@ -80,7 +80,7 @@ index 50c1bc3..22dc7d7 100644
   /*
    * Finally, send the print file...
    */
-@@ -244,5 +295,15 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
+@@ -245,5 +309,15 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
    if (print_fd != 0)
      close(print_fd);
  
