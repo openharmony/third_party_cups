@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <cups/ipp.h>
 
-#define PRINTER_STATE_REASONS_SIZE 512
+#define PRINTER_STATE_REASONS_SIZE 1024
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,7 +41,7 @@ void SetTerminalSingal(void);
 void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
     char** addedReasons, char** deletedReasons);
 
-void FreeCompareStringsResult(char* addedReasons, char* deletedReasons);
+void FreeCompareStringsResult(char** addedReasons, char** deletedReasons);
 #ifdef __cplusplus
 }
 #endif
