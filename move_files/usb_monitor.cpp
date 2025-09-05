@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <thread>
+#include <utility>
 #include <unordered_set>
 #include "usb_monitor.h"
 #include "usb_ipp_manager.h"
@@ -25,8 +26,7 @@
 using namespace OHOS::CUPS;
 
 static IppUsbManager& usbManager = IppUsbManager::GetInstance();
-
-static char* AllocateAndStrCpy(const std::string& str);
+static std::pair<std::string, std::string> GetComparedStateReasons(const char* oldReasons, const char* newReasons);
 
 bool IsSupportIppOverUsb(const char* uri)
 {
@@ -66,19 +66,12 @@ void SetTerminalSingal()
     usbManager.SetTerminalSingal();
 }
 
-void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
-    char** addedReasons, char** deletedReasons)
+std::pair<std::string, std::string> GetComparedStateReasons(const char* oldReasons, const char* newReasons)
 {
-    if (oldReasons == nullptr || newReasons == nullptr ||
-        addedReasons == nullptr || deletedReasons == nullptr) {
-        fprintf(stderr, "DEBUG: USB_MONITOR ComparePrinterStateReasons nullptr\n");
-        return;       
-    }
-    if (strcmp(oldReasons, newReasons) == 0) {
-        return;
-    }
-    std::vector<std::string> oldReasonsVec, newReasonsVec;
-    std::stringstream ssOldReasons(oldReasons), ssNewReasons(newReasons);
+    std::vector<std::string> oldReasonsVec;
+    std::vector<std::string> newReasonsVec;
+    std::stringstream ssOldReasons(oldReasons);
+    std::stringstream ssNewReasons(newReasons);
     std::string token;
     while (std::getline(ssOldReasons, token, ',')) {
         oldReasonsVec.push_back(token);
@@ -88,7 +81,8 @@ void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
     }
     std::unordered_set<std::string> setOldReasons(oldReasonsVec.begin(), oldReasonsVec.end());
     std::unordered_set<std::string> setNewReasons(newReasonsVec.begin(), newReasonsVec.end());
-    std::vector<std::string> addedVec, deletedVec;
+    std::vector<std::string> addedVec;
+    std::vector<std::string> deletedVec;
     for (const auto& item : setNewReasons) {
         if (setOldReasons.find(item) == setOldReasons.end()) {
             addedVec.push_back(item);
@@ -99,7 +93,8 @@ void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
             deletedVec.push_back(item);
         }
     }
-    std::string addedStr, deletedStr;
+    std::string addedStr;
+    std::string deletedStr;
     for (size_t i = 0; i < addedVec.size(); ++i) {
         if (i != 0) {
             addedStr += ",";
@@ -112,32 +107,54 @@ void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
         }
         deletedStr += deletedVec[i];
     }
-    *addedReasons = AllocateAndStrCpy(addedStr);
-    *deletedReasons = AllocateAndStrCpy(deletedStr);
+    return std::make_pair(addedStr, deletedStr);
 }
 
-void FreeCompareStringsResult(char* addedReasons, char* deletedReasons)
+void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
+    char** addedReasons, char** deletedReasons)
 {
-    if (addedReasons != nullptr) {
-        delete[] addedReasons;
+    if (oldReasons == nullptr || newReasons == nullptr ||
+        addedReasons == nullptr || deletedReasons == nullptr) {
+        fprintf(stderr, "DEBUG: USB_MONITOR ComparePrinterStateReasons nullptr\n");
+        return;       
     }
-    if (deletedReasons != nullptr) {
-        delete[] deletedReasons;
+    if (strcmp(oldReasons, newReasons) == 0) {
+        return;
     }
+    auto comparedStr = GetComparedStateReasons(oldReasons, newReasons);
+    std::string addedStr = comparedStr.first;
+    std::string deletedStr = comparedStr.second;
+    auto getComparedStr = [](const std::string& str) -> char* {
+        int32_t len = static_cast<int32_t>(str.size()) + 1;
+        if (len > PRINTER_STATE_REASONS_SIZE) {
+            fprintf(stderr, "DEBUG: USB_MONITOR The length exceeds the maximum value.\n");
+            return nullptr;
+        }
+        char* cStr = new (std::nothrow) char[len]{};
+        if (cStr == nullptr) {
+            fprintf(stderr, "DEBUG: USB_MONITOR cStr new fail\n");
+            return nullptr;
+        }
+        if (strcpy_s(cStr, len, str.c_str()) != 0) {
+            fprintf(stderr, "DEBUG: USB_MONITOR ComparePrinterStateReasons strcpy_s fail\n");
+            delete[] cStr;
+            return nullptr;
+        }
+        return cStr;
+    };
+
+    *addedReasons = getComparedStr(addedStr);
+    *deletedReasons = getComparedStr(deletedStr);
 }
 
-char* AllocateAndStrCpy(const std::string& str)
+void FreeCompareStringsResult(char** addedReasons, char** deletedReasons)
 {
-    int32_t len = str.size() + 1;
-    char* cStr = new (std::nothrow) char[len]{};
-    if (cStr == nullptr) {
-        fprintf(stderr, "DEBUG: USB_MONITOR cStr new fail\n");
-        return nullptr;
+    if (addedReasons != nullptr && *addedReasons != nullptr) {
+        delete[] *addedReasons;
+        *addedReasons = nullptr;
     }
-    if (strcpy_s(cStr, len, str.c_str()) != 0) {
-        fprintf(stderr, "DEBUG: USB_MONITOR AllocateAndStrCpy strcpy_s fail\n");
-        delete[] cStr;
-        return nullptr;
+    if (deletedReasons != nullptr && *deletedReasons != nullptr) {
+        delete[] *deletedReasons;
+        *deletedReasons = nullptr;
     }
-    return cStr;
 }
