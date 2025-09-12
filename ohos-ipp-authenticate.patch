@@ -1,0 +1,110 @@
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 96ed0259..6c5cdc55 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -9651,8 +9651,6 @@ save_auth_info(
+     ipp_attribute_t *auth_info)		/* I - auth-info attribute, if any */
+ {
+   int			i;		/* Looping var */
+-  char			filename[1024];	/* Job authentication filename */
+-  cups_file_t		*fp;		/* Job authentication file */
+   char			line[65536];	/* Line for file */
+   cupsd_printer_t	*dest;		/* Destination printer/class */
+ 
+@@ -9680,30 +9678,9 @@ save_auth_info(
+   * so reprints may require subsequent re-authentication.
+   */
+ 
+-  if (RunUser)
+-    return;
+-
+   if ((dest = cupsdFindDest(job->dest)) == NULL)
+     return;
+ 
+- /*
+-  * Create the authentication file and change permissions...
+-  */
+-
+-  snprintf(filename, sizeof(filename), "%s/a%05d", RequestRoot, job->id);
+-  if ((fp = cupsFileOpen(filename, "w")) == NULL)
+-  {
+-    cupsdLogMessage(CUPSD_LOG_ERROR,
+-                    "Unable to save authentication info to \"%s\" - %s",
+-                    filename, strerror(errno));
+-    return;
+-  }
+-
+-  fchown(cupsFileNumber(fp), 0, 0);
+-  fchmod(cupsFileNumber(fp), 0400);
+-
+-  cupsFilePuts(fp, "CUPSD-AUTH-V3\n");
+-
+   for (i = 0;
+        i < (int)(sizeof(job->auth_env) / sizeof(job->auth_env[0]));
+        i ++)
+@@ -9723,11 +9700,7 @@ save_auth_info(
+       if (strcmp(dest->auth_info_required[i], "negotiate"))
+       {
+ 	httpEncode64_2(line, sizeof(line), auth_info->values[i].string.text, (int)strlen(auth_info->values[i].string.text));
+-	cupsFilePutConf(fp, dest->auth_info_required[i], line);
+       }
+-      else
+-	cupsFilePutConf(fp, dest->auth_info_required[i],
+-	                auth_info->values[i].string.text);
+ 
+       if (!strcmp(dest->auth_info_required[i], "username"))
+         cupsdSetStringf(job->auth_env + i, "AUTH_USERNAME=%s",
+@@ -9754,13 +9727,11 @@ save_auth_info(
+     */
+ 
+     httpEncode64_2(line, sizeof(line), auth_info->values[0].string.text, (int)strlen(auth_info->values[0].string.text));
+-    cupsFilePutConf(fp, "username", line);
+ 
+     cupsdSetStringf(job->auth_env + 0, "AUTH_USERNAME=%s",
+                     auth_info->values[0].string.text);
+ 
+     httpEncode64_2(line, sizeof(line), auth_info->values[1].string.text, (int)strlen(auth_info->values[1].string.text));
+-    cupsFilePutConf(fp, "password", line);
+ 
+     cupsdSetStringf(job->auth_env + 1, "AUTH_PASSWORD=%s",
+                     auth_info->values[1].string.text);
+@@ -9772,7 +9743,6 @@ save_auth_info(
+     */
+ 
+     httpEncode64_2(line, sizeof(line), con->username, (int)strlen(con->username));
+-    cupsFilePutConf(fp, "username", line);
+ 
+     cupsdSetStringf(job->auth_env + 0, "AUTH_USERNAME=%s", con->username);
+ 
+@@ -9781,7 +9751,6 @@ save_auth_info(
+     */
+ 
+     httpEncode64_2(line, sizeof(line), con->password, (int)strlen(con->password));
+-    cupsFilePutConf(fp, "password", line);
+ 
+     cupsdSetStringf(job->auth_env + 1, "AUTH_PASSWORD=%s", con->password);
+   }
+@@ -9789,23 +9758,9 @@ save_auth_info(
+ #ifdef HAVE_GSSAPI
+   if (con->gss_uid > 0)
+   {
+-    cupsFilePrintf(fp, "uid %d\n", (int)con->gss_uid);
+     cupsdSetStringf(&job->auth_uid, "AUTH_UID=%d", (int)con->gss_uid);
+   }
+ #endif /* HAVE_GSSAPI */
+-
+- /*
+-  * Write a random number of newlines to the end of the file...
+-  */
+-
+-  for (i = (CUPS_RAND() % 1024); i >= 0; i --)
+-    cupsFilePutChar(fp, '\n');
+-
+- /*
+-  * Close the file and return...
+-  */
+-
+-  cupsFileClose(fp);
+ }
+ 
+ 
