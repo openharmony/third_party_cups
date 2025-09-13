@@ -1,9 +1,9 @@
 diff --git a/scheduler/hilog-helper.c b/scheduler/hilog-helper.c
 new file mode 100644
-index 0000000..331563c
+index 00000000..56a11249
 --- /dev/null
 +++ b/scheduler/hilog-helper.c
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,33 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,9 @@ index 0000000..331563c
 +
 +void hilogPrint(int level, const char *message)
 +{
++    if (strstr(message, "auth-info") || strstr(message, "password")) {
++        return;
++    }
 +    if (strchr(message, '.') || strchr(message, '/') || strstr(message, "job-name") ||
 +         strstr(message, "uuid") || strstr(message, "argv") || strstr(message, "document-name")) {
 +        HiLogPrint(LOG_CORE, LOG_INFO, 0xD0050B0, "cupslog", "%{private}s", message);
@@ -36,7 +39,7 @@ index 0000000..331563c
 +
 diff --git a/scheduler/hilog-helper.h b/scheduler/hilog-helper.h
 new file mode 100644
-index 0000000..7baa470
+index 00000000..7baa4703
 --- /dev/null
 +++ b/scheduler/hilog-helper.h
 @@ -0,0 +1,16 @@
@@ -58,7 +61,7 @@ index 0000000..7baa470
 +void hilogPrint(int level, const char *message);
 \ No newline at end of file
 diff --git a/scheduler/log.c b/scheduler/log.c
-index 8a2996e..9278934 100644
+index dbaa4a8f..30b9fc24 100644
 --- a/scheduler/log.c
 +++ b/scheduler/log.c
 @@ -25,6 +25,7 @@
