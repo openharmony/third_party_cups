@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..9c0b5e24
+index 00000000..2f49ad18
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,704 @@
+@@ -0,0 +1,705 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -293,14 +293,15 @@ index 00000000..9c0b5e24
 +    auto &usbSrvClient = OHOS::USB::UsbSrvClient::GetInstance();
 +    uint32_t retryNum = 0;
 +    int32_t ret = OHUSB_SUCCESS;
-+    do {
-+        if (retryNum) {
-+            OH_ResetDevice(pipe);
-+        }
++    ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
++    if (ret) {
++        OH_ResetDevice(pipe);
++    }
++    while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES) {
 +        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
 +        retryNum++;
-+    } while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES);
-+    fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d, retryCount: %d\n", ret, retryNum);
++    }
++    fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d, retryNum = %d\n", ret, retryNum);
 +    if (ret != 0) {
 +        fprintf(stderr, "DEBUG: OH_ControlTransferRead fail\n");
 +        return OHUSB_ERROR_IO;
@@ -710,7 +711,7 @@ index 00000000..9c0b5e24
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 00000000..72b693c3
+index 00000000..953ea5c2
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,469 @@
@@ -750,7 +751,7 @@ index 00000000..72b693c3
 +
 +const int32_t OHUSB_ENDPOINT_MAX_LENGTH = 512;
 +const int32_t OHUSB_CONTROLTRANSFER_READ_SLEEP = 100;
-+const int32_t OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES = 20;
++const int32_t OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES = 10;
 +const int32_t OHUSB_BULKTRANSFER_WRITE_SLEEP = 1000;
 +const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 60;
 +const int32_t OHUSB_BULKTRANSFER_READ_TIMEOUT = 5000;
