@@ -79,7 +79,8 @@ def do_patch(target_dir):
         "cups-usb-job-state-monitor.patch",
         "ohos-filetypes-crash.patch",
         "ohos-ipp-authenticate.patch",
-        "backport-CVE-2025-59364"
+        "backport-CVE-2025-59364",
+        "backport-Fix-memory-leak-in-cupsConvertOption.patch"
     ]
 
     for patch in patch_file:
