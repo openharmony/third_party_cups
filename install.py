@@ -78,7 +78,8 @@ def do_patch(target_dir):
         "ohos-verify-backend.patch",
         "cups-usb-job-state-monitor.patch",
         "ohos-filetypes-crash.patch",
-        "ohos-ipp-authenticate.patch"
+        "ohos-ipp-authenticate.patch",
+        "backport-CVE-2025-59364"
     ]
 
     for patch in patch_file:
