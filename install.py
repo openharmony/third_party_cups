@@ -80,7 +80,8 @@ def do_patch(target_dir):
         "ohos-filetypes-crash.patch",
         "ohos-ipp-authenticate.patch",
         "backport-CVE-2025-59364.patch",
-        "backport-Fix-memory-leak-in-cupsConvertOption.patch"
+        "backport-Fix-memory-leak-in-cupsConvertOption.patch",
+        "ohos-ipp-everywhere-color-fix.patch"
     ]
 
     for patch in patch_file:

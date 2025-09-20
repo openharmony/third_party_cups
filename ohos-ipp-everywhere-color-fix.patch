@@ -1,0 +1,12 @@
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+index a4c2b4c..623a862 100644
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -4338,7 +4338,6 @@ _ppdCreateFromIPP2(
+ 
+ 	PRINTF_COLOROPTION("RGB", _("Color"), CUPS_CSPACE_SRGB, 8)
+ 
+-        if (!default_color)
+ 	  default_color = "RGB";
+ 
+         // Apparently some printers only advertise color support, so make sure
