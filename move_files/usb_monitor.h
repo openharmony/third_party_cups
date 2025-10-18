@@ -42,6 +42,8 @@ void ComparePrinterStateReasons(const char* oldReasons, const char* newReasons,
     char** addedReasons, char** deletedReasons);
 
 void FreeCompareStringsResult(char** addedReasons, char** deletedReasons);
+
+bool IsUsbPrinterStateNormalIdle(const char* uri);
 #ifdef __cplusplus
 }
 #endif

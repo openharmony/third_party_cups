@@ -51,7 +51,7 @@ bool StartMonitorIppPrinter(MonitorPrinterCallback callback, const char* uri)
         return false;
     }
     if (!usbManager.ProcessMonitorPrinter(uriStr, callback)) {
-        fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter fail\n");
+        fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter exit\n");
         usbManager.DisConnectUsbPinter(uriStr);
         return false;
     }
@@ -157,4 +157,13 @@ void FreeCompareStringsResult(char** addedReasons, char** deletedReasons)
         delete[] *deletedReasons;
         *deletedReasons = nullptr;
     }
+}
+
+bool IsUsbPrinterStateNormalIdle(const char* uri)
+{
+    if (uri == nullptr) {
+        fprintf(stderr, "DEBUG: USB_MONITOR uri is nullptr\n");
+        return true;
+    }
+    return usbManager.IsUsbPrinterStateNormalIdle(uri);
 }
