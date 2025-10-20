@@ -65,6 +65,8 @@ struct UsbPrinter {
     UsbDevice device;
     bool isOpened = false;
     bool isSupportIpp = false;
+    ipp_pstate_t printerState = IPP_PSTATE_IDLE;
+    std::string printerStateReasons;
 };
 
 class IppUsbManager {
@@ -80,6 +82,7 @@ public:
     bool DisConnectUsbPinter(const std::string& uri);
     bool ProcessMonitorPrinter(const std::string& uri, MonitorPrinterCallback callback);
     void SetTerminalSingal();
+    bool IsUsbPrinterStateNormalIdle(const std::string& uri);
 private:
     IppUsbManager();
     ~IppUsbManager();
@@ -97,6 +100,8 @@ private:
     void RemoveHttpHeader(std::vector<uint8_t>& readTempBuffer);
     void ReportPrinterState(bool& isPrinterStarted, PrinterStatus& printerStatus, MonitorPrinterCallback callback);
     void SetPrinterStateReasons(PrinterStatus& printerStatus);
+    bool SaveIppUsbPrinterState(const std::string& uri, const PrinterStatus& printerStatus);
+    std::string GetSerialNumber(UsbDevice &usbDevice);
 
     std::map<std::string, UsbPrinter> ippPrinterMap_;
     std::atomic<bool> isTerminated_;

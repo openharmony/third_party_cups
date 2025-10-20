@@ -48,6 +48,16 @@ static constexpr std::array<const char*, errorReasonCount> ippPrinterErrorReason
     "door-open"
 };
 static auto &usbSrvClient = UsbSrvClient::GetInstance();
+
+static constexpr uint16_t USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER = 0X03;
+static constexpr uint8_t USB_REQUESTTYPE_DEVICE_TO_HOST = 0X80;
+static constexpr uint8_t USB_REQUEST_GET_DESCRIPTOR = 0X06;
+static constexpr uint16_t USB_VALUE_DESCRIPTOR_TYPE_STRING = 0X03;
+static constexpr int32_t HTTP_COMMON_CONST_VALUE_8 = 8;
+static constexpr uint16_t USB_INDEX_LANGUAGE_ID_ENGLISH = 0X409;
+static constexpr int32_t HTTP_COMMON_CONST_VALUE_500 = 500;
+static constexpr int32_t HTTP_COMMON_CONST_VALUE_100 = 100;
+static constexpr int32_t HTTP_COMMON_CONST_VALUE_2 = 2;
 IppUsbManager::IppUsbManager()
 {
     isTerminated_.store(false);
@@ -72,6 +82,7 @@ IppUsbManager& IppUsbManager::GetInstance()
 
 bool IppUsbManager::FindUsbPrinter(UsbDevice& device, const std::string& uri)
 {
+    fprintf(stderr, "DEBUG: USB_MONITOR FindUsbPrinter, uri = %s\n", uri.c_str());
     std::vector<UsbDevice> devlist;
     auto getDevRet = usbSrvClient.GetDevices(devlist);
     if (getDevRet != OHOS::ERR_OK) {
@@ -83,19 +94,7 @@ bool IppUsbManager::FindUsbPrinter(UsbDevice& device, const std::string& uri)
         return false;
     }
     for (size_t i = 0; i < devlist.size(); i++) {
-        ohusb_pipe pipe;
-        pipe.busNum = devlist[i].GetBusNum();
-        pipe.devAddr = devlist[i].GetDevAddr();
-        constexpr int32_t MAX_SN_LENGTH = 256;
-        char tempsern[MAX_SN_LENGTH] = {};
-        int32_t length = OH_GetStringDescriptor(&pipe, devlist[i].GetiSerialNumber(),
-            reinterpret_cast<unsigned char *>(tempsern), sizeof(tempsern) - 1);
-        std::string sn;
-        if (length <= 0) {
-            fprintf(stderr, "DEBUG: USB_MONITOR Not find sn\n");
-            continue;
-        }
-        sn = std::string(tempsern);
+        std::string sn = GetSerialNumber(devlist[i]);
         if (uri.find(sn) == std::string::npos) {
             continue;
         }
@@ -105,6 +104,44 @@ bool IppUsbManager::FindUsbPrinter(UsbDevice& device, const std::string& uri)
     }
     fprintf(stderr, "DEBUG: USB_MONITOR not find sn\n");
     return false;
+}
+
+std::string IppUsbManager::GetSerialNumber(UsbDevice &usbDevice)
+{
+    USBDevicePipe usbDevicePipe;
+    int32_t openDeviceRet = usbSrvClient.OpenDevice(usbDevice, usbDevicePipe);
+    if (openDeviceRet != UEC_OK) {
+        fprintf(stderr, "DEBUG: USB_MONITOR openDevice fail with ret = %d\n", openDeviceRet);
+        return "";
+    }
+    uint16_t indexInStringDescriptor = USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER;
+    uint8_t requestType = USB_REQUESTTYPE_DEVICE_TO_HOST;
+    uint8_t request = USB_REQUEST_GET_DESCRIPTOR;
+    uint16_t value = (USB_VALUE_DESCRIPTOR_TYPE_STRING << HTTP_COMMON_CONST_VALUE_8) | indexInStringDescriptor;
+    uint16_t index = USB_INDEX_LANGUAGE_ID_ENGLISH;
+    int32_t timeOut = HTTP_COMMON_CONST_VALUE_500;
+    const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
+    std::vector<uint8_t> bufferData(HTTP_COMMON_CONST_VALUE_100, 0);
+    int32_t ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
+    if (ret != 0 || bufferData[0] == 0) {
+        fprintf(stderr, "DEBUG: USB_MONITOR ControlTransfer failed, ret = %d\n", ret);
+        return "";
+    }
+    std::vector<uint8_t> arr((bufferData[0] - HTTP_COMMON_CONST_VALUE_2) / HTTP_COMMON_CONST_VALUE_2);
+    int arrIndex = 0;
+    for (int i = 2; i < bufferData[0];) {
+        arr[arrIndex++] = bufferData[i];
+        i += HTTP_COMMON_CONST_VALUE_2;
+    }
+    std::string serialNumber(arr.begin(), arr.end());
+    bool closeDeviceRet = usbSrvClient.Close(usbDevicePipe);
+    if (closeDeviceRet != UEC_OK) {
+        fprintf(stderr, "DEBUG: USB_MONITOR closeDeviceRet failed, ret = %d\n", closeDeviceRet);
+    }
+    size_t pos = serialNumber.find_last_not_of('\0');
+    size_t newSize = (pos == std::string::npos) ? 0 : pos + 1;
+    serialNumber.resize(newSize);
+    return serialNumber;
 }
 
 bool IppUsbManager::IsSupportIppOverUsb(const std::string& uri)
@@ -293,6 +330,7 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
             fprintf(stderr, "DEBUG: USB_MONITOR ProcessMonitorPrinter job is completed\n");
             return true;
         }
+        SaveIppUsbPrinterState(uri, printerStatus);
     }
     fprintf(stderr, "DEBUG: USB_MONITOR endtWriteDataToPrinterLooper\n");
     return false;
@@ -301,6 +339,37 @@ bool IppUsbManager::ProcessMonitorPrinter(const std::string& uri, MonitorPrinter
 void IppUsbManager::SetTerminalSingal()
 {
     isTerminated_.store(true);
+}
+
+bool IppUsbManager::IsUsbPrinterStateNormalIdle(const std::string& uri)
+{
+    std::lock_guard<std::mutex> autoLock(lock_);
+    auto it = ippPrinterMap_.find(uri);
+    if (it != ippPrinterMap_.end()) {
+        ipp_pstate_t printerState = it->second.printerState;
+        std::string printerStateReasons = it->second.printerStateReasons;
+        if (printerState == IPP_PSTATE_IDLE && printerStateReasons == "none") {
+            fprintf(stderr, "DEBUG: USB_MONITOR printer is normal idle, uri = %s\n", uri.c_str());
+            return true;
+        }
+        fprintf(stderr, "DEBUG: USB_MONITOR printer is busy, uri = %s\n", uri.c_str());
+        return false;
+    }
+    fprintf(stderr, "DEBUG: USB_MONITOR IsUsbPrinterStateNormalIdle fail, uri = %s\n", uri.c_str());
+    return false;
+}
+
+bool IppUsbManager::SaveIppUsbPrinterState(const std::string& uri, const PrinterStatus& printerStatus)
+{
+    std::lock_guard<std::mutex> autoLock(lock_);
+    auto it = ippPrinterMap_.find(uri);
+    if (it != ippPrinterMap_.end()) {
+        it->second.printerState = printerStatus.printerState;
+        it->second.printerStateReasons = std::string(printerStatus.printerStateReasons);
+        return true;
+    }
+    fprintf(stderr, "DEBUG: USB_MONITOR SaveIppUsbPrinterState fail, uri = %s\n", uri.c_str());
+    return false;
 }
 
 void IppUsbManager::RemoveHttpHeader(std::vector<uint8_t>& readTempBuffer)

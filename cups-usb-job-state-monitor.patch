@@ -1,13 +1,12 @@
 diff --git a/backend/usb.c b/backend/usb.c
-index a4dfbc0b..79050681 100644
+index a4dfbc0..4e42b10 100644
 --- a/backend/usb.c
 +++ b/backend/usb.c
-@@ -110,6 +110,63 @@ print_device(const char *uri,		/* I - Device URI */
+@@ -110,6 +110,59 @@ print_device(const char *uri,		/* I - Device URI */
  }
  #endif /* HAVE_LIBUSB */
  
 +#define HAVE_USB_MONITOR
-+#define BEGIN_WAIT_TIME 2
 +
 +#ifdef HAVE_USB_MONITOR
 +#include "usb_monitor.h"
@@ -50,14 +49,11 @@ index a4dfbc0b..79050681 100644
 +        fprintf(stderr, "DEBUG: USB_MONITOR arg is nullptr\n");
 +        return NULL;
 +    }
-+    sleep(BEGIN_WAIT_TIME);
 +    char* uri = (char*)arg;
-+    if (IsSupportIppOverUsb(uri)) {
-+        if (StartMonitorIppPrinter(UpdatePrinterState, uri)) {
-+            fprintf(stderr, "DEBUG: USB_MONITOR StartMonitorIppPrinter finished\n");
-+        } else {
-+            fprintf(stderr, "STATE: none\n");
-+        }
++    if (StartMonitorIppPrinter(UpdatePrinterState, uri)) {
++        fprintf(stderr, "DEBUG: USB_MONITOR StartMonitorIppPrinter finished\n");
++    } else {
++        fprintf(stderr, "STATE: none\n");
 +    }
 +    free(uri);
 +    return NULL;
@@ -66,21 +62,25 @@ index a4dfbc0b..79050681 100644
  
  /*
   * 'main()' - Send a file to the specified USB port.
-@@ -231,6 +288,13 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
+@@ -231,6 +284,17 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
      copies = atoi(argv[4]);
    }
  
 +#ifdef HAVE_USB_MONITOR
-+signal(SIGTERM, HandleTerm);
 +fprintf(stderr, "STATE: cups-waiting-for-job-completed\n");
-+char* uriCopy = strdup(uri);
-+pthread_t monitorThread = _cupsThreadCreate((_cups_thread_func_t)MonitorPrinterThread, uriCopy);
++bool isSupportIppOverUsb = IsSupportIppOverUsb(uri);
++pthread_t monitorThread = 0;
++if (isSupportIppOverUsb) {
++    signal(SIGTERM, HandleTerm);
++    char* uriCopy = strdup(uri);
++    monitorThread = _cupsThreadCreate((_cups_thread_func_t)MonitorPrinterThread, uriCopy);
++}
 +#endif /* HAVE_USB_MONITOR */
 +
   /*
    * Finally, send the print file...
    */
-@@ -245,5 +309,15 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
+@@ -245,5 +309,19 @@ main(int  argc,				/* I - Number of command-line arguments (6 or 7) */
    if (print_fd != 0)
      close(print_fd);
  
@@ -91,8 +91,12 @@ index a4dfbc0b..79050681 100644
 +    status = CUPS_BACKEND_FAILED;
 +    fprintf(stderr, "STATE: stopped\n");
 +}
-+pthread_join(monitorThread, NULL);
++if (isSupportIppOverUsb) {
++    if (IsUsbPrinterStateNormalIdle(uri)) {
++        SetTerminalSingal();
++    }
++    pthread_join(monitorThread, NULL);
++}
 +#endif /* HAVE_USB_MONITOR */
-+
    return (status);
  }
