@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 00000000..d1821dfb
+index 00000000..1e390d91
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1835 @@
+@@ -0,0 +1,1845 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -477,7 +477,17 @@ index 00000000..d1821dfb
 +	      {
 +	        fputs("DEBUG: Got USB transaction timeout during write.\n", stderr);
 +	        iostatus = 0;
-+	      }
++	      } else if (iostatus == OHUSB_ERROR_INTERRUPTED) {
++         /*
++	        * Write error - bail if we don't see an error we can retry...
++	        */
++
++	        _cupsLangPrintFilter(stderr, "ERROR", _("Unable to send data to printer."));
++	        fprintf(stderr, "DEBUG: ohusb write operation returned %d.\n", iostatus);
++
++	        status = CUPS_BACKEND_HOLD;
++	        break;
++        }
 +
 +       /*
 +	      * Retry a write after an aborted write since we probably just got
@@ -499,7 +509,7 @@ index 00000000..d1821dfb
 +	        */
 +
 +	        _cupsLangPrintFilter(stderr, "ERROR", _("Unable to send data to printer."));
-+	        fprintf(stderr, "DEBUG: ohusb write operation returned %x.\n", iostatus);
++	        fprintf(stderr, "DEBUG: ohusb write operation returned %d.\n", iostatus);
 +
 +	        status = CUPS_BACKEND_FAILED;
 +	        break;
