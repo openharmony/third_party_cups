@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..2f49ad18
+index 00000000..8ee04e7f
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,705 @@
+@@ -0,0 +1,701 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -257,18 +257,14 @@ index 00000000..2f49ad18
 +            fprintf(stderr, "DEBUG: BulkTransferWriteData no device\n");
 +            return OHUSB_ERROR_NO_DEVICE;
 +        }
-+        if (ret == OHUSB_ERROR_IO) {
-+            fprintf(stderr, "DEBUG: BulkTransferWriteData OHUSB_ERROR_IO\n");
-+            return OHUSB_ERROR_IO;
-+        }
-+        if (ret == OHUSB_ERROR_TIMEOUT) {
++        if (ret != OHUSB_SUCCESS) {
 +            std::this_thread::sleep_for(std::chrono::milliseconds(OHUSB_BULKTRANSFER_WRITE_SLEEP));
 +        }
 +        retryNum++;
 +    } while (ret != OHUSB_SUCCESS && retryNum < OHUSB_WRITE_RETRY_MAX_TIMES);
 +    if (ret != 0) {
 +        fprintf(stderr, "DEBUG: Write data fail\n");
-+        return ret;
++        return OHUSB_ERROR_INTERRUPTED;
 +    }
 +    return ret;
 +}
@@ -307,7 +303,7 @@ index 00000000..2f49ad18
 +        return OHUSB_ERROR_IO;
 +    }
 +    fprintf(stderr, "DEBUG: OH_ControlTransferRead bufferData size = %zu\n", bufferData.size());
-+    
++
 +    if (bufferData.size() == 0) {
 +        return 0;
 +    }
@@ -711,7 +707,7 @@ index 00000000..2f49ad18
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 00000000..953ea5c2
+index 00000000..634e8b65
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,469 @@
@@ -753,7 +749,7 @@ index 00000000..953ea5c2
 +const int32_t OHUSB_CONTROLTRANSFER_READ_SLEEP = 100;
 +const int32_t OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES = 10;
 +const int32_t OHUSB_BULKTRANSFER_WRITE_SLEEP = 1000;
-+const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 60;
++const int32_t OHUSB_WRITE_RETRY_MAX_TIMES = 3;
 +const int32_t OHUSB_BULKTRANSFER_READ_TIMEOUT = 5000;
 +
 +/*
@@ -827,32 +823,32 @@ index 00000000..953ea5c2
 +typedef enum {
 +	/** Request status of the specific recipient */
 +    OHUSB_REQUEST_GET_STATUS = 0x00,
-+    
++
 +    /** Clear or disable a specific feature */
 +    OHUSB_REQUEST_CLEAR_FEATURE = 0x01,
-+    
++
 +    /* 0x02 is reserved */
-+    
++
 +    /** Set or enable a specific feature */
 +    OHUSB_REQUEST_SET_FEATURE = 0x03,
-+    
++
 +    /* 0x04 is reserved */
-+    
++
 +    /** Set device address for all future accesses */
 +    OHUSB_REQUEST_SET_ADDRESS = 0x05,
-+    
++
 +    /** Get the specified descriptor */
 +    OHUSB_REQUEST_GET_DESCRIPTOR = 0x06,
-+    
++
 +    /** Used to update existing descriptors or add new descriptors */
 +    OHUSB_REQUEST_SET_DESCRIPTOR = 0x07,
-+    
++
 +    /** Get the current device configuration value */
 +    OHUSB_REQUEST_GET_CONFIGURATION = 0x08,
-+    
++
 +    /** Set device configuration */
 +    OHUSB_REQUEST_SET_CONFIGURATION = 0x09,
-+    
++
 +    /** Return the selected alternate setting for the specified interface */
 +    OHUSB_REQUEST_GET_INTERFACE = 0x0a,
 +
