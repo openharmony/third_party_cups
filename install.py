@@ -81,7 +81,8 @@ def do_patch(target_dir):
         "ohos-ipp-authenticate.patch",
         "backport-CVE-2025-59364.patch",
         "backport-Fix-memory-leak-in-cupsConvertOption.patch",
-        "ohos-ipp-everywhere-color-fix.patch"
+        "ohos-ipp-everywhere-color-fix.patch",
+        "ohos-default-paper-size.patch"
     ]
 
     for patch in patch_file:

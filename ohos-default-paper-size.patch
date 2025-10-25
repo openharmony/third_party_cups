@@ -1,0 +1,12 @@
+diff --git a/scheduler/conf.c b/scheduler/conf.c
+index 1804503..49d4127 100644
+--- a/scheduler/conf.c
++++ b/scheduler/conf.c
+@@ -639,6 +639,7 @@ cupsdReadConfiguration(void)
+   ReadyPaperSizes = NULL;
+ 
+   cupsdSetString(&TempDir, NULL);
++  cupsdSetString(&DefaultPaperSize, "A4");
+ 
+ #ifdef HAVE_GSSAPI
+   cupsdSetString(&GSSServiceName, CUPS_DEFAULT_GSSSERVICENAME);
