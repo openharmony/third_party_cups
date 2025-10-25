@@ -1,5 +1,5 @@
 diff --git a/scheduler/ipp.c b/scheduler/ipp.c
-index 96ed0259..6c5cdc55 100644
+index 96ed025..397ccbb 100644
 --- a/scheduler/ipp.c
 +++ b/scheduler/ipp.c
 @@ -9651,8 +9651,6 @@ save_auth_info(
@@ -42,7 +42,7 @@ index 96ed0259..6c5cdc55 100644
    for (i = 0;
         i < (int)(sizeof(job->auth_env) / sizeof(job->auth_env[0]));
         i ++)
-@@ -9723,11 +9700,7 @@ save_auth_info(
+@@ -9723,15 +9700,13 @@ save_auth_info(
        if (strcmp(dest->auth_info_required[i], "negotiate"))
        {
  	httpEncode64_2(line, sizeof(line), auth_info->values[i].string.text, (int)strlen(auth_info->values[i].string.text));
@@ -52,9 +52,16 @@ index 96ed0259..6c5cdc55 100644
 -	cupsFilePutConf(fp, dest->auth_info_required[i],
 -	                auth_info->values[i].string.text);
  
-       if (!strcmp(dest->auth_info_required[i], "username"))
+-      if (!strcmp(dest->auth_info_required[i], "username"))
++      if (!strcmp(dest->auth_info_required[i], "username")) {
          cupsdSetStringf(job->auth_env + i, "AUTH_USERNAME=%s",
-@@ -9754,13 +9727,11 @@ save_auth_info(
+ 	                auth_info->values[i].string.text);
++        cupsdSetString(&job->username, auth_info->values[i].string.text);
++      }
+       else if (!strcmp(dest->auth_info_required[i], "domain"))
+         cupsdSetStringf(job->auth_env + i, "AUTH_DOMAIN=%s",
+ 	                auth_info->values[i].string.text);
+@@ -9754,16 +9729,15 @@ save_auth_info(
      */
  
      httpEncode64_2(line, sizeof(line), auth_info->values[0].string.text, (int)strlen(auth_info->values[0].string.text));
@@ -68,7 +75,11 @@ index 96ed0259..6c5cdc55 100644
  
      cupsdSetStringf(job->auth_env + 1, "AUTH_PASSWORD=%s",
                      auth_info->values[1].string.text);
-@@ -9772,7 +9743,6 @@ save_auth_info(
++    cupsdSetString(&job->username, auth_info->values[0].string.text);
+   }
+   else if (con->username[0])
+   {
+@@ -9772,7 +9746,6 @@ save_auth_info(
      */
  
      httpEncode64_2(line, sizeof(line), con->username, (int)strlen(con->username));
@@ -76,7 +87,7 @@ index 96ed0259..6c5cdc55 100644
  
      cupsdSetStringf(job->auth_env + 0, "AUTH_USERNAME=%s", con->username);
  
-@@ -9781,7 +9751,6 @@ save_auth_info(
+@@ -9781,7 +9754,6 @@ save_auth_info(
      */
  
      httpEncode64_2(line, sizeof(line), con->password, (int)strlen(con->password));
@@ -84,7 +95,7 @@ index 96ed0259..6c5cdc55 100644
  
      cupsdSetStringf(job->auth_env + 1, "AUTH_PASSWORD=%s", con->password);
    }
-@@ -9789,23 +9758,9 @@ save_auth_info(
+@@ -9789,23 +9761,9 @@ save_auth_info(
  #ifdef HAVE_GSSAPI
    if (con->gss_uid > 0)
    {
