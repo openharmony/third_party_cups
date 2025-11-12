@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..8ee04e7f
+index 00000000..08acffa4
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,701 @@
+@@ -0,0 +1,695 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -208,7 +208,7 @@ index 00000000..8ee04e7f
 +int32_t OH_BulkTransferWrite(
 +    ohusb_pipe *pipe, ohusb_transfer_pipe *tpipe, unsigned char *data, int length, int *transferred, int32_t timeout)
 +{
-+    fprintf(stderr, "DEBUG: OH_BulkTransferRead enter\n");
++    fprintf(stderr, "DEBUG: OH_BulkTransferWrite enter\n");
 +    USBDevicePipe usbDevicePipe = {pipe->busNum, pipe->devAddr};
 +    USBEndpoint endpoint;
 +    endpoint.SetInterfaceId(tpipe->bInterfaceId);
@@ -216,7 +216,6 @@ index 00000000..8ee04e7f
 +    int32_t ret = 0;
 +    int leftDataLen = length;
 +    while (leftDataLen > 0) {
-+        fprintf(stderr, "DEBUG: OH_BulkTransferWrite leftDataLen waiting for transfer = %d\n", leftDataLen);
 +        size_t len = leftDataLen > OHUSB_ENDPOINT_MAX_LENGTH ? OHUSB_ENDPOINT_MAX_LENGTH : leftDataLen;
 +        std::string sendDataStr(reinterpret_cast<char *>(data), len);
 +        ret = BulkTransferWriteData(usbDevicePipe, endpoint, sendDataStr, timeout);
@@ -224,19 +223,16 @@ index 00000000..8ee04e7f
 +            fprintf(stderr, "DEBUG: OH_BulkTransferWrite OHUSB_ERROR_IO\n");
 +            int32_t claimRet = OH_ClaimInterface(pipe, tpipe->bClaimedInterfaceId, true);
 +            if (claimRet >= 0) {
-+                fprintf(stderr, "DEBUG: OH_BulkTransferWrite OH_ClaimInterface success ret = %d\n", claimRet);
 +                continue;
 +            }
 +        }
 +        if (ret != 0) {
 +            return ret;
 +        }
-+        fprintf(stderr, "DEBUG: OH_BulkTransferWrite transferred data len = %zu\n", len);
 +        leftDataLen -= len;
 +        data += len;
 +    }
 +    *transferred = length - leftDataLen;
-+    fprintf(stderr, "DEBUG: transferred data len = %d\n", *transferred);
 +    fprintf(stderr, "DEBUG: OH_BulkTransferWrite out\n");
 +    return OHUSB_SUCCESS;
 +}
@@ -250,9 +246,7 @@ index 00000000..8ee04e7f
 +    uint32_t retryNum = 0;
 +    int32_t ret = 0;
 +    do {
-+        fprintf(stderr, "DEBUG: BulkTransferWriteData write data retryCout: %d\n", retryNum);
 +        ret = usbSrvClient.BulkTransfer(usbDevicePipe, endpoint, vectorRequestBuffer, timeout);
-+        fprintf(stderr, "DEBUG: BulkTransferWrite ret: %d\n", ret);
 +        if (ret == HDF_DEV_ERR_NO_DEVICE) {
 +            fprintf(stderr, "DEBUG: BulkTransferWriteData no device\n");
 +            return OHUSB_ERROR_NO_DEVICE;
