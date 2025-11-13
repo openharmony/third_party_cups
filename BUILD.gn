@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("./cups.gni")
 
 config_dir = "${target_gen_dir}"
-cups_code_dir = "${target_gen_dir}/cups-2.4.12"
+cups_code_dir = "${target_gen_dir}/cups-2.4.14"
 core_code_dir = "$cups_code_dir/cups/"
 filter_code_dir = "$cups_code_dir/filter"
 backend_code_dir = "$cups_code_dir/backend"
@@ -259,7 +259,7 @@ config("cups_config") {
     "$config_dir",
     "$cups_code_dir",
     "$core_code_dir",
-    get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.12",
+    get_label_info(":cups_action", "target_gen_dir") + "/cups-2.4.14",
   ]
 
   cflags = [

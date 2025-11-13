@@ -79,8 +79,6 @@ def do_patch(target_dir):
         "cups-usb-job-state-monitor.patch",
         "ohos-filetypes-crash.patch",
         "ohos-ipp-authenticate.patch",
-        "backport-CVE-2025-59364.patch",
-        "backport-Fix-memory-leak-in-cupsConvertOption.patch",
         "ohos-ipp-everywhere-color-fix.patch",
         "ohos-default-paper-size.patch"
     ]
@@ -94,7 +92,7 @@ def main():
     cups_path.add_argument('--gen-dir', help='generate path of log', required=True)
     cups_path.add_argument('--source-dir', help='generate path of log', required=True)
     args = cups_path.parse_args()
-    target_dir = os.path.join(args.gen_dir, "cups-2.4.12")
+    target_dir = os.path.join(args.gen_dir, "cups-2.4.14")
     convs_dir = os.path.join(target_dir, "conf")
 
     move_cups_files(args.source_dir, target_dir)
