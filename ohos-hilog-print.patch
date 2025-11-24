@@ -1,9 +1,9 @@
 diff --git a/scheduler/hilog-helper.c b/scheduler/hilog-helper.c
 new file mode 100644
-index 00000000..1059400c
+index 00000000..5db33013
 --- /dev/null
 +++ b/scheduler/hilog-helper.c
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,28 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,14 +29,7 @@ index 00000000..1059400c
 +    if (strstr(message, "auth-info") || strstr(message, "password")) {
 +        return;
 +    }
-+
-+    if (strchr(message, '.') || strchr(message, '/') || strstr(message, "job-name") ||
-+         strstr(message, "uuid") || strstr(message, "argv") || strstr(message, "document-name") ||
-+         strstr(message, "user-name") || strstr(message, "owner") || strstr(message, " by ")) {
-+        HiLogPrint(LOG_CORE, LOG_DEBUG, 0xD0050B0, "cupslog", "%{private}s", message);
-+    } else {
-+        HiLogPrint(LOG_CORE, LOG_DEBUG, 0xD0050B0, "cupslog", "%{public}s", message);
-+    }
++    HiLogPrint(LOG_CORE, LOG_DEBUG, 0xD0050B0, "cupslog", "%{public}s", message);
 +}
 +
 diff --git a/scheduler/hilog-helper.h b/scheduler/hilog-helper.h
