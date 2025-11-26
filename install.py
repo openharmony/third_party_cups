@@ -80,7 +80,8 @@ def do_patch(target_dir):
         "ohos-filetypes-crash.patch",
         "ohos-ipp-authenticate.patch",
         "ohos-ipp-everywhere-color-fix.patch",
-        "ohos-default-paper-size.patch"
+        "ohos-default-paper-size.patch",
+        "ohos-ppdcache.patch"
     ]
 
     for patch in patch_file:
