@@ -37,4 +37,5 @@ cups_defines = [
 
 declare_args() {
   cups_feature_pstops_filter = false
+  cups_feature_virtual_printer = false
 }

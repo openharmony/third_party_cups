@@ -93,6 +93,10 @@ cups_driverd_generated_sources = [ "$scheduler_code_dir/cups-driverd.cxx" ]
 
 cups_exec_generated_sources = [ "$scheduler_code_dir/cups-exec.c" ]
 
+virtual_printer_generated_sources = [ "$backend_code_dir/virtual-printer.c" ]
+
+virtual_printer_generated_ppd = "$backend_code_dir/virtual-printer.ppd"
+
 cupsd_generated_sources = [
   "$scheduler_code_dir/auth.c",
   "$scheduler_code_dir/banners.c",
@@ -217,6 +221,8 @@ action("cups_action") {
   outputs += scheduler_util_generated_sources
   outputs += [ mime_convs_generated_source ]
   outputs += [ mime_types_generated_source ]
+  outputs += virtual_printer_generated_sources
+  outputs += [ virtual_printer_generated_ppd ]
 
   if (cups_feature_pstops_filter) {
     outputs += pstops_generated_sources
@@ -250,6 +256,12 @@ group("third_party_cups") {
   ]
   if (cups_feature_pstops_filter) {
     deps += [ ":pstops" ]
+  }
+  if (cups_feature_virtual_printer) {
+    deps += [
+        ":virtual_printer_ppd",
+        ":virtual-printer"
+    ]
   }
 }
 
@@ -562,4 +574,27 @@ ohos_prebuilt_etc("mime.types") {
   relative_install_dir = "cups/share/mime"
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
+}
+
+ohos_executable('virtual-printer') {
+    sources = virtual_printer_generated_sources
+    deps = [
+        ":backend",
+        ":cups",
+        ":cups_action",
+    ]
+    external_deps = []
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/backend"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+}
+
+ohos_prebuilt_etc("virtual_printer_ppd") {
+    source = virtual_printer_generated_ppd
+    deps = [ ":cups_action" ]
+    relative_install_dir = "cups/share/model"
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
 }
