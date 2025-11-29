@@ -259,8 +259,8 @@ group("third_party_cups") {
   }
   if (cups_feature_virtual_printer) {
     deps += [
-        ":virtual_printer_ppd",
-        ":virtual-printer"
+      ":virtual_printer_ppd",
+      ":virtual-printer"
     ]
   }
 }
@@ -576,19 +576,19 @@ ohos_prebuilt_etc("mime.types") {
   part_name = "$PART_NAME"
 }
 
-ohos_executable('virtual-printer') {
-    sources = virtual_printer_generated_sources
-    deps = [
-        ":backend",
-        ":cups",
-        ":cups_action",
-    ]
-    external_deps = []
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/backend"
-    public_configs = [ ":cups_config" ]
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
+ohos_executable("virtual-printer") {
+   sources = virtual_printer_generated_sources
+   deps = [
+     ":backend",
+     ":cups",
+     ":cups_action",
+   ]
+   external_deps = []
+   install_enable = true
+   module_install_dir = "$cups_serverbin_dir/backend"
+   public_configs = [ ":cups_config" ]
+   subsystem_name = "$SUBSYSTEM_NAME"
+   part_name = "$PART_NAME"
 }
 
 ohos_prebuilt_etc("virtual_printer_ppd") {
