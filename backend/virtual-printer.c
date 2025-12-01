@@ -1,16 +1,12 @@
 /*
- * USB printer backend for CUPS.
+ * Backend support definitions for CUPS.
  *
- * Copyright © 2020-2024 by OpenPrinting.
- * Copyright © 2007-2012 by Apple Inc.
+ * Copyright © 2021 by OpenPrinting
+ * Copyright © 2007-2021 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
  * information.
- */
-
-/*
- * Include necessary headers.
  */
 
 #include <stdio.h>
@@ -65,15 +61,16 @@ static int build_output_path(const char *tmp_dir, const char *job_id, char *outp
         return 1;
     }
 
-    errno_t ret = snprintf_s(output_file,
-                             OUTPUT_PATH_BUF_SIZE,
-                             _TRUNCATE,
-                             "%s/%s.pdf",
-                             tmp_dir, job_id);
+    // 跨平台：移除_TRUNCATE，手动校验长度
+    int ret = snprintf_s(output_file,
+                         OUTPUT_PATH_BUF_SIZE,
+                         "%s/%s.pdf",
+                         tmp_dir, job_id);
 
-    if (ret != 0) {
-        if (ret == ERANGE) {
-            fprintf(stderr, "ERROR: output path too long (truncated), max length: %d\n", OUTPUT_PATH_BUF_SIZE - 1);
+    // snprintf_s返回值：成功返回写入的字符数（不含\0），失败返回非0
+    if (ret < 0 || ret >= OUTPUT_PATH_BUF_SIZE) {
+        if (ret >= OUTPUT_PATH_BUF_SIZE) {
+            fprintf(stderr, "ERROR: output path too long, max length: %d\n", OUTPUT_PATH_BUF_SIZE - 1);
         } else {
             fprintf(stderr, "ERROR: snprintf_s failed to build output path, err code: %d\n", ret);
         }
