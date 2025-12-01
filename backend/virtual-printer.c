@@ -1,12 +1,16 @@
 /*
- * Backend support definitions for CUPS.
+ * USB printer backend for CUPS.
  *
- * Copyright © 2021 by OpenPrinting
- * Copyright © 2007-2021 by Apple Inc.
+ * Copyright © 2020-2024 by OpenPrinting.
+ * Copyright © 2007-2012 by Apple Inc.
  * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
  *
  * Licensed under Apache License v2.0.  See the file "LICENSE" for more
  * information.
+ */
+
+/*
+ * Include necessary headers.
  */
 
 #include <stdio.h>
@@ -117,11 +121,15 @@ int main(int argc, char *argv[]) {
     }
 
     if (write_output_file(input_fd, output_file) != 0) {
-        if (input_fd != 0) close(input_fd);
+        if (input_fd != 0) {
+            close(input_fd);
+        }
         return 1;
     }
 
-    if (input_fd != 0) close(input_fd);
+    if (input_fd != 0) {
+        close(input_fd);
+    }
 
     verify_output_file(output_file);
 
