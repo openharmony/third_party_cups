@@ -16,12 +16,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <stdint.h>
 
 #define BUFFER_SIZE 4096
 #define DEFAULT_TMP_DIR "/data/service/el1/public/print_service/cups/spool/tmp"
-#define MAX_JOB_ID_LEN 64
-#define OUTPUT_PATH_BUF_SIZE 256
 
 static int validate_args(int argc, char *argv[]) {
     fprintf(stderr, "CUPS backend start, argc = %d\n", argc);
@@ -32,12 +29,8 @@ static int validate_args(int argc, char *argv[]) {
         return 1;
     }
 
-    if (argc < 2 || strlen(argv[1]) > MAX_JOB_ID_LEN) {
-        if (argc < 2) {
-            fprintf(stderr, "ERROR: job id is missing\n");
-        } else {
-            fprintf(stderr, "ERROR: job id too long (max %d bytes)\n", MAX_JOB_ID_LEN);
-        }
+    if (argc < 2) {
+        fprintf(stderr, "ERROR: job id is missing\n");
         return 1;
     }
 
@@ -55,30 +48,9 @@ static const char *get_temp_dir(void) {
     return tmp_dir;
 }
 
-static int build_output_path(const char *tmp_dir, const char *job_id, char *output_file) {
-    if (tmp_dir == NULL || job_id == NULL || output_file == NULL) {
-        fprintf(stderr, "ERROR: invalid input parameters for path building (NULL pointer)\n");
-        return 1;
-    }
-
-    // 跨平台：移除_TRUNCATE，手动校验长度
-    int ret = snprintf_s(output_file,
-                         OUTPUT_PATH_BUF_SIZE,
-                         "%s/%s.pdf",
-                         tmp_dir, job_id);
-
-    // snprintf_s返回值：成功返回写入的字符数（不含\0），失败返回非0
-    if (ret < 0 || ret >= OUTPUT_PATH_BUF_SIZE) {
-        if (ret >= OUTPUT_PATH_BUF_SIZE) {
-            fprintf(stderr, "ERROR: output path too long, max length: %d\n", OUTPUT_PATH_BUF_SIZE - 1);
-        } else {
-            fprintf(stderr, "ERROR: snprintf_s failed to build output path, err code: %d\n", ret);
-        }
-        return 1;
-    }
-
+static void build_output_path(const char *tmp_dir, const char *job_id, char *output_file) {
+    snprintf(output_file, 256, "%s/%s.pdf", tmp_dir, job_id);
     fprintf(stderr, "Output file path: %s\n", output_file);
-    return 0;
 }
 
 static int open_input_source(int argc, char *argv[]) {
@@ -107,11 +79,7 @@ static int write_output_file(int input_fd, const char *output_file) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read;
     while ((bytes_read = read(input_fd, buffer, BUFFER_SIZE)) > 0) {
-        if (fwrite(buffer, 1, (size_t)bytes_read, fp_dest) != (size_t)bytes_read) {
-            fprintf(stderr, "ERROR: write to %s failed, err: %s\n", output_file, strerror(errno));
-            fclose(fp_dest);
-            return 1;
-        }
+        fwrite(buffer, 1, (size_t)bytes_read, fp_dest);
     }
 
     if (bytes_read < 0) {
@@ -140,10 +108,8 @@ int main(int argc, char *argv[]) {
 
     const char *tmp_dir = get_temp_dir();
 
-    char output_file[OUTPUT_PATH_BUF_SIZE];
-    if (build_output_path(tmp_dir, argv[1], output_file) != 0) {
-        return 1;
-    }
+    char output_file[256];
+    build_output_path(tmp_dir, argv[1], output_file);
 
     int input_fd = open_input_source(argc, argv);
     if (input_fd < 0) {
@@ -151,15 +117,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (write_output_file(input_fd, output_file) != 0) {
-        if (input_fd != 0) {
-            close(input_fd);
-        }
+        if (input_fd != 0) close(input_fd);
         return 1;
     }
 
-    if (input_fd != 0) {
-        close(input_fd);
-    }
+    if (input_fd != 0) close(input_fd);
 
     verify_output_file(output_file);
 
