@@ -1,3 +1,18 @@
+/*
+ * USB printer backend for CUPS.
+ *
+ * Copyright © 2020-2024 by OpenPrinting.
+ * Copyright © 2007-2012 by Apple Inc.
+ * Copyright © 1997-2007 by Easy Software Products, all rights reserved.
+ *
+ * Licensed under Apache License v2.0.  See the file "LICENSE" for more
+ * information.
+ */
+
+/*
+ * Include necessary headers.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,100 +20,151 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
-#define BUFFER_SIZE 4096  // 4KB 缓冲区
+#define BUFFER_SIZE 4096
+#define DEFAULT_TMP_DIR "/data/service/el1/public/print_service/cups/spool/tmp"
+#define MAX_JOB_ID_LEN 64
+#define OUTPUT_PATH_BUF_SIZE 256
 
-int main(int argc, char *argv[]) {
-    // 1. 打印参数调试（改为 stderr）
+static int validate_args(int argc, char *argv[]) {
     fprintf(stderr, "CUPS backend start, argc = %d\n", argc);
-    for (int i = 0; i < argc; i++) {
-        fprintf(stderr, "argv[%d] = %s\n", i, argv[i]);
-    }
 
-    // 2. 校验参数合法性
     if (argc != 6 && argc != 7) {
         fprintf(stderr, "ERROR: invalid argc %d, only support 6 or 7\n", argc);
         fprintf(stderr, "Usage: %s job-id user title copies options [file]\n", argv[0]);
         return 1;
     }
 
-    fprintf(stderr, "receive print job (argc = %d)\n", argc);
-
-    // 3. 基础校验：job ID 必传
-    if (argc < 2) {
-        fprintf(stderr, "ERROR: job id is missing\n");
+    if (argc < 2 || strlen(argv[1]) > MAX_JOB_ID_LEN) {
+        if (argc < 2) {
+            fprintf(stderr, "ERROR: job id is missing\n");
+        } else {
+            fprintf(stderr, "ERROR: job id too long (max %d bytes)\n", MAX_JOB_ID_LEN);
+        }
         return 1;
     }
 
-    // 4. 获取临时目录
+    fprintf(stderr, "receive print job (argc = %d)\n", argc);
+    return 0;
+}
+
+static const char *get_temp_dir(void) {
     const char *tmp_dir = getenv("TMPDIR");
     if (!tmp_dir) {
-        tmp_dir = "/data/service/el1/public/print_service/cups/spool/tmp";
+        fprintf(stderr, "get temp dir failed, use default dir\n");
+        tmp_dir = DEFAULT_TMP_DIR;
         fprintf(stderr, "Use default temp dir: %s\n", tmp_dir);
     }
+    return tmp_dir;
+}
 
-    // 5. 构造输出文件路径
-    char output_file[256];
-    snprintf(output_file, sizeof(output_file), "%s/%s.pdf", tmp_dir, argv[1]);
+static int build_output_path(const char *tmp_dir, const char *job_id, char *output_file) {
+    if (tmp_dir == NULL || job_id == NULL || output_file == NULL) {
+        fprintf(stderr, "ERROR: invalid input parameters for path building (NULL pointer)\n");
+        return 1;
+    }
+
+    errno_t ret = snprintf_s(output_file,
+                             OUTPUT_PATH_BUF_SIZE,
+                             _TRUNCATE,
+                             "%s/%s.pdf",
+                             tmp_dir, job_id);
+
+    if (ret != 0) {
+        if (ret == ERANGE) {
+            fprintf(stderr, "ERROR: output path too long (truncated), max length: %d\n", OUTPUT_PATH_BUF_SIZE - 1);
+        } else {
+            fprintf(stderr, "ERROR: snprintf_s failed to build output path, err code: %d\n", ret);
+        }
+        return 1;
+    }
+
     fprintf(stderr, "Output file path: %s\n", output_file);
+    return 0;
+}
 
-    // 6. 核心：区分数据来源（移除 copies 相关逻辑）
+static int open_input_source(int argc, char *argv[]) {
     int input_fd = -1;
     if (argc == 7) {
-        // 场景1：argc=7 → 打开 argv[6] 指向的文件
         input_fd = open(argv[6], O_RDONLY);
         if (input_fd < 0) {
             fprintf(stderr, "ERROR: open input file %s failed, err: %s\n", argv[6], strerror(errno));
-            return 1;
+            return -1;
         }
         fprintf(stderr, "Open input file success: %s\n", argv[6]);
     } else {
-        // 场景2：argc=6 → 从 stdin 读取
         input_fd = 0;
         fprintf(stderr, "Use stdin as input\n");
     }
+    return input_fd;
+}
 
-    // 7. 打开输出文件（二进制写入）
+static int write_output_file(int input_fd, const char *output_file) {
     FILE *fp_dest = fopen(output_file, "wb");
-    if (!fp_dest) {
+    if (fp_dest == NULL) {
         fprintf(stderr, "ERROR: open output file %s failed, err: %s\n", output_file, strerror(errno));
-        if (input_fd != 0) close(input_fd);
         return 1;
     }
 
-    // 8. 读取输入数据并写入输出文件
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read;
     while ((bytes_read = read(input_fd, buffer, BUFFER_SIZE)) > 0) {
         if (fwrite(buffer, 1, (size_t)bytes_read, fp_dest) != (size_t)bytes_read) {
             fprintf(stderr, "ERROR: write to %s failed, err: %s\n", output_file, strerror(errno));
             fclose(fp_dest);
-            if (input_fd != 0) close(input_fd);
             return 1;
         }
     }
 
-    // 9. 校验读取错误
     if (bytes_read < 0) {
         fprintf(stderr, "ERROR: read input data failed, err: %s\n", strerror(errno));
         fclose(fp_dest);
-        if (input_fd != 0) close(input_fd);
         return 1;
     }
 
-    // 10. 关闭文件句柄
     fclose(fp_dest);
-    if (input_fd != 0) {
-        close(input_fd);
-    }
+    return 0;
+}
 
-    // 11. 验证输出文件
+static void verify_output_file(const char *output_file) {
     struct stat file_stat;
     if (stat(output_file, &file_stat) == 0) {
         fprintf(stderr, "SUCCESS: File saved to %s, size: %ld bytes\n", output_file, file_stat.st_size);
     } else {
         fprintf(stderr, "WARNING: output file %s created but stat failed, err: %s\n", output_file, strerror(errno));
     }
+}
+
+int main(int argc, char *argv[]) {
+    if (validate_args(argc, argv) != 0) {
+        return 1;
+    }
+
+    const char *tmp_dir = get_temp_dir();
+
+    char output_file[OUTPUT_PATH_BUF_SIZE];
+    if (build_output_path(tmp_dir, argv[1], output_file) != 0) {
+        return 1;
+    }
+
+    int input_fd = open_input_source(argc, argv);
+    if (input_fd < 0) {
+        return 1;
+    }
+
+    if (write_output_file(input_fd, output_file) != 0) {
+        if (input_fd != 0) {
+            close(input_fd);
+        }
+        return 1;
+    }
+
+    if (input_fd != 0) {
+        close(input_fd);
+    }
+
+    verify_output_file(output_file);
 
     return 0;
 }
