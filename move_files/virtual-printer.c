@@ -1,5 +1,5 @@
 /*
- * USB printer backend for CUPS.
+ * Virtual printer backend for CUPS.
  *
  * Copyright © 2020-2024 by OpenPrinting.
  * Copyright © 2007-2012 by Apple Inc.
