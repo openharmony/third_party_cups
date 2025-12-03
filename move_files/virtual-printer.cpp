@@ -4,8 +4,8 @@
 #include <cerrno>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <securec.h>
+#include <sys/stat.h>
 
 constexpr size_t BUFFER_SIZE = 4096;
 constexpr const char* DEFAULT_TMP_DIR = "/data/service/el1/public/print_service/cups/spool/tmp";
