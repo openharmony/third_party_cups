@@ -1,0 +1,13 @@
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+index f538653..5cf7445 100644
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -3690,7 +3690,7 @@ _ppdCreateFromIPP2(
+       y_dim       = ippFindAttribute(media_size, "y-dimension", IPP_TAG_ZERO);
+       pwg         = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
+ 
+-      if (pwg)
++      if (pwg && pwg->ppd)
+       {
+ 	temp.width  = pwg->width;
+ 	temp.length = pwg->length;
