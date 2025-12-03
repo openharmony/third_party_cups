@@ -93,7 +93,7 @@ cups_driverd_generated_sources = [ "$scheduler_code_dir/cups-driverd.cxx" ]
 
 cups_exec_generated_sources = [ "$scheduler_code_dir/cups-exec.c" ]
 
-virtual_printer_generated_sources = [ "$backend_code_dir/virtual-printer.c" ]
+virtual_printer_generated_sources = [ "$backend_code_dir/virtual-printer.cpp" ]
 
 virtual_printer_generated_ppd = "$backend_code_dir/virtual-printer.ppd"
 
