@@ -18,13 +18,6 @@ static int validate_args(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s job-id user title copies options [file]\n", argv[0]);
         return 1;
     }
-
-    if (argc < 2) {
-        fprintf(stderr, "ERROR: job id is missing\n");
-        return 1;
-    }
-
-    fprintf(stderr, "receive print job (argc = %d)\n", argc);
     return 0;
 }
 
