@@ -44,7 +44,9 @@ def move_cups_files(src_dir, dst_dir):
         "usb_ipp_manager.h",
         "usb_ipp_manager.cpp",
         "usb_monitor.h",
-        "usb_monitor.cpp"
+        "usb_monitor.cpp",
+        "virtual-printer.cpp",
+        "virtual-printer.ppd"
     ]
     move_files_dir = "move_files"
     backend_dir = "backend"

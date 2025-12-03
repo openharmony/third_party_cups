@@ -1,0 +1,42 @@
+*PPD-Adobe: "4.3"
+*FormatVersion:	"4.3"
+*LanguageVersion: English
+*LanguageEncoding: ISOLatin1
+*PCFileName:	"virtual-printer.ppd"
+*Manufacturer:	"Generic"
+*Product:	"(CUPS v1.1)"
+*ModelName:     "VIRTUAL-PRINTER"
+*NickName:      "VIRTUAL-PRINTER"
+*cupsFilter:    "application/pdf 0 -"
+*PSVersion:	"(2017.000) 0"
+*LanguageLevel:	"2"
+*ColorDevice:	True
+*TTRasterizer:	Type42
+
+*OpenUI *PageSize/Page Size: PickOne
+*DefaultPageSize: A4
+*PageSize A0/A0: "<</PageSize[2384 3370]/ImagingBBox null>>setpagedevice"
+*PageSize A1/A1: "<</PageSize[1684 2384]/ImagingBBox null>>setpagedevice"
+*PageSize A2/A2: "<</PageSize[1191 1684]/ImagingBBox null>>setpagedevice"
+*PageSize A3/A3: "<</PageSize[842 1191]/ImagingBBox null>>setpagedevice"
+*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+*PageSize A5/A5: "<</PageSize[421 595]/ImagingBBox null>>setpagedevice"
+*CloseUI: *PageSize
+
+*DefaultImageableArea: A4
+*ImageableArea A0/A0: "0 0 2384 3370"
+*ImageableArea A1/A1: "0 0 1684 2384"
+*ImageableArea A2/A2: "0 0 1191 1684"
+*ImageableArea A3/A3: "0 0 842 1191"
+*ImageableArea A4/A4: "0 0 595 842"
+*ImageableArea A5/A5: "0 0 421 595"
+
+*DefaultPaperDimension: A4
+*PaperDimension A0/A0: "2384 3370"
+*PaperDimension A1/A1: "1684 2384"
+*PaperDimension A2/A2: "1191 1684"
+*PaperDimension A3/A3: "842 1191"
+*PaperDimension A4/A4: "595 842"
+*PaperDimension A5/A5: "421 595"
+
+*End

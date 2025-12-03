@@ -16,7 +16,9 @@
         "name": "cups",
         "subsystem": "thirdparty",
         "syscap": [],
-        "features": [ "cups_feature_pstops_filter" ],
+        "features": [
+            "cups_feature_pstops_filter",
+            "cups_feature_virtual_printer"],
         "adapted_system_type": [ "standard" ],
         "rom": "",
         "ram": "",
