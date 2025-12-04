@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,7 @@ static std::string get_temp_dir() {
     const char* tmp_dir_c = getenv("TMPDIR");
     std::string tmp_dir;
 
-    if (!tmp_dir_c) {
+    if (tmp_dir_c == nullptr) {
         tmp_dir = DEFAULT_TMP_DIR;
     } else {
         tmp_dir = tmp_dir_c;
