@@ -48,12 +48,12 @@ static std::string get_temp_dir() {
 }
 
 static int build_output_path(const std::string& tmp_dir, const std::string& job_id, std::string& output_file) {
-output_file = tmp_dir + "/" + job_id + ".pdf";
+    output_file = tmp_dir + "/" + job_id + ".pdf";
 
-if (output_file.length() >= OUTPUT_FILE_BUF_SIZE) {
-fprintf(stderr, "ERROR: path too long (need %zu bytes, max %zu)\n",
-output_file.length(), OUTPUT_FILE_BUF_SIZE - 1);
-return 1;
+    if (output_file.length() >= OUTPUT_FILE_BUF_SIZE) {
+    fprintf(stderr, "ERROR: path too long (need %zu bytes, max %zu)\n",
+    output_file.length(), OUTPUT_FILE_BUF_SIZE - 1);
+    return 1;
 }
 
 return 0;
@@ -75,41 +75,41 @@ static int open_input_source(int argc, char* argv[]) {
 }
 
 static int write_output_file(int input_fd, const std::string& output_file) {
-FILE* fp_dest = fopen(output_file.c_str(), "wb");
-if (fp_dest == nullptr) {
-fprintf(stderr, "ERROR: open output %s failed: %s\n", output_file.c_str(), strerror(errno));
-return 1;
+    FILE* fp_dest = fopen(output_file.c_str(), "wb");
+    if (fp_dest == nullptr) {
+    fprintf(stderr, "ERROR: open output %s failed: %s\n", output_file.c_str(), strerror(errno));
+    return 1;
 }
 
-char buffer[BUFFER_SIZE];
-ssize_t bytes_read;
-while ((bytes_read = read(input_fd, buffer, BUFFER_SIZE)) > 0) {
-size_t bytes_written = fwrite(buffer, 1, static_cast<size_t>(bytes_read), fp_dest);
-if (bytes_written != static_cast<size_t>(bytes_read)) {
-fprintf(stderr, "ERROR: write failed (wrote %zu of %zd bytes): %s\n",
-bytes_written, bytes_read, strerror(errno));
-fclose(fp_dest);
-return 1;
-}
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_read;
+    while ((bytes_read = read(input_fd, buffer, BUFFER_SIZE)) > 0) {
+        size_t bytes_written = fwrite(buffer, 1, static_cast<size_t>(bytes_read), fp_dest);
+        if (bytes_written != static_cast<size_t>(bytes_read)) {
+        fprintf(stderr, "ERROR: write failed (wrote %zu of %zd bytes): %s\n",
+        bytes_written, bytes_read, strerror(errno));
+        fclose(fp_dest);
+        return 1;
+    }
 }
 
 if (bytes_read < 0) {
-fprintf(stderr, "ERROR: read failed: %s\n", strerror(errno));
-fclose(fp_dest);
-return 1;
+    fprintf(stderr, "ERROR: read failed: %s\n", strerror(errno));
+    fclose(fp_dest);
+    return 1;
 }
 
-fclose(fp_dest);
-return 0;
+    fclose(fp_dest);
+    return 0;
 }
 
 static void verify_output_file(const std::string& output_file) {
-struct stat file_stat;
-if (stat(output_file.c_str(), &file_stat) == 0) {
-fprintf(stderr, "SUCCESS: File saved to %s, size: %ld bytes\n", output_file.c_str(), file_stat.st_size);
-} else {
-fprintf(stderr, "WARNING: stat %s failed: %s\n", output_file.c_str(), strerror(errno));
-}
+    struct stat file_stat;
+    if (stat(output_file.c_str(), &file_stat) == 0) {
+        fprintf(stderr, "SUCCESS: File saved to %s, size: %ld bytes\n", output_file.c_str(), file_stat.st_size);
+    } else {
+        fprintf(stderr, "WARNING: stat %s failed: %s\n", output_file.c_str(), strerror(errno));
+    }
 }
 
 int main(int argc, char* argv[]) {
