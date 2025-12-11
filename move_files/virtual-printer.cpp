@@ -26,7 +26,7 @@ const size_t BUFFER_SIZE = 4096;
 const std::string DEFAULT_TMP_DIR = "/data/service/el1/public/print_service/cups/spool/tmp";
 const size_t OUTPUT_FILE_BUF_SIZE = 256;
 
-static bool validate_args(int argc, char* argv[]) {
+static bool validate_args(const int argc,const char* argv[]) {
     if (argc != 6 && argc != 7) {
         fprintf(stderr, "ERROR: invalid argc %d, only 6 or 7 allowed\n", argc);
         fprintf(stderr, "Usage: %s job-id user title copies options [file]\n", argv[0]);
