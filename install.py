@@ -46,7 +46,13 @@ def move_cups_files(src_dir, dst_dir):
         "usb_monitor.h",
         "usb_monitor.cpp",
         "virtual-printer.cpp",
-        "virtual-printer.ppd"
+        "virtual-printer.ppd",
+        "smb_spool.h",
+        "smb_spool.cpp",
+        "smb.cpp",
+        "uri_processor.h",
+        "uri_processor.cpp",
+        "smb_log.h"
     ]
     move_files_dir = "move_files"
     backend_dir = "backend"
