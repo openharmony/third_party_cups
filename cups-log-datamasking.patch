@@ -1,0 +1,186 @@
+diff --git a/backend/ipp.c b/backend/ipp.c
+index 08a41efe..857e37e2 100644
+--- a/backend/ipp.c
++++ b/backend/ipp.c
+@@ -2526,6 +2526,9 @@ debug_attributes(ipp_t *ipp)		/* I - Request or response message */
+     else
+       ippAttributeString(attr, buffer, sizeof(buffer));
+ 
++    if (!strcmp(name, "job-name"))
++      strlcpy(buffer, "<anonymous>", sizeof(buffer));
++
+     fprintf(stderr, "DEBUG: %s %s%s %s\n", name,
+             ippGetCount(attr) > 1 ? "1setOf " : "",
+             ippTagString(ippGetValueTag(attr)), buffer);
+@@ -2887,7 +2890,7 @@ new_request(
+   if (title && *title)
+   {
+     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "job-name", NULL, title);
+-    fprintf(stderr, "DEBUG: job-name=\"%s\"\n", title);
++    fprintf(stderr, "DEBUG: job-name=\"<anonymous>\"\n");
+   }
+ 
+   if (format && op != IPP_OP_CREATE_JOB)
+diff --git a/scheduler/datamasking.c b/scheduler/datamasking.c
+new file mode 100644
+index 00000000..3713953e
+--- /dev/null
++++ b/scheduler/datamasking.c
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (c) 2025 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#include "datamasking.h"
++#include <stdio.h>
++
++char* getSafeArgument(const char *arg)
++{
++    const char *prefix = JOBNAME_PREFIX;
++    const char *pos = strstr(arg, prefix);
++
++    if (!pos) return strdup(arg);
++
++    const char *jobname_start = pos + strlen(prefix);
++    const char *jobname_end = strchr(jobname_start, ' ');
++    if (!jobname_end) {
++        jobname_end = arg + strlen(arg);
++    }
++
++    size_t len = (jobname_start - arg) + strlen("<anonymous>") + strlen(jobname_end) + 1;
++    char *result = (char *)malloc(len);
++    if (!result) return NULL;
++
++    snprintf(result, len, "%.*s<anonymous>%s", (int)(jobname_start - arg), arg, jobname_end);
++    return result;
++}
+\ No newline at end of file
+diff --git a/scheduler/datamasking.h b/scheduler/datamasking.h
+new file mode 100644
+index 00000000..d9994986
+--- /dev/null
++++ b/scheduler/datamasking.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) 2025 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#define CUPSDCONTINUEJOB_JOBNAME_INDEX 3
++#define CUPSDCONTINUEJOB_OPTIONS_INDEX 5
++#define CUPSDSTARTPROCESS_JOBNAME_INDEX 12
++#define CUPSDSTARTPROCESS_OPTIONS_INDEX 14
++#define EXECFILTERS_JOBNAME_INDEX 3
++#define EXECFILTERS_OPTIONS_INDEX 4
++#define JOBNAME_PREFIX "document-name-supplied="
++
++char* getSafeArgument(const char *arg);
+\ No newline at end of file
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 2f104cc6..54e4e865 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -165,6 +165,9 @@ cupsdProcessIPPRequest(
+ 
+       ippAttributeString(attr, value, sizeof(value));
+ 
++      if (!strcmp(name, "job-name") || !strcmp(name, "document-name"))
++        strlcpy(value, "<anonymous>", sizeof(value));
++
+       cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdProcessIPPRequest: %s %s%s '%s'", name, ippGetCount(attr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attr)), value);
+     }
+   }
+diff --git a/scheduler/job.c b/scheduler/job.c
+index 620a2dd4..97b2c742 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include "cupsd.h"
++#include "datamasking.h"
+ #include <grp.h>
+ #include <cups/backend.h>
+ #include <cups/dir.h>
+@@ -928,7 +929,22 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+   }
+ 
+   for (i = 0; argv[i]; i ++)
+-    cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"%s\"", i, argv[i]);
++  {
++    if ( i == CUPSDCONTINUEJOB_JOBNAME_INDEX)
++    {
++      cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"<anonymous>\"", i);
++    }
++    else if (i == CUPSDCONTINUEJOB_OPTIONS_INDEX)
++    {
++      char *safe_arg = getSafeArgument(argv[i]);
++      cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"%s\"", i, safe_arg);
++      free(safe_arg);
++    }
++    else
++    {
++      cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"%s\"", i, argv[i]);
++    }
++  }
+ 
+  /*
+   * Create environment variable strings for the filters...
+diff --git a/scheduler/process.c b/scheduler/process.c
+index 7f05a90a..a12f56d9 100644
+--- a/scheduler/process.c
++++ b/scheduler/process.c
+@@ -14,6 +14,7 @@
+  */
+ 
+ #include "cupsd.h"
++#include "datamasking.h"
+ #include <grp.h>
+ #ifdef __APPLE__
+ #  include <libgen.h>
+@@ -586,7 +587,22 @@ cupsdStartProcess(
+     cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: Preparing to start \"%s\", arguments:", command);
+ 
+     for (i = 0; argv[i]; i ++)
+-      cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"%s\"", i, argv[i]);
++    {
++      if (i == CUPSDSTARTPROCESS_JOBNAME_INDEX)
++      {
++        cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"<anonymous>\"", i);
++      }
++      else if (i == CUPSDSTARTPROCESS_OPTIONS_INDEX)
++      {
++        char *safe_arg = getSafeArgument(argv[i]);
++        cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"%s\"", i, safe_arg);
++        free(safe_arg);
++      }
++      else
++      {
++        cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"%s\"", i, argv[i]);
++      }
++    }
+   }
+ 
+ #if USE_POSIX_SPAWN
+-- 
+2.40.0.windows.1
+
