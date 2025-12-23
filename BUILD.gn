@@ -116,6 +116,7 @@ cupsd_generated_sources = [
   "$scheduler_code_dir/client.c",
   "$scheduler_code_dir/colorman.c",
   "$scheduler_code_dir/conf.c",
+  "$scheduler_code_dir/datamasking.c",
   "$scheduler_code_dir/dirsvc.c",
   "$scheduler_code_dir/env.c",
   "$scheduler_code_dir/file.c",
