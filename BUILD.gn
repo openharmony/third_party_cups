@@ -97,17 +97,6 @@ virtual_printer_generated_sources = [ "$backend_code_dir/virtual-printer.cpp" ]
 
 virtual_printer_generated_ppd = "$backend_code_dir/virtual-printer.ppd"
 
-if (enable_cups_smb) {
-  cups_smb_backend = [
-    "$backend_code_dir/smb_spool.h",
-    "$backend_code_dir/smb_spool.cpp",
-    "$backend_code_dir/smb.cpp",
-    "$backend_code_dir/uri_processor.h",
-    "$backend_code_dir/uri_processor.cpp",
-    "$backend_code_dir/smb_log.h",
-  ]
-}
-
 cupsd_generated_sources = [
   "$scheduler_code_dir/auth.c",
   "$scheduler_code_dir/banners.c",
@@ -234,26 +223,12 @@ action("cups_action") {
   outputs += [ mime_types_generated_source ]
   outputs += virtual_printer_generated_sources
   outputs += [ virtual_printer_generated_ppd ]
-  if (enable_cups_smb) {
-    outputs += cups_smb_backend
-  }
 
   if (cups_feature_pstops_filter) {
     outputs += pstops_generated_sources
   }
 
   inputs = []
-
-  if (enable_cups_smb) {
-    inputs += [
-        "//third_party/cups/move_files/smb_spool.h",
-        "//third_party/cups/move_files/smb_spool.cpp",
-        "//third_party/cups/move_files/smb.cpp",
-        "//third_party/cups/move_files/uri_processor.h",
-        "//third_party/cups/move_files/uri_processor.cpp",
-        "//third_party/cups/move_files/smb_log.h",
-    ]
-  }
   cups_path = rebase_path("${target_gen_dir}", root_build_dir)
   cups_source_path = rebase_path("//third_party/cups", root_build_dir)
   args = [
@@ -287,9 +262,6 @@ group("third_party_cups") {
       ":virtual_printer_ppd",
       ":virtual-printer"
     ]
-  }
-  if (enable_cups_smb) {
-    deps += [ ":smb" ]
   }
 }
 
@@ -625,41 +597,4 @@ ohos_prebuilt_etc("virtual_printer_ppd") {
     relative_install_dir = "cups/share/model"
     subsystem_name = "$SUBSYSTEM_NAME"
     part_name = "$PART_NAME"
-}
-
-if (enable_cups_smb) {
-  ohos_executable("smb") {
-    branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      boundary_sanitize = true
-      debug = false
-      integer_overflow = true
-      ubsan = true
-    }
-    cflags_cc = [
-      "-fdata-sections",
-      "-ffunction-sections",
-      "-fno-asynchronous-unwind-tables",
-      "-fno-unwind-tables",
-      "-flto",
-      "-Os",
-    ]
-    include_dirs = [
-      "$backend_code_dir",
-      "$core_code_dir",
-    ]
-    sources = cups_smb_backend
-    deps = [ ":cups_action" ]
-    external_deps = [
-      "c_utils:utils",
-      "libsmb2:libsmb2_shared",
-      "hilog:libhilog",
-    ]
-    install_enable = true
-    module_install_dir = "$cups_serverbin_dir/backend"
-    subsystem_name = "$SUBSYSTEM_NAME"
-    part_name = "$PART_NAME"
-  }
 }
