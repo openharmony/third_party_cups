@@ -97,6 +97,13 @@ virtual_printer_generated_sources = [ "$backend_code_dir/virtual-printer.cpp" ]
 
 virtual_printer_generated_ppd = "$backend_code_dir/virtual-printer.ppd"
 
+if (enable_cups_lpd_backend) {
+  lpd_generated_sources = [ "$backend_code_dir/lpd.c" ]
+}
+if (enable_cups_socket_backend) {
+  socket_generated_sources = [ "$backend_code_dir/socket.c" ]
+}
+
 cupsd_generated_sources = [
   "$scheduler_code_dir/auth.c",
   "$scheduler_code_dir/banners.c",
@@ -152,7 +159,6 @@ if (cups_feature_pstops_filter) {
     "$filter_code_dir/pstops.c",
   ]
 }
-
 cupsmime_generated_sources = [
   "$scheduler_code_dir/filter.c",
   "$scheduler_code_dir/mime.c",
@@ -229,6 +235,14 @@ action("cups_action") {
     outputs += pstops_generated_sources
   }
 
+  if (enable_cups_lpd_backend) {
+    outputs += lpd_generated_sources
+  }
+
+  if (enable_cups_socket_backend) {
+    outputs += socket_generated_sources
+  }
+
   inputs = []
   cups_path = rebase_path("${target_gen_dir}", root_build_dir)
   cups_source_path = rebase_path("//third_party/cups", root_build_dir)
@@ -263,6 +277,12 @@ group("third_party_cups") {
       ":virtual_printer_ppd",
       ":virtual-printer"
     ]
+  }
+  if (enable_cups_lpd_backend) {
+    deps += [ ":lpd" ]
+  }
+  if (enable_cups_socket_backend) {
+    deps += [ ":socket" ]
   }
 }
 
@@ -358,6 +378,44 @@ ohos_shared_library("backend") {
   public_configs = [ ":cups_config" ]
   subsystem_name = "$SUBSYSTEM_NAME"
   part_name = "$PART_NAME"
+}
+
+if (enable_cups_lpd_backend) {
+  ohos_executable("lpd") {
+    sources = lpd_generated_sources
+    deps = [
+      ":backend",
+      ":cups",
+      ":cups_action",
+    ]
+    external_deps = [
+      "openssl:libcrypto_shared",
+    ]
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/backend"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+  }
+}
+
+if (enable_cups_socket_backend) {
+  ohos_executable("socket") {
+    sources = socket_generated_sources
+    deps = [
+      ":backend",
+      ":cups",
+      ":cups_action",
+    ]
+    external_deps = [
+      "openssl:libcrypto_shared",
+    ]
+    install_enable = true
+    module_install_dir = "$cups_serverbin_dir/backend"
+    public_configs = [ ":cups_config" ]
+    subsystem_name = "$SUBSYSTEM_NAME"
+    part_name = "$PART_NAME"
+  }
 }
 
 ohos_executable("ipp") {
