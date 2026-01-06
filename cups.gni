@@ -40,4 +40,5 @@ declare_args() {
   cups_feature_virtual_printer = false
 }
 
-enable_cups_smb = false
+enable_cups_lpd_backend = true
+enable_cups_socket_backend = true
