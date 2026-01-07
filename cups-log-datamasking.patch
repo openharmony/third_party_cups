@@ -1,18 +1,38 @@
 diff --git a/backend/ipp.c b/backend/ipp.c
-index 08a41efe..857e37e2 100644
+index 08a41efe..1c1333ec 100644
 --- a/backend/ipp.c
 +++ b/backend/ipp.c
-@@ -2526,6 +2526,9 @@ debug_attributes(ipp_t *ipp)		/* I - Request or response message */
+@@ -2526,6 +2526,22 @@ debug_attributes(ipp_t *ipp)		/* I - Request or response message */
      else
        ippAttributeString(attr, buffer, sizeof(buffer));
  
-+    if (!strcmp(name, "job-name"))
-+      strlcpy(buffer, "<anonymous>", sizeof(buffer));
++    if (!strcmp(name, "job-name") || !strcmp(name, "requesting-user-name") ||
++        !strcmp(name, "job-originating-user-name") || !strcmp(name, "printer-uuid") || !strcmp(name, "job-uuid"))
++    {
++      if (!strcmp(name, "printer-uuid") || !strcmp(name, "job-uuid"))
++      {
++        char *last_dash = strrchr(buffer, '-');
++        if (last_dash && *(last_dash + 1) != '\0')
++        {
++          *(last_dash + 1) = 'x';
++          *(last_dash + 2) = '\0';
++        }
++      } else {
++        strlcpy(buffer, "<anonymous>", sizeof(buffer));
++      }
++    }
 +
      fprintf(stderr, "DEBUG: %s %s%s %s\n", name,
              ippGetCount(attr) > 1 ? "1setOf " : "",
              ippTagString(ippGetValueTag(attr)), buffer);
-@@ -2887,7 +2890,7 @@ new_request(
+@@ -2881,13 +2897,13 @@ new_request(
+   if (user && *user)
+   {
+     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, user);
+-    fprintf(stderr, "DEBUG: requesting-user-name=\"%s\"\n", user);
++    fprintf(stderr, "DEBUG: requesting-user-name=\"<anonymous>\"\n");
+   }
+ 
    if (title && *title)
    {
      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "job-name", NULL, title);
@@ -21,12 +41,25 @@ index 08a41efe..857e37e2 100644
    }
  
    if (format && op != IPP_OP_CREATE_JOB)
+diff --git a/scheduler/auth.c b/scheduler/auth.c
+index 3c9aa72a..abbde51f 100644
+--- a/scheduler/auth.c
++++ b/scheduler/auth.c
+@@ -1579,7 +1579,7 @@ cupsdIsAuthorized(cupsd_client_t *con,	/* I - Connection */
+ 
+   cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdIsAuthorized: con->uri=\"%s\", con->best=%p(%s)", con->uri, (void *)con->best, con->best ? con->best->location ? con->best->location : "(null)" : "");
+   if (owner)
+-    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdIsAuthorized: owner=\"%s\"", owner);
++    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdIsAuthorized: owner=\"%s\"", "<anonymous>");
+ 
+  /*
+   * If there is no "best" authentication rule for this request, then
 diff --git a/scheduler/datamasking.c b/scheduler/datamasking.c
 new file mode 100644
-index 00000000..3713953e
+index 00000000..96485e28
 --- /dev/null
 +++ b/scheduler/datamasking.c
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,73 @@
 +/*
 + * Copyright (c) 2025 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,9 +79,45 @@ index 00000000..3713953e
 +
 +char* getSafeArgument(const char *arg)
 +{
++    if (!arg) return NULL;
++
++    char *result = maskJobName(arg);
++    if (!result) return NULL;
++    maskJobUuid(result);
++    return result;
++}
++
++void maskJobUuid(char *str)
++{
++    if (!str) return;
++    char *uuid_pos = strstr(str, UUIDNAME_PREFIX);
++    if (!uuid_pos) return;
++    uuid_pos += strlen(UUIDNAME_PREFIX);
++
++    char *uuid_end = strchr(uuid_pos, ' ');
++    if (!uuid_end) {
++        uuid_end = str + strlen(str);
++    }
++
++    char *last_dash = NULL;
++    char *p = uuid_pos;
++    while (p < uuid_end) {
++        if (*p == '-') {
++            last_dash = p;
++        }
++        p++;
++    }
++    if (last_dash) {
++        *(last_dash + 1) = 'x';
++        *(last_dash + 2) = '\0';
++        strcat(last_dash + 2, uuid_end);
++    }
++}
++
++char* maskJobName(const char *arg)
++{
 +    const char *prefix = JOBNAME_PREFIX;
 +    const char *pos = strstr(arg, prefix);
-+
 +    if (!pos) return strdup(arg);
 +
 +    const char *jobname_start = pos + strlen(prefix);
@@ -67,10 +136,10 @@ index 00000000..3713953e
 \ No newline at end of file
 diff --git a/scheduler/datamasking.h b/scheduler/datamasking.h
 new file mode 100644
-index 00000000..d9994986
+index 00000000..36335d85
 --- /dev/null
 +++ b/scheduler/datamasking.h
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,26 @@
 +/*
 + * Copyright (c) 2025 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,32 +154,385 @@ index 00000000..d9994986
 + * See the License for the specific language governing permissions and
 + * limitations under the License.
 + */
++#define CUPSDCONTINUEJOB_USERNAME_INDEX 2
 +#define CUPSDCONTINUEJOB_JOBNAME_INDEX 3
 +#define CUPSDCONTINUEJOB_OPTIONS_INDEX 5
++#define CUPSDSTARTPROCESS_USERNAME_INDEX 11
 +#define CUPSDSTARTPROCESS_JOBNAME_INDEX 12
 +#define CUPSDSTARTPROCESS_OPTIONS_INDEX 14
-+#define EXECFILTERS_JOBNAME_INDEX 3
-+#define EXECFILTERS_OPTIONS_INDEX 4
 +#define JOBNAME_PREFIX "document-name-supplied="
++#define UUIDNAME_PREFIX "job-uuid="
 +
 +char* getSafeArgument(const char *arg);
++char* maskJobName(const char *arg);
++void maskJobUuid(char *str);
 \ No newline at end of file
 diff --git a/scheduler/ipp.c b/scheduler/ipp.c
-index 2f104cc6..54e4e865 100644
+index 2f104cc6..b3618ff6 100644
 --- a/scheduler/ipp.c
 +++ b/scheduler/ipp.c
 @@ -165,6 +165,9 @@ cupsdProcessIPPRequest(
  
        ippAttributeString(attr, value, sizeof(value));
  
-+      if (!strcmp(name, "job-name") || !strcmp(name, "document-name"))
++      if (!strcmp(name, "job-name") || !strcmp(name, "document-name") || !strcmp(name, "requesting-user-name"))
 +        strlcpy(value, "<anonymous>", sizeof(value));
 +
        cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdProcessIPPRequest: %s %s%s '%s'", name, ippGetCount(attr) > 1 ? "1setOf " : "", ippTagString(ippGetValueTag(attr)), value);
      }
    }
+@@ -736,7 +739,7 @@ accept_jobs(cupsd_client_t  *con,	/* I - Client connection */
+     cupsdMarkDirty(CUPSD_DIRTY_CLASSES);
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" now accepting jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+   else
+   {
+@@ -744,7 +747,7 @@ accept_jobs(cupsd_client_t  *con,	/* I - Client connection */
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Printer \"%s\" now accepting jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+ 
+  /*
+@@ -1053,19 +1056,19 @@ add_class(cupsd_client_t  *con,		/* I - Client connection */
+   {
+     cupsdAddEvent(CUPSD_EVENT_PRINTER_MODIFIED,
+ 		  pclass, NULL, "Class \"%s\" modified by \"%s\".",
+-		  pclass->name, get_username(con));
++		  pclass->name, "<anonymous>");
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" modified by \"%s\".",
+-                    pclass->name, get_username(con));
++                    pclass->name, "<anonymous>");
+   }
+   else
+   {
+     cupsdAddEvent(CUPSD_EVENT_PRINTER_ADDED,
+ 		  pclass, NULL, "New class \"%s\" added by \"%s\".",
+-		  pclass->name, get_username(con));
++		  pclass->name, "<anonymous>");
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "New class \"%s\" added by \"%s\".",
+-                    pclass->name, get_username(con));
++                    pclass->name, "<anonymous>");
+   }
+ 
+   con->response->request.status.status_code = IPP_OK;
+@@ -1548,7 +1551,7 @@ add_job(cupsd_client_t  *con,		/* I - Client connection */
+   {
+     cupsdLogMessage(CUPSD_LOG_DEBUG,
+                     "add_job: requesting-user-name=\"%s\"",
+-                    attr->values[0].string.text);
++                    "<anonymous>");
+ 
+     cupsdSetString(&job->username, attr->values[0].string.text);
+   }
+@@ -2814,19 +2817,19 @@ add_printer(cupsd_client_t  *con,	/* I - Client connection */
+   {
+     cupsdAddEvent(CUPSD_EVENT_PRINTER_MODIFIED,
+                   printer, NULL, "Printer \"%s\" modified by \"%s\".",
+-		  printer->name, get_username(con));
++		  printer->name, "<anonymous>");
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "Printer \"%s\" modified by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+   else
+   {
+     cupsdAddEvent(CUPSD_EVENT_PRINTER_ADDED,
+                   printer, NULL, "New printer \"%s\" added by \"%s\".",
+-		  printer->name, get_username(con));
++		  printer->name, "<anonymous>");
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "New printer \"%s\" added by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+ 
+   con->response->request.status.status_code = IPP_OK;
+@@ -3273,7 +3276,7 @@ cancel_all_jobs(cupsd_client_t  *con,	/* I - Client connection */
+ 
+       cupsdLogMessage(CUPSD_LOG_INFO, "Selected jobs were %s by \"%s\".",
+ 		      purge == CUPSD_JOB_PURGE ? "purged" : "canceled",
+-		      get_username(con));
++		      "<anonymous>");
+     }
+     else
+     {
+@@ -3285,7 +3288,7 @@ cancel_all_jobs(cupsd_client_t  *con,	/* I - Client connection */
+ 
+       cupsdLogMessage(CUPSD_LOG_INFO, "All jobs were %s by \"%s\".",
+ 		      purge == CUPSD_JOB_PURGE ? "purged" : "canceled",
+-		      get_username(con));
++		      "<anonymous>");
+     }
+   }
+   else
+@@ -3332,7 +3335,7 @@ cancel_all_jobs(cupsd_client_t  *con,	/* I - Client connection */
+ 
+       cupsdLogMessage(CUPSD_LOG_INFO, "Selected jobs were %s by \"%s\".",
+ 		      purge == CUPSD_JOB_PURGE ? "purged" : "canceled",
+-		      get_username(con));
++		      "<anonymous>");
+     }
+     else
+     {
+@@ -3345,7 +3348,7 @@ cancel_all_jobs(cupsd_client_t  *con,	/* I - Client connection */
+       cupsdLogMessage(CUPSD_LOG_INFO, "All jobs on \"%s\" were %s by \"%s\".",
+ 		      printer->name,
+ 		      purge == CUPSD_JOB_PURGE ? "purged" : "canceled",
+-		      get_username(con));
++		      "<anonymous>");
+     }
+   }
+ 
+@@ -3548,15 +3551,15 @@ cancel_job(cupsd_client_t  *con,	/* I - Client connection */
+   cupsdSetJobState(job, IPP_JOB_CANCELED, purge,
+                    purge == CUPSD_JOB_PURGE ? "Job purged by \"%s\"" :
+ 		                              "Job canceled by \"%s\"",
+-		   username);
++		   "<anonymous>");
+   cupsdCheckJobs();
+ 
+   if (purge == CUPSD_JOB_PURGE)
+     cupsdLogMessage(CUPSD_LOG_INFO, "[Job %d] Purged by \"%s\".", jobid,
+-		    username);
++		    "<anonymous>");
+   else
+     cupsdLogMessage(CUPSD_LOG_INFO, "[Job %d] Canceled by \"%s\".", jobid,
+-		    username);
++		    "<anonymous>");
+ 
+   con->response->request.status.status_code = IPP_OK;
+ }
+@@ -3729,7 +3732,7 @@ check_quotas(cupsd_client_t  *con,	/* I - Client connection */
+     if (cupsdGetUserJobCount(username) >= MaxJobsPerUser)
+     {
+       cupsdLogMessage(CUPSD_LOG_INFO, "Too many jobs for user \"%s\"...",
+-                      username);
++                      "<anonymous>");
+       return (-1);
+     }
+   }
+@@ -3756,11 +3759,11 @@ check_quotas(cupsd_client_t  *con,	/* I - Client connection */
+ 
+       cupsdLogMessage(CUPSD_LOG_DEBUG,
+ 		      "check_quotas: UUID lookup failed for user \"%s\"",
+-		      username);
++		      "<anonymous>");
+       cupsdLogMessage(CUPSD_LOG_INFO,
+ 		      "Denying user \"%s\" access to printer \"%s\" "
+ 		      "(unknown user)...",
+-		      username, p->name);
++		      "<anonymous>", p->name);
+       return (0);
+     }
+ #else
+@@ -3862,7 +3865,7 @@ check_quotas(cupsd_client_t  *con,	/* I - Client connection */
+     {
+       cupsdLogMessage(CUPSD_LOG_INFO,
+                       "Denying user \"%s\" access to printer \"%s\"...",
+-        	      username, p->name);
++        	      "<anonymous>", p->name);
+       return (0);
+     }
+   }
+@@ -3877,7 +3880,7 @@ check_quotas(cupsd_client_t  *con,	/* I - Client connection */
+     {
+       cupsdLogMessage(CUPSD_LOG_ERROR,
+                       "Unable to allocate quota data for user \"%s\"",
+-                      username);
++                      "<anonymous>");
+       return (-1);
+     }
+ 
+@@ -3885,7 +3888,7 @@ check_quotas(cupsd_client_t  *con,	/* I - Client connection */
+         (q->page_count >= p->page_limit && p->page_limit))
+     {
+       cupsdLogMessage(CUPSD_LOG_INFO, "User \"%s\" is over the quota limit...",
+-                      username);
++                      "<anonymous>");
+       return (-1);
+     }
+   }
+@@ -5247,7 +5250,7 @@ create_job(cupsd_client_t  *con,	/* I - Client connection */
+   */
+ 
+   cupsdLogJob(job, CUPSD_LOG_INFO, "Queued on \"%s\" by \"%s\".",
+-	      job->dest, job->username);
++	      job->dest, "<anonymous>");
+ }
+ 
+ 
+@@ -6292,7 +6295,7 @@ delete_printer(cupsd_client_t  *con,	/* I - Client connection */
+   cupsdAddEvent(CUPSD_EVENT_PRINTER_DELETED, printer, NULL,
+                 "%s \"%s\" deleted by \"%s\".",
+ 		(dtype & CUPS_PRINTER_CLASS) ? "Class" : "Printer",
+-		printer->name, get_username(con));
++		printer->name, "<anonymous>");
+ 
+   cupsdExpireSubscriptions(printer, NULL);
+ 
+@@ -6324,7 +6327,7 @@ delete_printer(cupsd_client_t  *con,	/* I - Client connection */
+   if (dtype & CUPS_PRINTER_CLASS)
+   {
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" deleted by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+     cupsdDeletePrinter(printer, 0);
+     if (!temporary)
+@@ -6333,7 +6336,7 @@ delete_printer(cupsd_client_t  *con,	/* I - Client connection */
+   else
+   {
+     cupsdLogMessage(CUPSD_LOG_INFO, "Printer \"%s\" deleted by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+     if (cupsdDeletePrinter(printer, 0) && !temporary)
+       cupsdMarkDirty(CUPSD_DIRTY_CLASSES);
+@@ -7096,7 +7099,7 @@ get_jobs(cupsd_client_t  *con,		/* I - Client connection */
+       cupsdLogMessage(CUPSD_LOG_DEBUG2,
+ 		      "get_jobs: job->id=%d, dest=\"%s\", username=\"%s\", "
+ 		      "state_value=%d, attrs=%p", job->id, job->dest,
+-		      job->username, job->state_value, (void *)job->attrs);
++		      "<anonymous>", job->state_value, (void *)job->attrs);
+ 
+       if (!job->dest || !job->username)
+ 	cupsdLoadJob(job);
+@@ -8345,11 +8348,11 @@ hold_new_jobs(cupsd_client_t  *con,	/* I - Connection */
+   if (dtype & CUPS_PRINTER_CLASS)
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Class \"%s\" now holding pending/new jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   else
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Printer \"%s\" now holding pending/new jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+  /*
+   * Everything was ok, so return OK status...
+@@ -8948,10 +8951,10 @@ print_job(cupsd_client_t  *con,		/* I - Client connection */
+ 
+   cupsdLogJob(job, CUPSD_LOG_INFO,
+ 	      "File of type %s/%s queued by \"%s\".",
+-	      filetype->super, filetype->type, job->username);
++	      filetype->super, filetype->type, "<anonymous>");
+   cupsdLogJob(job, CUPSD_LOG_DEBUG, "hold_until=%d", (int)job->hold_until);
+   cupsdLogJob(job, CUPSD_LOG_INFO, "Queued on \"%s\" by \"%s\".",
+-	      job->dest, job->username);
++	      job->dest, "<anonymous>");
+ 
+  /*
+   * Start the job if possible...
+@@ -9213,14 +9216,14 @@ reject_jobs(cupsd_client_t  *con,	/* I - Client connection */
+     cupsdMarkDirty(CUPSD_DIRTY_CLASSES);
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" rejecting jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+   else
+   {
+     cupsdMarkDirty(CUPSD_DIRTY_PRINTERS);
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO, "Printer \"%s\" rejecting jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+ 
+  /*
+@@ -9284,11 +9287,11 @@ release_held_new_jobs(
+   if (dtype & CUPS_PRINTER_CLASS)
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Class \"%s\" now printing pending/new jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   else
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Printer \"%s\" now printing pending/new jobs (\"%s\").",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+   cupsdCheckJobs();
+ 
+@@ -10186,7 +10189,7 @@ send_document(cupsd_client_t  *con,	/* I - Client connection */
+   cupsdClearString(&con->filename);
+ 
+   cupsdLogJob(job, CUPSD_LOG_INFO, "File of type %s/%s queued by \"%s\".",
+-	      filetype->super, filetype->type, job->username);
++	      filetype->super, filetype->type, "<anonymous>");
+ 
+  /*
+   * Start the job if this is the last document...
+@@ -10545,7 +10548,7 @@ set_default(cupsd_client_t  *con,	/* I - Client connection */
+ 
+   cupsdLogMessage(CUPSD_LOG_INFO,
+                   "Default destination set to \"%s\" by \"%s\".",
+-		  printer->name, get_username(con));
++		  printer->name, "<anonymous>");
+ 
+  /*
+   * Everything was ok, so return OK status...
+@@ -11037,11 +11040,11 @@ set_printer_attrs(cupsd_client_t  *con,	/* I - Client connection */
+ 
+     cupsdAddEvent(CUPSD_EVENT_PRINTER_CONFIG, printer, NULL,
+                   "Printer \"%s\" description or location changed by \"%s\".",
+-		  printer->name, get_username(con));
++		  printer->name, "<anonymous>");
+ 
+     cupsdLogMessage(CUPSD_LOG_INFO,
+                     "Printer \"%s\" description or location changed by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   }
+ 
+   con->response->request.status.status_code = IPP_OK;
+@@ -11382,10 +11385,10 @@ start_printer(cupsd_client_t  *con,	/* I - Client connection */
+ 
+   if (dtype & CUPS_PRINTER_CLASS)
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" started by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   else
+     cupsdLogMessage(CUPSD_LOG_INFO, "Printer \"%s\" started by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+   cupsdCheckJobs();
+ 
+@@ -11471,10 +11474,10 @@ stop_printer(cupsd_client_t  *con,	/* I - Client connection */
+ 
+   if (dtype & CUPS_PRINTER_CLASS)
+     cupsdLogMessage(CUPSD_LOG_INFO, "Class \"%s\" stopped by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+   else
+     cupsdLogMessage(CUPSD_LOG_INFO, "Printer \"%s\" stopped by \"%s\".",
+-                    printer->name, get_username(con));
++                    printer->name, "<anonymous>");
+ 
+  /*
+   * Everything was ok, so return OK status...
+@@ -11861,7 +11864,7 @@ validate_user(cupsd_job_t    *job,	/* I - Job */
+   cupsd_printer_t	*printer;	/* Printer for job */
+ 
+ 
+-  cupsdLogMessage(CUPSD_LOG_DEBUG2, "validate_user(job=%d, con=%d, owner=\"%s\", username=%p, userlen=" CUPS_LLFMT ")", job->id, con ? con->number : 0, owner ? owner : "(null)", (void *)username, CUPS_LLCAST userlen);
++  cupsdLogMessage(CUPSD_LOG_DEBUG2, "validate_user(job=%d, con=%d, owner=\"%s\", username=%p, userlen=" CUPS_LLFMT ")", job->id, con ? con->number : 0, owner ? "<anonymous>" : "(null)", (void *)username, CUPS_LLCAST userlen);
+ 
+  /*
+   * Validate input...
 diff --git a/scheduler/job.c b/scheduler/job.c
-index 620a2dd4..97b2c742 100644
+index 620a2dd4..66a8c9a4 100644
 --- a/scheduler/job.c
 +++ b/scheduler/job.c
 @@ -10,6 +10,7 @@
@@ -127,7 +549,7 @@ index 620a2dd4..97b2c742 100644
    for (i = 0; argv[i]; i ++)
 -    cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"%s\"", i, argv[i]);
 +  {
-+    if ( i == CUPSDCONTINUEJOB_JOBNAME_INDEX)
++    if (i == CUPSDCONTINUEJOB_USERNAME_INDEX || i == CUPSDCONTINUEJOB_JOBNAME_INDEX)
 +    {
 +      cupsdLogJob(job, CUPSD_LOG_DEBUG, "argv[%d]=\"<anonymous>\"", i);
 +    }
@@ -146,7 +568,7 @@ index 620a2dd4..97b2c742 100644
   /*
    * Create environment variable strings for the filters...
 diff --git a/scheduler/process.c b/scheduler/process.c
-index 7f05a90a..a12f56d9 100644
+index 7f05a90a..d5ce1c29 100644
 --- a/scheduler/process.c
 +++ b/scheduler/process.c
 @@ -14,6 +14,7 @@
@@ -163,7 +585,7 @@ index 7f05a90a..a12f56d9 100644
      for (i = 0; argv[i]; i ++)
 -      cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"%s\"", i, argv[i]);
 +    {
-+      if (i == CUPSDSTARTPROCESS_JOBNAME_INDEX)
++      if (i == CUPSDSTARTPROCESS_USERNAME_INDEX || i == CUPSDSTARTPROCESS_JOBNAME_INDEX)
 +      {
 +        cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: argv[%d] = \"<anonymous>\"", i);
 +      }
@@ -181,6 +603,3 @@ index 7f05a90a..a12f56d9 100644
    }
  
  #if USE_POSIX_SPAWN
--- 
-2.40.0.windows.1
-

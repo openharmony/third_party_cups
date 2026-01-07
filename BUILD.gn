@@ -243,7 +243,40 @@ action("cups_action") {
     outputs += socket_generated_sources
   }
 
-  inputs = []
+  inputs = [
+    "//third_party/cups/ohos-multi-file-print.patch",
+    "//third_party/cups/ohos-modify-pthread.patch",
+    "//third_party/cups/ohos_ip_conflict.patch",
+    "//third_party/cups/ohos-usb-manager.patch",
+    "//third_party/cups/ohos-usb-print.patch",
+    "//third_party/cups/ohos-ppdfile-not-generated.patch",
+    "//third_party/cups/ohos-hilog-print.patch",
+    "//third_party/cups/ohos-uni-print-driver-path.patch",
+    "//third_party/cups/ohos-cups-badfd.patch",
+    "//third_party/cups/ohos-verify-backend.patch",
+    "//third_party/cups/cups-usb-job-state-monitor.patch",
+    "//third_party/cups/ohos-filetypes-crash.patch",
+    "//third_party/cups/ohos-ipp-authenticate.patch",
+    "//third_party/cups/backport-CVE-2025-59364.patch",
+    "//third_party/cups/backport-Fix-memory-leak-in-cupsConvertOption.patch",
+    "//third_party/cups/ohos-ipp-everywhere-color-fix.patch",
+    "//third_party/cups/cups-log-datamasking.patch"
+  ]
+  cups_src_dir = "//third_party/cups"
+  foreach(file, outputs){
+    inputs += [ string_replace(file, cups_code_dir, cups_src_dir) ]
+  }
+  inputs -= [
+    "//third_party/cups/scheduler/hilog-helper.c",
+    "//third_party/cups/backend/usb_ipp_manager.cpp",
+    "//third_party/cups/backend/usb_manager.cxx",
+    "//third_party/cups/backend/usb_monitor.cpp",
+    "//third_party/cups/conf/mime.convs",
+    "//third_party/cups/backend/virtual-printer.cpp",
+    "//third_party/cups/backend/virtual-printer.ppd",
+    "//third_party/cups/scheduler/datamasking.c",
+  ]
+
   cups_path = rebase_path("${target_gen_dir}", root_build_dir)
   cups_source_path = rebase_path("//third_party/cups", root_build_dir)
   args = [
