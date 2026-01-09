@@ -1,5 +1,5 @@
 diff --git a/backend/ipp.c b/backend/ipp.c
-index 08a41efe..1c1333ec 100644
+index 08a41efe..a57ef37a 100644
 --- a/backend/ipp.c
 +++ b/backend/ipp.c
 @@ -2526,6 +2526,22 @@ debug_attributes(ipp_t *ipp)		/* I - Request or response message */
@@ -7,9 +7,9 @@ index 08a41efe..1c1333ec 100644
        ippAttributeString(attr, buffer, sizeof(buffer));
  
 +    if (!strcmp(name, "job-name") || !strcmp(name, "requesting-user-name") ||
-+        !strcmp(name, "job-originating-user-name") || !strcmp(name, "printer-uuid") || !strcmp(name, "job-uuid"))
++        !strcmp(name, "job-originating-user-name") || !strcmp(name, "printer-uuid"))
 +    {
-+      if (!strcmp(name, "printer-uuid") || !strcmp(name, "job-uuid"))
++      if (!strcmp(name, "printer-uuid"))
 +      {
 +        char *last_dash = strrchr(buffer, '-');
 +        if (last_dash && *(last_dash + 1) != '\0')
@@ -56,10 +56,10 @@ index 3c9aa72a..abbde51f 100644
    * If there is no "best" authentication rule for this request, then
 diff --git a/scheduler/datamasking.c b/scheduler/datamasking.c
 new file mode 100644
-index 00000000..96485e28
+index 00000000..901438a8
 --- /dev/null
 +++ b/scheduler/datamasking.c
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,44 @@
 +/*
 + * Copyright (c) 2025 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,36 +82,7 @@ index 00000000..96485e28
 +    if (!arg) return NULL;
 +
 +    char *result = maskJobName(arg);
-+    if (!result) return NULL;
-+    maskJobUuid(result);
 +    return result;
-+}
-+
-+void maskJobUuid(char *str)
-+{
-+    if (!str) return;
-+    char *uuid_pos = strstr(str, UUIDNAME_PREFIX);
-+    if (!uuid_pos) return;
-+    uuid_pos += strlen(UUIDNAME_PREFIX);
-+
-+    char *uuid_end = strchr(uuid_pos, ' ');
-+    if (!uuid_end) {
-+        uuid_end = str + strlen(str);
-+    }
-+
-+    char *last_dash = NULL;
-+    char *p = uuid_pos;
-+    while (p < uuid_end) {
-+        if (*p == '-') {
-+            last_dash = p;
-+        }
-+        p++;
-+    }
-+    if (last_dash) {
-+        *(last_dash + 1) = 'x';
-+        *(last_dash + 2) = '\0';
-+        strcat(last_dash + 2, uuid_end);
-+    }
 +}
 +
 +char* maskJobName(const char *arg)
@@ -136,10 +107,10 @@ index 00000000..96485e28
 \ No newline at end of file
 diff --git a/scheduler/datamasking.h b/scheduler/datamasking.h
 new file mode 100644
-index 00000000..36335d85
+index 00000000..fa45ab47
 --- /dev/null
 +++ b/scheduler/datamasking.h
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,24 @@
 +/*
 + * Copyright (c) 2025 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -161,11 +132,9 @@ index 00000000..36335d85
 +#define CUPSDSTARTPROCESS_JOBNAME_INDEX 12
 +#define CUPSDSTARTPROCESS_OPTIONS_INDEX 14
 +#define JOBNAME_PREFIX "document-name-supplied="
-+#define UUIDNAME_PREFIX "job-uuid="
 +
 +char* getSafeArgument(const char *arg);
 +char* maskJobName(const char *arg);
-+void maskJobUuid(char *str);
 \ No newline at end of file
 diff --git a/scheduler/ipp.c b/scheduler/ipp.c
 index 2f104cc6..b3618ff6 100644
