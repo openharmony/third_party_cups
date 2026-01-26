@@ -77,7 +77,8 @@ def do_patch(target_dir):
         "ohos-cups-badfd.patch",
         "ohos-verify-backend.patch",
         "cups-usb-job-state-monitor.patch",
-        "ohos-filetypes-crash.patch"
+        "ohos-filetypes-crash.patch",
+        "backport-CVE-2025-59364.patch"
     ]
 
     for patch in patch_file:
