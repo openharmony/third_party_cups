@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..09bfda9
+index 00000000..0d77e850
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,702 @@
+@@ -0,0 +1,700 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -291,10 +291,8 @@ index 0000000..09bfda9
 +    uint32_t retryNum = 0;
 +    int32_t ret = OHUSB_SUCCESS;
 +    ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
-+    if (ret) {
-+        OH_ResetDevice(pipe);
-+    }
 +    while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES) {
++        OH_ResetDevice(pipe);
 +        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
 +        retryNum++;
 +    }
@@ -708,7 +706,7 @@ index 0000000..09bfda9
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..66e5d65
+index 00000000..66e5d65e
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,469 @@
