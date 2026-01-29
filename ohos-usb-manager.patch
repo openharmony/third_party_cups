@@ -1,6 +1,6 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..0d77e850
+index 00000000..e298f03c
 --- /dev/null
 +++ b/backend/usb_manager.cxx
 @@ -0,0 +1,700 @@
@@ -285,15 +285,15 @@ index 00000000..0d77e850
 +    int32_t value = ctrlParam->value;
 +    int32_t index = ctrlParam->index;
 +    int32_t timeOut = ctrlParam->timeout;
-+    const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
++    const HDI::Usb::V1_2::UsbCtrlTransferParams ctrlParams = {requestType, request, value, index, length, timeOut};
 +    std::vector<uint8_t> bufferData(length, 0);
 +    auto &usbSrvClient = OHOS::USB::UsbSrvClient::GetInstance();
 +    uint32_t retryNum = 0;
 +    int32_t ret = OHUSB_SUCCESS;
-+    ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
++    ret = usbSrvClient.UsbControlTransfer(usbDevicePipe, ctrlParams, bufferData);
 +    while ((ret != OHUSB_SUCCESS || bufferData.size() == 0) && retryNum < OHUSB_CONTROLTRANSFER_READ_RETRY_MAX_TIMES) {
 +        OH_ResetDevice(pipe);
-+        ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
++        ret = usbSrvClient.UsbControlTransfer(usbDevicePipe, ctrlParams, bufferData);
 +        retryNum++;
 +    }
 +    fprintf(stderr, "DEBUG: OH_ControlTransferRead ret = %d, retryNum = %d\n", ret, retryNum);
