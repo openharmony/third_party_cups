@@ -84,7 +84,8 @@ def do_patch(target_dir):
         "ohos-ipp-everywhere-color-fix.patch",
         "ohos-default-paper-size.patch",
         "ohos-cloud-pagesize-error-fix.patch",
-        "cups-log-datamasking.patch"
+        "cups-log-datamasking.patch",
+        "ohos-reduce-delete-time.patch"
     ]
 
     for patch in patch_file:
