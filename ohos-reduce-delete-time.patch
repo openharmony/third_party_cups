@@ -1,0 +1,15 @@
+diff --git a/scheduler/cupsd.h b/scheduler/cupsd.h
+index 164df6e..4c08de3 100644
+--- a/scheduler/cupsd.h
++++ b/scheduler/cupsd.h
+@@ -79,8 +79,8 @@ extern const char *cups_hstrerror(int);
+  * Defaults...
+  */
+ 
+-#define DEFAULT_HISTORY		INT_MAX	/* Preserve job history? */
+-#define DEFAULT_FILES		86400	/* Preserve job files? */
++#define DEFAULT_HISTORY		10	/* Preserve job history? */
++#define DEFAULT_FILES		10	/* Preserve job files? */
+ #define DEFAULT_TIMEOUT		300	/* Timeout during requests/updates */
+ #define DEFAULT_KEEPALIVE	30	/* Timeout between requests */
+ 
