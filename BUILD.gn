@@ -153,6 +153,8 @@ lpinfo_generated_sources = [ "$cups_code_dir/systemv/lpinfo.c" ]
 
 rastertopwg_generated_sources = [ "$filter_code_dir/rastertopwg.c" ]
 
+commandtops_generated_sources = [ "$filter_code_dir/commandtops.c" ]
+
 if (cups_feature_pstops_filter) {
   pstops_generated_sources = [
     "$filter_code_dir/common.c",
@@ -220,6 +222,7 @@ action("cups_action") {
   outputs += lpadmin_generated_sources
   outputs += lpinfo_generated_sources
   outputs += rastertopwg_generated_sources
+  outputs += commandtops_generated_sources
   outputs += cupsmime_generated_sources
   outputs += cupsimage_generated_sources
   outputs += backend_generated_sources
@@ -370,6 +373,22 @@ ohos_shared_library("cupsimage") {
 
 ohos_executable("rastertopwg") {
   sources = rastertopwg_generated_sources
+  deps = [
+    ":cups",
+    ":cups_action",
+  ]
+  external_deps = [
+    "openssl:libcrypto_shared",
+  ]
+  install_enable = true
+  module_install_dir = "$cups_serverbin_dir/filter"
+  public_configs = [ ":cups_config" ]
+  subsystem_name = "$SUBSYSTEM_NAME"
+  part_name = "$PART_NAME"
+}
+
+ohos_executable("rastertopwg") {
+  sources = commandtops_generated_sources
   deps = [
     ":cups",
     ":cups_action",
