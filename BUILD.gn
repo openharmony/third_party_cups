@@ -387,7 +387,7 @@ ohos_executable("rastertopwg") {
   part_name = "$PART_NAME"
 }
 
-ohos_executable("rastertopwg") {
+ohos_executable("commandtops") {
   sources = commandtops_generated_sources
   deps = [
     ":cups",
