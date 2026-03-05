@@ -303,6 +303,7 @@ group("third_party_cups") {
     ":mime.convs",
     ":mime.types",
     ":rastertopwg",
+    ":commandtops",
     ":usb",
   ]
   if (cups_feature_pstops_filter) {
