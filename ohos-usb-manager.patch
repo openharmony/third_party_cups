@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..e298f03c
+index 0000000..e07877c
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,700 @@
+@@ -0,0 +1,701 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -183,7 +183,8 @@ index 00000000..e298f03c
 +    USBEndpoint endpoint;
 +    endpoint.SetInterfaceId(tpipe->bInterfaceId);
 +    endpoint.SetAddr(tpipe->bEndpointAddress);
-+    std::vector<uint8_t> readTempBuffer;
++    constexpr int32_t READ_BUFFER_SIZE = 512;
++    std::vector<uint8_t> readTempBuffer(READ_BUFFER_SIZE);
 +    size_t readSize = 0;
 +    int32_t ret = usbSrvClient.BulkTransfer(usbDevicePipe, endpoint, readTempBuffer, OHUSB_BULKTRANSFER_READ_TIMEOUT);
 +    fprintf(stderr, "DEBUG: OH_BulkTransferRead ret = %d\n", ret);
@@ -194,7 +195,7 @@ index 00000000..e298f03c
 +    readSize = readTempBuffer.size();
 +    fprintf(stderr, "DEBUG: OH_BulkTransferRead readSize = %zu\n", readSize);
 +    if (ret == OHUSB_SUCCESS) {
-+        if (readSize < 512) {
++        if (readSize < READ_BUFFER_SIZE) {
 +            std::copy(readTempBuffer.begin(), readTempBuffer.begin() + readSize, data);
 +            *transferred = readSize;
 +        }
@@ -706,7 +707,7 @@ index 00000000..e298f03c
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 00000000..66e5d65e
+index 0000000..66e5d65
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,469 @@
