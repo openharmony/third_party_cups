@@ -58,6 +58,7 @@ static constexpr uint16_t USB_INDEX_LANGUAGE_ID_ENGLISH = 0X409;
 static constexpr int32_t HTTP_COMMON_CONST_VALUE_500 = 500;
 static constexpr int32_t HTTP_COMMON_CONST_VALUE_100 = 100;
 static constexpr int32_t HTTP_COMMON_CONST_VALUE_2 = 2;
+static constexpr int32_t READ_BUFFER_SIZE = 512;
 IppUsbManager::IppUsbManager()
 {
     isTerminated_.store(false);
@@ -389,7 +390,7 @@ bool IppUsbManager::ProcessDataFromDevice(const std::string& uri, PrinterStatus&
     constexpr int32_t MAX_TIME = 50;
     for (int32_t readCount = 0; readCount < MAX_TIME; readCount++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(USB_WRITE_INTERVAL));
-        std::vector<uint8_t> readTempBuffer;
+        std::vector<uint8_t> readTempBuffer(READ_BUFFER_SIZE);
         int32_t readFromUsbRes = BulkTransferRead(uri, readTempBuffer);
         if (readFromUsbRes != UEC_OK && readFromUsbRes != EORROR_HDF_DEV_ERR_TIME_OUT) {
             fprintf(stderr, "DEBUG: USB_MONITOR BulkTransferRead fail, ret = %d\n", readFromUsbRes);
