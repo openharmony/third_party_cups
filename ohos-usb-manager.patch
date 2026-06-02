@@ -1,6 +1,6 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 0000000..e07877c
+index 00000000..e4fa5b35
 --- /dev/null
 +++ b/backend/usb_manager.cxx
 @@ -0,0 +1,701 @@
@@ -217,7 +217,7 @@ index 0000000..e07877c
 +    int32_t ret = 0;
 +    int leftDataLen = length;
 +    while (leftDataLen > 0) {
-+        size_t len = leftDataLen > OHUSB_ENDPOINT_MAX_LENGTH ? OHUSB_ENDPOINT_MAX_LENGTH : leftDataLen;
++        size_t len = leftDataLen > tpipe->wMaxPacketSize ? tpipe->wMaxPacketSize : leftDataLen;
 +        std::string sendDataStr(reinterpret_cast<char *>(data), len);
 +        ret = BulkTransferWriteData(usbDevicePipe, endpoint, sendDataStr, timeout);
 +        if (ret == OHUSB_ERROR_IO) {
@@ -707,10 +707,10 @@ index 0000000..e07877c
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 0000000..66e5d65
+index 00000000..7ff13faf
 --- /dev/null
 +++ b/backend/usb_manager.h
-@@ -0,0 +1,469 @@
+@@ -0,0 +1,472 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1155,6 +1155,9 @@ index 0000000..66e5d65
 +
 +    /** The interface id to be claimed. */
 +    int32_t bClaimedInterfaceId;
++
++    /** Maximum packet size this endpoint is capable of sending/receiving. */
++    uint16_t wMaxPacketSize;
 +} ohusb_transfer_pipe;
 +
 +extern int32_t OH_GetDevices(ohusb_device_descriptor** list, ssize_t *numdevs);
