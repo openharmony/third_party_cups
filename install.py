@@ -86,7 +86,8 @@ def do_patch(target_dir):
         "ohos-cloud-pagesize-error-fix.patch",
         "cups-log-datamasking.patch",
         "ohos-reduce-delete-time.patch",
-        "ohos-integer-overflow.patch"
+        "ohos-fix-integer-overflow.patch",
+        "ohos-fix-buffer-overread.patch"
     ]
 
     for patch in patch_file:
