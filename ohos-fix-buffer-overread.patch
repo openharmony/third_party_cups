@@ -1,0 +1,44 @@
+diff --git a/cups/raster-interpret.c b/cups/raster-interpret.c
+index ad4b187f..af1a9427 100644
+--- a/cups/raster-interpret.c
++++ b/cups/raster-interpret.c
+@@ -1500,6 +1500,8 @@ setpagedevice(
+       h->Duplex = (unsigned)obj->value.boolean;
+     else if (!strcmp(name, "HWResolution") && obj->type == CUPS_PS_START_ARRAY)
+     {
++      if (obj + 3 >= end)
++        return (-1);
+       if (obj[1].type == CUPS_PS_NUMBER && obj[2].type == CUPS_PS_NUMBER &&
+           obj[3].type == CUPS_PS_END_ARRAY)
+       {
+@@ -1545,6 +1547,8 @@ setpagedevice(
+       h->OutputFaceUp = (unsigned)obj->value.boolean;
+     else if (!strcmp(name, "PageSize") && obj->type == CUPS_PS_START_ARRAY)
+     {
++      if (obj + 3 >= end)
++        return (-1);
+       if (obj[1].type == CUPS_PS_NUMBER && obj[2].type == CUPS_PS_NUMBER &&
+           obj[3].type == CUPS_PS_END_ARRAY)
+       {
+diff --git a/scheduler/client.c b/scheduler/client.c
+index f0349a6c..9b12a9e9 100644
+--- a/scheduler/client.c
++++ b/scheduler/client.c
+@@ -1152,7 +1152,7 @@ cupsdReadClient(cupsd_client_t *con)	/* I - Client to read from */
+ 		  {
+ 		    unsigned int i = 0;	// Array index
+ 
+-		    for (ptr = con->uri + 9; *ptr && *ptr != '?' && i < sizeof(name);)
++		    for (ptr = con->uri + 9; *ptr && *ptr != '?' && i < sizeof(name) - 1;)
+ 		      name[i++] = *ptr++;
+ 
+ 		    name[i] = '\0';
+@@ -1192,7 +1192,7 @@ cupsdReadClient(cupsd_client_t *con)	/* I - Client to read from */
+ 		  {
+ 		    unsigned int i = 0;	// Array index
+ 
+-		    for (ptr = con->uri + 10; *ptr && *ptr != '?' && i < sizeof(name);)
++		    for (ptr = con->uri + 10; *ptr && *ptr != '?' && i < sizeof(name) - 1;)
+ 		      name[i++] = *ptr++;
+ 
+ 		    name[i] = '\0';
