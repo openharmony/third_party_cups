@@ -1,9 +1,9 @@
 diff --git a/backend/usb-oh.c b/backend/usb-oh.c
 new file mode 100644
-index 00000000..f5cc6500
+index 00000000..2f70948d
 --- /dev/null
 +++ b/backend/usb-oh.c
-@@ -0,0 +1,1848 @@
+@@ -0,0 +1,1852 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,6 +82,7 @@ index 00000000..f5cc6500
 +			  protocol,	/* Protocol: 1 = Uni-di, 2 = Bi-di. */
 +			  usblp_attached,	/* "usblp" kernel module attached? */
 +			  reset_after_job;/* Set to 1 by print_device() */
++  uint16_t   maxPacketSize;/* Max packet size of write endpoint */
 +  unsigned   quirks;		/* Quirks flags */
 +  ohusb_pipe *pipe;	/* Open pipe to device */
 +} usb_printer_t;
@@ -460,8 +461,7 @@ index 00000000..f5cc6500
 +      if (g.print_bytes)
 +      {
 +        int claimedIfId = g.printer->device->config[g.printer->conf].interface[g.printer->iface].altsetting[g.printer->altset].bInterfaceNumber;
-+        uint16_t maxPacketSize = g.printer->device->config[g.printer->conf].interface[g.printer->iface].
-+          altsetting[g.printer->altset].endpoint[g.printer->write_endp].wMaxPacketSize;
++        uint16_t maxPacketSize = g.printer->maxPacketSize;
 +
 +        ohusb_transfer_pipe tpipe = {
 +          g.printer->iface,
@@ -819,6 +819,10 @@ index 00000000..f5cc6500
 +		            else
 +		              fprintf(stderr, "DEBUG: Uni-directional USB communication "
 +		            	  "only!\n");
++                printer.maxPacketSize = confptr->interface[printer.iface].
++		            			               altsetting[printer.altset].
++		            			               endpoint[printer.write_endp].
++		            			               wMaxPacketSize;
 +		            printer.write_endp = confptr->interface[printer.iface].
 +		            			               altsetting[printer.altset].
 +		            			               endpoint[printer.write_endp].
