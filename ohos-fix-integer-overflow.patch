@@ -1,0 +1,30 @@
+diff --git a/cups/raster-stream.c b/cups/raster-stream.c
+index 307139fa..16fda4c9 100644
+--- a/cups/raster-stream.c
++++ b/cups/raster-stream.c
+@@ -688,11 +688,24 @@ _cupsRasterReadHeader(
+           r->header.cupsBitsPerColor = r->header.cupsBitsPerPixel / r->header.cupsNumColors;
+           r->header.cupsWidth        = ((unsigned)appleheader[12] << 24) | ((unsigned)appleheader[13] << 16) | ((unsigned)appleheader[14] << 8) | (unsigned)appleheader[15];
+           r->header.cupsHeight       = ((unsigned)appleheader[16] << 24) | ((unsigned)appleheader[17] << 16) | ((unsigned)appleheader[18] << 8) | (unsigned)appleheader[19];
+-          r->header.cupsBytesPerLine = r->header.cupsWidth * r->header.cupsBitsPerPixel / 8;
++          {
++            unsigned long long bits_per_line = (unsigned long long)r->header.cupsWidth * r->header.cupsBitsPerPixel;
++            if (bits_per_line > 0xffffffffU)
++            {
++              DEBUG_printf(("Raster dimensions too large (cupsWidth=%u, cupsBitsPerPixel=%u).", r->header.cupsWidth, r->header.cupsBitsPerPixel));
++              return (0);
++            }
++            r->header.cupsBytesPerLine = (unsigned)(bits_per_line / 8);
++          }
+           r->header.cupsColorOrder   = CUPS_ORDER_CHUNKED;
+           r->header.HWResolution[0]  = r->header.HWResolution[1] = ((unsigned)appleheader[20] << 24) | ((unsigned)appleheader[21] << 16) | ((unsigned)appleheader[22] << 8) | (unsigned)appleheader[23];
+           if (r->header.HWResolution[0] > 0)
+           {
++              if (r->header.cupsWidth > 0x00ffffff || r->header.cupsHeight > 0x00ffffff)
++              {
++                DEBUG_puts("Raster dimensions too large.");
++                return (0);
++              }
+ 	    r->header.PageSize[0]     = (r->header.cupsWidth * 72 / r->header.HWResolution[0]);
+ 	    r->header.PageSize[1]     = (r->header.cupsHeight * 72 / r->header.HWResolution[1]);
+ 	    r->header.cupsPageSize[0] = (float)(r->header.cupsWidth * 72.0 / r->header.HWResolution[0]);

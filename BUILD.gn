@@ -263,7 +263,9 @@ action("cups_action") {
     "//third_party/cups/backport-CVE-2025-59364.patch",
     "//third_party/cups/backport-Fix-memory-leak-in-cupsConvertOption.patch",
     "//third_party/cups/ohos-ipp-everywhere-color-fix.patch",
-    "//third_party/cups/cups-log-datamasking.patch"
+    "//third_party/cups/cups-log-datamasking.patch",
+    "//third_party/cups/ohos-fix-integer-overflow.patch",
+    "//third_party/cups/ohos-fix-buffer-overread.patch"
   ]
   cups_src_dir = "//third_party/cups"
   foreach(file, outputs){
