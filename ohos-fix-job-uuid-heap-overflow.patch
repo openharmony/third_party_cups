@@ -1,0 +1,14 @@
+diff --git a/scheduler/job.c b/scheduler/job.c
+index 620a2dd4..2f809576 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -4188,7 +4188,8 @@ ipp_length(ipp_t *ipp)			/* I - IPP request */
+ 	attr->value_tag == IPP_TAG_MIMETYPE ||
+ 	attr->value_tag == IPP_TAG_NAMELANG ||
+ 	attr->value_tag == IPP_TAG_TEXTLANG ||
+-	attr->value_tag == IPP_TAG_URI ||
++	(attr->value_tag == IPP_TAG_URI && strcmp(attr->name, "job-uuid") &&
++	 strcmp(attr->name, "job-authorization-uri")) ||
+ 	attr->value_tag == IPP_TAG_URISCHEME)
+       continue;
+ 

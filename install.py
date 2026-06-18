@@ -87,7 +87,8 @@ def do_patch(target_dir):
         "cups-log-datamasking.patch",
         "ohos-reduce-delete-time.patch",
         "ohos-fix-integer-overflow.patch",
-        "ohos-fix-buffer-overread.patch"
+        "ohos-fix-buffer-overread.patch",
+        "ohos-fix-job-uuid-heap-overflow.patch"
     ]
 
     for patch in patch_file:
