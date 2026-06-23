@@ -128,7 +128,7 @@ std::string IppUsbManager::GetSerialNumber(UsbDevice &usbDevice)
         fprintf(stderr, "DEBUG: USB_MONITOR ControlTransfer failed, ret = %d\n", ret);
         return "";
     }
-    std::vector<uint8_t> arr((bufferData[0] - HTTP_COMMON_CONST_VALUE_2) / HTTP_COMMON_CONST_VALUE_2);
+    std::vector<uint8_t> arr((bufferData[0] - 1) / HTTP_COMMON_CONST_VALUE_2);
     int arrIndex = 0;
     for (int i = 2; i < bufferData[0];) {
         arr[arrIndex++] = bufferData[i];
@@ -495,7 +495,7 @@ bool IppUsbManager::AllocateInterface(const std::string &uri, UsbDevice& usbdevi
         return false;
     }
     std::vector<PrinterTranIndex>& indexVec = it->second.indexVec;
-    for (auto indexVecIt = indexVec.rbegin(); indexVecIt != indexVec.rend(); it++) {
+    for (auto indexVecIt = indexVec.rbegin(); indexVecIt != indexVec.rend(); indexVecIt++) {
         int32_t configIndex = indexVecIt->configIndex;
         int32_t interfaceIndex = indexVecIt->interfaceIndex;
         UsbInterface ippInterface =
