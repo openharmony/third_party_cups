@@ -1,0 +1,14 @@
+﻿diff --git a/scheduler/type.c b/scheduler/type.c
+index 81c54ef2..cc9e6dd2 100644
+--- a/scheduler/type.c
++++ b/scheduler/type.c
+@@ -1028,7 +1028,8 @@ mime_check_rules(
+ 	  * Load the buffer if necessary...
+ 	  */
+ 
+-          if (fb->offset < 0 || rules->offset < fb->offset)
++          if (fb->offset < 0 || rules->offset < fb->offset ||
++	      (rules->offset + 1) > (fb->offset + fb->length))
+ 	  {
+ 	   /*
+ 	    * Reload file buffer...

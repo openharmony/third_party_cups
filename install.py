@@ -88,7 +88,12 @@ def do_patch(target_dir):
         "ohos-reduce-delete-time.patch",
         "ohos-fix-integer-overflow.patch",
         "ohos-fix-buffer-overread.patch",
-        "ohos-fix-job-uuid-heap-overflow.patch"
+        "ohos-fix-job-uuid-heap-overflow.patch",
+        "ohos-tls-openssl.patch",
+        "ohos-fix-snmp-overread.patch",
+        "ohos-fix-classes-uaf.patch",
+        "ohos-fix-ipp-no-members.patch",
+        "ohos-fix-type-overread.patch"
     ]
 
     for patch in patch_file:
