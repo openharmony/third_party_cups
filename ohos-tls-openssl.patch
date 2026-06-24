@@ -1,0 +1,12 @@
+diff --git a/cups/tls-openssl.c b/cups/tls-openssl.c
+index 9fcbe0a..051f68f 100644
+--- a/cups/tls-openssl.c
++++ b/cups/tls-openssl.c
+@@ -1119,6 +1119,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
+ 
+   // Set TLS options...
+   strlcpy(cipherlist, "HIGH:!DH:+DHE", sizeof(cipherlist));
++  strlcat(cipherlist, ":!aNULL", sizeof(cipherlist));
+   if ((tls_options & _HTTP_TLS_ALLOW_RC4) && http->mode == _HTTP_MODE_CLIENT)
+     strlcat(cipherlist, ":+RC4", sizeof(cipherlist));
+   else
