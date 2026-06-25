@@ -1,0 +1,16 @@
+﻿diff --git a/scheduler/classes.c b/scheduler/classes.c
+index 03ea04c9..660c798e 100644
+--- a/scheduler/classes.c
++++ b/scheduler/classes.c
+@@ -129,6 +129,11 @@ cupsdDeletePrinterFromClass(
+     */
+ 
+     c->num_printers --;
++    if (c->num_printers == 0)
++    {
++      free(c->printers);
++      c->printers = NULL;
++    }
+     if (i < c->num_printers)
+       memmove(c->printers + i, c->printers + i + 1,
+               (size_t)(c->num_printers - i) * sizeof(cupsd_printer_t *));

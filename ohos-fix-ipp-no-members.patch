@@ -1,0 +1,18 @@
+﻿diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 2f104cc6..0f6d5512 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -7410,6 +7410,13 @@ get_ppd(cupsd_client_t  *con,		/* I - Client connection */
+ 
+       if (i < dest->num_printers)
+         dest = dest->printers[i];
++      else if (dest->num_printers == 0)
++      {
++        send_ipp_status(con, IPP_STATUS_ERROR_NOT_FOUND,
++          _("Class \"%s\" has no member printers."),
++          dest->name);
++        return;
++      }
+       else
+       {
+ 	send_ipp_status(con, IPP_STATUS_CUPS_SEE_OTHER, _("See remote printer."));
