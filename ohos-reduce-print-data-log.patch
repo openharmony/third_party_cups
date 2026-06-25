@@ -1,0 +1,42 @@
+diff --git a/backend/runloop.c b/backend/runloop.c
+index e61ba96..5f518f1 100644
+--- a/backend/runloop.c
++++ b/backend/runloop.c
+@@ -91,7 +91,7 @@ backendDrainOutput(int print_fd,	/* I - Print file descriptor */
+       return (0);
+     }
+ 
+-    fprintf(stderr, "DEBUG: Read %d bytes of print data...\n",
++    fprintf(stderr, "DEBUG2: Read %d bytes of print data...\n",
+ 	    (int)print_bytes);
+ 
+     for (print_ptr = print_buffer; print_bytes > 0;)
+@@ -111,7 +111,7 @@ backendDrainOutput(int print_fd,	/* I - Print file descriptor */
+       }
+       else
+       {
+-        fprintf(stderr, "DEBUG: Wrote %d bytes of print data...\n", (int)bytes);
++        fprintf(stderr, "DEBUG2: Wrote %d bytes of print data...\n", (int)bytes);
+ 
+         print_bytes -= bytes;
+ 	print_ptr   += bytes;
+@@ -322,7 +322,7 @@ backendRunLoop(
+ 
+       print_ptr = print_buffer;
+ 
+-      fprintf(stderr, "DEBUG: Read %d bytes of print data...\n",
++      fprintf(stderr, "DEBUG2: Read %d bytes of print data...\n",
+               (int)print_bytes);
+     }
+ 
+@@ -380,7 +380,7 @@ backendRunLoop(
+ 	  offline = 0;
+ 	}
+ 
+-        fprintf(stderr, "DEBUG: Wrote %d bytes of print data...\n", (int)bytes);
++        fprintf(stderr, "DEBUG2: Wrote %d bytes of print data...\n", (int)bytes);
+ 
+         print_bytes -= bytes;
+ 	print_ptr   += bytes;
+-- 
+

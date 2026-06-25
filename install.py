@@ -89,7 +89,8 @@ def do_patch(target_dir):
         "ohos-fix-integer-overflow.patch",
         "ohos-fix-buffer-overread.patch",
         "ohos-fix-job-uuid-heap-overflow.patch",
-        "ohos-tls-openssl.patch"
+        "ohos-tls-openssl.patch",
+        "ohos-reduce-print-data-log.patch"
     ]
 
     for patch in patch_file:
