@@ -1,0 +1,780 @@
+diff --git a/scheduler/conf.c b/scheduler/conf.c
+index 5d1d404..afb2f57 100644
+--- a/scheduler/conf.c
++++ b/scheduler/conf.c
+@@ -3500,6 +3500,7 @@ read_cups_files_conf(cups_file_t *fp)	/* I - File to read from */
+     "FINAL_CONTENT_TYPE",
+     "HOME",
+     "LANG",
++    "OH_USER_OPTIONS",
+     "PPD",
+     "PRINTER",
+     "PRINTER_INFO",
+diff --git a/scheduler/job.c b/scheduler/job.c
+index 0446e0a..4eb820f 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -117,10 +117,15 @@ static int	compare_jobs(void *first, void *second, void *data);
+ static void	dump_job_history(cupsd_job_t *job);
+ static void	finalize_job(cupsd_job_t *job, int set_job_state);
+ static void	free_job_history(cupsd_job_t *job);
+-static char	*get_options(cupsd_job_t *job, int banner_page, char *copies,
+-		             size_t copies_size, char *title,
+-			     size_t title_size);
+-static size_t	ipp_length(ipp_t *ipp);
++static int is_user_attr(ipp_attribute_t *attr);
++static char *format_attr_to_buf(ipp_attribute_t *attr, char *ptr,
++                                char *base, size_t buflen);
++static size_t user_attr_length(ipp_attribute_t *attr);
++static char *get_options(cupsd_job_t *job, int banner_page, char *copies,
++                         size_t copies_size, char *title,
++                         size_t title_size,
++                         char **user_options_out);
++static size_t	ipp_length(ipp_t *ipp, size_t *user_length);
+ static void	load_job_cache(const char *filename);
+ static void	load_next_job_id(const char *filename);
+ static void	load_request_root(void);
+@@ -513,7 +518,10 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+ 					/* Job title string */
+ 			copies[255],	/* # copies string */
+ 			*options,	/* Options string */
+-			*envp[MAX_ENV + 21],
++			*user_options,	/* user_* options string */
++			*oh_user_options = NULL,
++					/* OH_USER_OPTIONS env var */
++			*envp[MAX_ENV + 22],
+ 					/* Environment variables */
+ 			charset[255],	/* CHARSET env variable */
+ 			class_name[255],/* CLASS env variable */
+@@ -860,7 +868,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+     banner_page = 0;
+ 
+   if ((options = get_options(job, banner_page, copies, sizeof(copies), title,
+-                             sizeof(title))) == NULL)
++                             sizeof(title), &user_options)) == NULL)
+   {
+     abort_message = "Stopping job because the scheduler ran out of memory.";
+ 
+@@ -1064,6 +1072,16 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+     strlcpy(auth_info_required, "AUTH_INFO_REQUIRED=none",
+ 	    sizeof(auth_info_required));
+ 
++  if (user_options != NULL)
++  {
++    size_t	oh_user_optlen;	/* Size of OH_USER_OPTIONS */
++
++    oh_user_optlen = strlen(user_options) + 16;
++
++    if ((oh_user_options = malloc(oh_user_optlen)) != NULL)
++      snprintf(oh_user_options, oh_user_optlen, "OH_USER_OPTIONS=%s",
++               user_options);
++  }
+   envc = cupsdLoadEnv(envp, (int)(sizeof(envp) / sizeof(envp[0])));
+ 
+   envp[envc ++] = charset;
+@@ -1079,6 +1097,8 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+   envp[envc ++] = printer_name;
+   envp[envc ++] = printer_state_reasons ? printer_state_reasons :
+                                           "PRINTER_STATE_REASONS=none";
++  if (oh_user_options)
++    envp[envc ++] = oh_user_options;
+   envp[envc ++] = banner_page ? "CUPS_FILETYPE=job-sheet" :
+                                 "CUPS_FILETYPE=document";
+ 
+@@ -1127,6 +1147,8 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+     if (!strncmp(envp[i], "AUTH_", 5))
+       cupsdLogJob(job, CUPSD_LOG_DEBUG, "envp[%d]=\"AUTH_%c****\"", i,
+                   envp[i][5]);
++    else if (!strncmp(envp[i], "OH_USER_OPTIONS=", 16))
++      cupsdLogJob(job, CUPSD_LOG_DEBUG, "envp[%d]=\"OH_USER_OPTIONS=<masked>\"", i);
+     else if (strncmp(envp[i], "DEVICE_URI=", 11))
+       cupsdLogJob(job, CUPSD_LOG_DEBUG, "envp[%d]=\"%s\"", i, envp[i]);
+     else
+@@ -1334,6 +1356,9 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+   if (printer_state_reasons)
+     free(printer_state_reasons);
+ 
++  if (oh_user_options)
++    free(oh_user_options);
++
+   cupsdAddSelect(job->status_buffer->fd, (cupsd_selfunc_t)update_job, NULL,
+                  job);
+ 
+@@ -1369,6 +1394,9 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
+   if (printer_state_reasons)
+     free(printer_state_reasons);
+ 
++  if (oh_user_options)
++    free(oh_user_options);
++
+   cupsdClosePipe(job->print_pipes);
+   cupsdClosePipe(job->back_pipes);
+   cupsdClosePipe(job->side_pipes);
+@@ -3675,12 +3703,14 @@ get_options(cupsd_job_t *job,		/* I - Job */
+ 	    char        *copies,	/* I - Copies buffer */
+ 	    size_t      copies_size,	/* I - Size of copies buffer */
+ 	    char        *title,		/* I - Title buffer */
+-	    size_t      title_size)	/* I - Size of title buffer */
++	    size_t      title_size,	/* I - Size of title buffer */
++	    char        **user_options_out)
+ {
+   int			i;		/* Looping var */
+-  size_t		newlength;	/* New option buffer length */
++  size_t		newlength,	/* New option buffer length */
++			new_userlength;/* Length of user_* option buffer */
+   char			*optptr,	/* Pointer to options */
+-			*valptr;	/* Pointer in value string */
++			*user_optptr;	/* Pointer into user_options */
+   ipp_attribute_t	*attr;		/* Current attribute */
+   _ppd_cache_t		*pc;		/* PPD cache and mapping data */
+   int			num_pwgppds;	/* Number of PWG->PPD options */
+@@ -3694,6 +3724,10 @@ get_options(cupsd_job_t *job,		/* I - Job */
+   int			exact;		/* Did we get an exact match? */
+   static char		*options = NULL;/* Full list of options */
+   static size_t		optlength = 0;	/* Length of option buffer */
++  static char		*user_options = NULL;
++					/* user_* options string */
++  static size_t		user_optlength = 0;
++					/* Length of user_options buffer */
+ 
+ 
+  /*
+@@ -3930,7 +3964,7 @@ get_options(cupsd_job_t *job,		/* I - Job */
+   * Figure out how much room we need...
+   */
+ 
+-  newlength = ipp_length(job->attrs);
++  newlength = ipp_length(job->attrs, &new_userlength);
+ 
+   for (i = num_pwgppds, pwgppd = pwgppds; i > 0; i --, pwgppd ++)
+     newlength += 1 + strlen(pwgppd->name) + 1 + strlen(pwgppd->value);
+@@ -3958,6 +3992,26 @@ get_options(cupsd_job_t *job,		/* I - Job */
+     optlength = newlength;
+   }
+ 
++  if (new_userlength > user_optlength || !user_options)
++  {
++    if (!user_options)
++      user_optptr = malloc(new_userlength);
++    else
++      user_optptr = realloc(user_options, new_userlength);
++
++    if (!user_optptr)
++    {
++      cupsdLogJob(job, CUPSD_LOG_CRIT,
++                  "Unable to allocate " CUPS_LLFMT " bytes for user option buffer.",
++                  CUPS_LLCAST new_userlength);
++      *user_options_out = NULL;
++      return (options);
++    }
++
++    user_options = user_optptr;
++    user_optlength = new_userlength;
++  }
++
+  /*
+   * Now loop through the attributes and convert them to the textual
+   * representation used by the filters...
+@@ -3965,6 +4019,8 @@ get_options(cupsd_job_t *job,		/* I - Job */
+ 
+   optptr  = options;
+   *optptr = '\0';
++  user_optptr  = user_options;
++  *user_optptr = '\0';
+ 
+   snprintf(title, title_size, "%s-%d", job->printer->name, job->id);
+   strlcpy(copies, "1", copies_size);
+@@ -4038,121 +4094,24 @@ get_options(cupsd_job_t *job,		/* I - Job */
+ 	  banner_page)
+         continue;
+ 
+-     /*
+-      * Otherwise add them to the list...
+-      */
+-
+-      if (optptr > options)
+-	strlcat(optptr, " ", optlength - (size_t)(optptr - options));
+-
+-      if (attr->value_tag != IPP_TAG_BOOLEAN)
++      if (is_user_attr(attr))
+       {
+-	strlcat(optptr, attr->name, optlength - (size_t)(optptr - options));
+-	strlcat(optptr, "=", optlength - (size_t)(optptr - options));
++        /*
++         * user_* attributes go into the separate user_options buffer,
++         * not the regular options string.  They will be exported as
++         * OH_USER_OPTIONS environment variable instead.
++         */
++
++        user_optptr = format_attr_to_buf(attr, user_optptr, user_options,
++                                         user_optlength);
++        continue;
+       }
+ 
+-      for (i = 0; i < attr->num_values; i ++)
+-      {
+-	if (i)
+-	  strlcat(optptr, ",", optlength - (size_t)(optptr - options));
+-
+-	optptr += strlen(optptr);
+-
+-	switch (attr->value_tag)
+-	{
+-	  case IPP_TAG_INTEGER :
+-	  case IPP_TAG_ENUM :
+-	      snprintf(optptr, optlength - (size_t)(optptr - options),
+-	               "%d", attr->values[i].integer);
+-	      break;
+-
+-	  case IPP_TAG_BOOLEAN :
+-	      if (!attr->values[i].boolean)
+-		strlcat(optptr, "no", optlength - (size_t)(optptr - options));
+-
+-	      strlcat(optptr, attr->name, optlength - (size_t)(optptr - options));
+-	      break;
+-
+-	  case IPP_TAG_RANGE :
+-	      if (attr->values[i].range.lower == attr->values[i].range.upper)
+-		snprintf(optptr, optlength - (size_t)(optptr - options) - 1,
+-	        	 "%d", attr->values[i].range.lower);
+-              else
+-		snprintf(optptr, optlength - (size_t)(optptr - options) - 1,
+-	        	 "%d-%d", attr->values[i].range.lower,
+-			 attr->values[i].range.upper);
+-	      break;
+-
+-	  case IPP_TAG_RESOLUTION :
+-	      snprintf(optptr, optlength - (size_t)(optptr - options) - 1,
+-	               "%dx%d%s", attr->values[i].resolution.xres,
+-		       attr->values[i].resolution.yres,
+-		       attr->values[i].resolution.units == IPP_RES_PER_INCH ?
+-			   "dpi" : "dpcm");
+-	      break;
+-
+-          case IPP_TAG_STRING :
+-              {
+-                int length = attr->values[i].unknown.length;
+-
+-		for (valptr = attr->values[i].unknown.data; length > 0; length --)
+-		{
+-		  if ((*valptr & 255) < 0x20 || *valptr == 0x7f)
+-		    break;
+-		}
+-
+-		if (length > 0)
+-		{
+-		 /*
+-		  * Encode this string as hex characters...
+-		  */
+-
+-                  *optptr++ = '<';
+-
+-		  for (valptr = attr->values[i].unknown.data, length = attr->values[i].unknown.length; length > 0; length --)
+-		  {
+-		    snprintf(optptr, optlength - (size_t)(optptr - options) - 1, "%02X", *valptr & 255);
+-		    optptr += 2;
+-		  }
+-
+-                  *optptr++ = '>';
+-		}
+-		else
+-		{
+-		  for (valptr = attr->values[i].unknown.data, length = attr->values[i].unknown.length; length > 0; length --)
+-		  {
+-		    if (strchr(" \t\n\\\'\"", *valptr))
+-		      *optptr++ = '\\';
+-		    *optptr++ = *valptr++;
+-		  }
+-		}
+-	      }
+-
+-	      *optptr = '\0';
+-	      break;
+-
+-	  case IPP_TAG_TEXT :
+-	  case IPP_TAG_NAME :
+-	  case IPP_TAG_KEYWORD :
+-	  case IPP_TAG_CHARSET :
+-	  case IPP_TAG_LANGUAGE :
+-	  case IPP_TAG_URI :
+-	      for (valptr = attr->values[i].string.text; *valptr;)
+-	      {
+-	        if (strchr(" \t\n\\\'\"", *valptr))
+-		  *optptr++ = '\\';
+-		*optptr++ = *valptr++;
+-	      }
+-
+-	      *optptr = '\0';
+-	      break;
+-
+-          default :
+-	      break; /* anti-compiler-warning-code */
+-	}
+-      }
++     /*
++      * Otherwise add them to the list...
++      */
+ 
+-      optptr += strlen(optptr);
++      optptr = format_attr_to_buf(attr, optptr, options, optlength);
+     }
+   }
+ 
+@@ -4176,142 +4135,368 @@ get_options(cupsd_job_t *job,		/* I - Job */
+   * Return the options string...
+   */
+ 
++  *user_options_out = user_options;
++
+   return (options);
+ }
+ 
++static int                          /* O - 1 if user_* attr, 0 otherwise */
++is_user_attr(ipp_attribute_t *attr) /* I - Attribute to check */
++{
++  return (attr->group_tag == IPP_TAG_JOB && !strncmp(attr->name, "user_", 5));
++}
++
++/*
++ * 'user_attr_length()' - Compute the size needed for a single user_*
++ *		        attribute in the CUPS options format string.
++ */
++
++static size_t                           /* O - Size in bytes */
++user_attr_length(ipp_attribute_t *attr) /* I - Attribute */
++{
++  size_t attr_bytes; /* Size of attribute text */
++  int i;             /* Looping var */
++
++  attr_bytes = 1;                         /* " " separator */
++  attr_bytes += (size_t)attr->num_values; /* "," separators */
++
++  if (attr->value_tag != IPP_TAG_BOOLEAN)
++    attr_bytes += strlen(attr->name);
++  else
++    attr_bytes += (size_t)attr->num_values * strlen(attr->name);
++
++  switch (attr->value_tag)
++  {
++  case IPP_TAG_INTEGER:
++  case IPP_TAG_ENUM:
++    attr_bytes += (size_t)attr->num_values * 11;
++    break;
++
++  case IPP_TAG_BOOLEAN:
++    /*
++     * Add two bytes for each false ("no") value...
++     */
++
++    for (i = 0; i < attr->num_values; i++)
++      if (!attr->values[i].boolean)
++        attr_bytes += 2;
++    break;
++
++  case IPP_TAG_RANGE:
++    attr_bytes += (size_t)attr->num_values * 23;
++    break;
++
++  case IPP_TAG_RESOLUTION:
++    attr_bytes += (size_t)attr->num_values * 26;
++    break;
++
++  case IPP_TAG_STRING:
++    /*
++     * Octet strings can contain characters that need quoting.
++     * We need at least 2 * len + 2 characters to cover the
++     * quotes and any backslashes in the string.
++     */
++
++    for (i = 0; i < attr->num_values; i++)
++      attr_bytes += 2 * (size_t)attr->values[i].unknown.length + 2;
++    break;
++
++  case IPP_TAG_TEXT:
++  case IPP_TAG_NAME:
++  case IPP_TAG_KEYWORD:
++  case IPP_TAG_CHARSET:
++  case IPP_TAG_LANGUAGE:
++  case IPP_TAG_URI:
++    /*
++     * Strings can contain characters that need quoting.
++     * We need at least 2 * len + 2 characters to cover
++     * the quotes and any backslashes in the string.
++     */
++
++    for (i = 0; i < attr->num_values; i++)
++      attr_bytes += 2 * strlen(attr->values[i].string.text) + 2;
++    break;
++
++  default:
++    break; /* anti-compiler-warning-code */
++  }
++
++  return (attr_bytes);
++}
++
++/*
++ * 'format_attr_to_buf()' - Format an IPP attribute into a CUPS options
++ *                          format string and append to the given buffer.
++ */
++
++static char * /* O - New pointer position */
++format_attr_to_buf(
++    ipp_attribute_t *attr, /* I - Attribute to format */
++    char *ptr,             /* I - Current position in buffer */
++    char *base,            /* I - Start of buffer */
++    size_t buflen)         /* I - Total buffer length */
++{
++  int i;        /* Looping var */
++  char *valptr; /* Pointer into value string */
++
++  if (ptr > base)
++    strlcat(ptr, " ", buflen - (size_t)(ptr - base));
++
++  if (attr->value_tag != IPP_TAG_BOOLEAN)
++  {
++    strlcat(ptr, attr->name, buflen - (size_t)(ptr - base));
++    strlcat(ptr, "=", buflen - (size_t)(ptr - base));
++  }
++
++  for (i = 0; i < attr->num_values; i++)
++  {
++    if (i)
++      strlcat(ptr, ",", buflen - (size_t)(ptr - base));
++
++    ptr += strlen(ptr);
++
++    switch (attr->value_tag)
++    {
++    case IPP_TAG_INTEGER:
++    case IPP_TAG_ENUM:
++      snprintf(ptr, buflen - (size_t)(ptr - base),
++               "%d", attr->values[i].integer);
++      break;
++
++    case IPP_TAG_BOOLEAN:
++      if (!attr->values[i].boolean)
++        strlcat(ptr, "no", buflen - (size_t)(ptr - base));
++
++      strlcat(ptr, attr->name, buflen - (size_t)(ptr - base));
++      break;
++
++    case IPP_TAG_RANGE:
++      if (attr->values[i].range.lower == attr->values[i].range.upper)
++        snprintf(ptr, buflen - (size_t)(ptr - base) - 1,
++                 "%d", attr->values[i].range.lower);
++      else
++        snprintf(ptr, buflen - (size_t)(ptr - base) - 1,
++                 "%d-%d", attr->values[i].range.lower,
++                 attr->values[i].range.upper);
++      break;
++
++    case IPP_TAG_RESOLUTION:
++      snprintf(ptr, buflen - (size_t)(ptr - base) - 1,
++               "%dx%d%s", attr->values[i].resolution.xres,
++               attr->values[i].resolution.yres,
++               attr->values[i].resolution.units == IPP_RES_PER_INCH ? "dpi" : "dpcm");
++      break;
++
++    case IPP_TAG_STRING:
++    {
++      int length = attr->values[i].unknown.length;
++
++      for (valptr = attr->values[i].unknown.data; length > 0; length--)
++      {
++        if ((*valptr & 255) < 0x20 || *valptr == 0x7f)
++          break;
++      }
++
++      if (length > 0)
++      {
++        /*
++         * Encode this string as hex characters...
++         */
++
++        *ptr++ = '<';
++
++        for (valptr = attr->values[i].unknown.data, length = attr->values[i].unknown.length; length > 0; length--)
++        {
++          snprintf(ptr, buflen - (size_t)(ptr - base) - 1, "%02X", *valptr & 255);
++          ptr += 2;
++        }
++
++        *ptr++ = '>';
++      }
++      else
++      {
++        for (valptr = attr->values[i].unknown.data, length = attr->values[i].unknown.length; length > 0; length--)
++        {
++          if (strchr(" \t\n\\\'\"", *valptr))
++            *ptr++ = '\\';
++          *ptr++ = *valptr++;
++        }
++      }
++    }
++
++      *ptr = '\0';
++      break;
++
++    case IPP_TAG_TEXT:
++    case IPP_TAG_NAME:
++    case IPP_TAG_KEYWORD:
++    case IPP_TAG_CHARSET:
++    case IPP_TAG_LANGUAGE:
++    case IPP_TAG_URI:
++      for (valptr = attr->values[i].string.text; *valptr;)
++      {
++        if (strchr(" \t\n\\\'\"", *valptr))
++          *ptr++ = '\\';
++        *ptr++ = *valptr++;
++      }
++
++      *ptr = '\0';
++      break;
++
++    default:
++      break; /* anti-compiler-warning-code */
++    }
++
++    ptr += strlen(ptr);
++  }
++
++  return (ptr);
++}
+ 
+ /*
+  * 'ipp_length()' - Compute the size of the buffer needed to hold
+  *		    the textual IPP attributes.
+  */
+ 
+-static size_t				/* O - Size of attribute buffer */
+-ipp_length(ipp_t *ipp)			/* I - IPP request */
++static size_t ipp_length(ipp_t *ipp,		/* I - IPP request */
++                         size_t *user_length)	/* O - Size of user_* attribute buffer */
+ {
+-  size_t		bytes; 		/* Number of bytes */
+-  int			i;		/* Looping var */
+-  ipp_attribute_t	*attr;		/* Current attribute */
+-
++  size_t bytes,          /* Number of bytes */
++      user_bytes;        /* Number of user_* bytes */
++  int i;                 /* Looping var */
++  ipp_attribute_t *attr; /* Current attribute */
+ 
+- /*
+-  * Loop through all attributes...
+-  */
++  /*
++   * Loop through all attributes...
++   */
+ 
+   bytes = 0;
++  user_bytes = 0;
+ 
+   for (attr = ipp->attrs; attr != NULL; attr = attr->next)
+   {
+-   /*
+-    * Skip attributes that won't be sent to filters...
+-    */
++    /*
++     * Skip attributes that won't be sent to filters...
++     */
+ 
+     if (attr->value_tag == IPP_TAG_NOVALUE ||
+-	attr->value_tag == IPP_TAG_MIMETYPE ||
+-	attr->value_tag == IPP_TAG_NAMELANG ||
+-	attr->value_tag == IPP_TAG_TEXTLANG ||
+-	(attr->value_tag == IPP_TAG_URI && strcmp(attr->name, "job-uuid") &&
+-	 strcmp(attr->name, "job-authorization-uri")) ||
+-	attr->value_tag == IPP_TAG_URISCHEME)
++        attr->value_tag == IPP_TAG_MIMETYPE ||
++        attr->value_tag == IPP_TAG_NAMELANG ||
++        attr->value_tag == IPP_TAG_TEXTLANG ||
++        (attr->value_tag == IPP_TAG_URI && strcmp(attr->name, "job-uuid") &&
++         strcmp(attr->name, "job-authorization-uri")) ||
++        attr->value_tag == IPP_TAG_URISCHEME)
+       continue;
+ 
+-   /*
+-    * Add space for a leading space and commas between each value.
+-    * For the first attribute, the leading space isn't used, so the
+-    * extra byte can be used as the nul terminator...
+-    */
++    /*
++     * Route user_* attributes to a separate size counter...
++     */
++
++    if (is_user_attr(attr))
++    {
++      user_bytes += user_attr_length(attr);
++      continue;
++    }
+ 
+-    bytes ++;				/* " " separator */
+-    bytes += (size_t)attr->num_values;	/* "," separators */
++    /*
++     * Add space for a leading space and commas between each value.
++     * For the first attribute, the leading space isn't used, so the
++     * extra byte can be used as the nul terminator...
++     */
+ 
+-   /*
+-    * Boolean attributes appear as "foo,nofoo,foo,nofoo", while
+-    * other attributes appear as "foo=value1,value2,...,valueN".
+-    */
++    bytes++;                           /* " " separator */
++    bytes += (size_t)attr->num_values; /* "," separators */
++
++    /*
++     * Boolean attributes appear as "foo,nofoo,foo,nofoo", while
++     * other attributes appear as "foo=value1,value2,...,valueN".
++     */
+ 
+     if (attr->value_tag != IPP_TAG_BOOLEAN)
+       bytes += strlen(attr->name);
+     else
+       bytes += (size_t)attr->num_values * strlen(attr->name);
+ 
+-   /*
+-    * Now add the size required for each value in the attribute...
+-    */
++    /*
++     * Now add the size required for each value in the attribute...
++     */
+ 
+     switch (attr->value_tag)
+     {
+-      case IPP_TAG_INTEGER :
+-      case IPP_TAG_ENUM :
+-         /*
+-	  * Minimum value of a signed integer is -2147483647, or 11 digits.
+-	  */
++    case IPP_TAG_INTEGER:
++    case IPP_TAG_ENUM:
++      /*
++       * Minimum value of a signed integer is -2147483647, or 11 digits.
++       */
+ 
+-	  bytes += (size_t)attr->num_values * 11;
+-	  break;
+-
+-      case IPP_TAG_BOOLEAN :
+-         /*
+-	  * Add two bytes for each false ("no") value...
+-	  */
++      bytes += (size_t)attr->num_values * 11;
++      break;
+ 
+-          for (i = 0; i < attr->num_values; i ++)
+-	    if (!attr->values[i].boolean)
+-	      bytes += 2;
+-	  break;
++    case IPP_TAG_BOOLEAN:
++      /*
++       * Add two bytes for each false ("no") value...
++       */
+ 
+-      case IPP_TAG_RANGE :
+-         /*
+-	  * A range is two signed integers separated by a hyphen, or
+-	  * 23 characters max.
+-	  */
++      for (i = 0; i < attr->num_values; i++)
++        if (!attr->values[i].boolean)
++          bytes += 2;
++      break;
+ 
+-	  bytes += (size_t)attr->num_values * 23;
+-	  break;
++    case IPP_TAG_RANGE:
++      /*
++       * A range is two signed integers separated by a hyphen, or
++       * 23 characters max.
++       */
+ 
+-      case IPP_TAG_RESOLUTION :
+-         /*
+-	  * A resolution is two signed integers separated by an "x" and
+-	  * suffixed by the units, or 26 characters max.
+-	  */
++      bytes += (size_t)attr->num_values * 23;
++      break;
+ 
+-	  bytes += (size_t)attr->num_values * 26;
+-	  break;
++    case IPP_TAG_RESOLUTION:
++      /*
++       * A resolution is two signed integers separated by an "x" and
++       * suffixed by the units, or 26 characters max.
++       */
+ 
+-      case IPP_TAG_STRING :
+-         /*
+-	  * Octet strings can contain characters that need quoting.  We need
+-	  * at least 2 * len + 2 characters to cover the quotes and any
+-	  * backslashes in the string.
+-	  */
++      bytes += (size_t)attr->num_values * 26;
++      break;
+ 
+-          for (i = 0; i < attr->num_values; i ++)
+-	    bytes += 2 * (size_t)attr->values[i].unknown.length + 2;
+-	  break;
++    case IPP_TAG_STRING:
++      /*
++       * Octet strings can contain characters that need quoting.  We need
++       * at least 2 * len + 2 characters to cover the quotes and any
++       * backslashes in the string.
++       */
+ 
+-      case IPP_TAG_TEXT :
+-      case IPP_TAG_NAME :
+-      case IPP_TAG_KEYWORD :
+-      case IPP_TAG_CHARSET :
+-      case IPP_TAG_LANGUAGE :
+-      case IPP_TAG_URI :
+-         /*
+-	  * Strings can contain characters that need quoting.  We need
+-	  * at least 2 * len + 2 characters to cover the quotes and
+-	  * any backslashes in the string.
+-	  */
++      for (i = 0; i < attr->num_values; i++)
++        bytes += 2 * (size_t)attr->values[i].unknown.length + 2;
++      break;
+ 
+-          for (i = 0; i < attr->num_values; i ++)
+-	    bytes += 2 * strlen(attr->values[i].string.text) + 2;
+-	  break;
++    case IPP_TAG_TEXT:
++    case IPP_TAG_NAME:
++    case IPP_TAG_KEYWORD:
++    case IPP_TAG_CHARSET:
++    case IPP_TAG_LANGUAGE:
++    case IPP_TAG_URI:
++      /*
++       * Strings can contain characters that need quoting.  We need
++       * at least 2 * len + 2 characters to cover the quotes and
++       * any backslashes in the string.
++       */
++
++      for (i = 0; i < attr->num_values; i++)
++        bytes += 2 * strlen(attr->values[i].string.text) + 2;
++      break;
+ 
+-       default :
+-	  break; /* anti-compiler-warning-code */
++    default:
++      break; /* anti-compiler-warning-code */
+     }
+   }
+ 
++  *user_length = user_bytes;
++
+   return (bytes);
+ }
+ 
+-
+ /*
+  * 'load_job_cache()' - Load jobs from the job.cache file.
+  */
+-- 
