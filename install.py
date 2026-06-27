@@ -94,7 +94,8 @@ def do_patch(target_dir):
         "ohos-fix-snmp-overread.patch",
         "ohos-fix-classes-uaf.patch",
         "ohos-fix-ipp-no-members.patch",
-        "ohos-fix-type-overread.patch"
+        "ohos-fix-type-overread.patch",
+        "ohos-reduce-print-data-log.patch"
     ]
 
     for patch in patch_file:
