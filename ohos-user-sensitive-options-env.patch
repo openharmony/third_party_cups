@@ -11,7 +11,7 @@ index 5d1d404..afb2f57 100644
      "PRINTER",
      "PRINTER_INFO",
 diff --git a/scheduler/job.c b/scheduler/job.c
-index 0446e0a..4eb820f 100644
+index 0446e0a..c395a48 100644
 --- a/scheduler/job.c
 +++ b/scheduler/job.c
 @@ -117,10 +117,15 @@ static int	compare_jobs(void *first, void *second, void *data);
@@ -63,7 +63,7 @@ index 0446e0a..4eb820f 100644
 +  {
 +    size_t	oh_user_optlen;	/* Size of OH_USER_OPTIONS */
 +
-+    oh_user_optlen = strlen(user_options) + 16;
++    oh_user_optlen = strlen(user_options) + strlen("OH_USER_OPTIONS=") + 1;
 +
 +    if ((oh_user_options = malloc(oh_user_optlen)) != NULL)
 +      snprintf(oh_user_options, oh_user_optlen, "OH_USER_OPTIONS=%s",
