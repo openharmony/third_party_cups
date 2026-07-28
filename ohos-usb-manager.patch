@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..8573593c
+index 00000000..a3bdce4c
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,700 @@
+@@ -0,0 +1,701 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -308,16 +308,17 @@ index 00000000..8573593c
 +    }
 +
 +    if ((value >> 8) == OHUSB_DT_STRING) {
-+        int bufferLen = bufferData.size();
-+        uint16_t *wbuf = new (std::nothrow) uint16_t[bufferLen + 1]();
-+        if (wbuf == nullptr) {
-+            fprintf(stderr, "DEBUG: OH_ControlTransferRead wbuf is nullptr.\n");
-+            return OHUSB_ERROR_NO_MEM;
++        size_t bufferLen = bufferData.size();
++        if (bufferLen < 2) {
++            fprintf(stderr, "DEBUG: OH_ControlTransferRead string descriptor too short (%zu bytes)\n", bufferLen);
++            return OHUSB_ERROR_IO;
 +        }
-+        for (uint32_t i = 0; i < bufferLen - 2; ++i) {
++        size_t payloadLen = bufferLen - 2;
++        std::vector<uint16_t> wbuf(payloadLen + 1, 0);
++        for (size_t i = 0; i < payloadLen; ++i) {
 +            wbuf[i] = bufferData[i + 2];
 +        }
-+        std::wstring wstr(reinterpret_cast<wchar_t *>(wbuf), (bufferLen - 2) / 2);
++        std::wstring wstr(reinterpret_cast<wchar_t *>(wbuf.data()), payloadLen / 2);
 +        std::string buffer(wstr.begin(), wstr.end());
 +        fprintf(stderr, "DEBUG: OH_ControlTransferRead buffer = %s\n", buffer.c_str());
 +        if (memcpy_s(data, length, buffer.c_str(), buffer.length()) != 0) {
