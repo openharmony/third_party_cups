@@ -276,7 +276,8 @@ action("cups_action") {
     "//third_party/cups/ohos-fix-classes-uaf.patch",
     "//third_party/cups/ohos-fix-ipp-no-members.patch",
     "//third_party/cups/ohos-fix-type-overread.patch",
-    "//third_party/cups/ohos-reduce-print-data-log.patch"
+    "//third_party/cups/ohos-reduce-print-data-log.patch",
+    "//third_party/cups/ohos-access-log-maxsize.patch"
   ]
   cups_src_dir = "//third_party/cups"
   foreach(file, outputs){

@@ -1,0 +1,105 @@
+diff --git a/scheduler/conf.c b/scheduler/conf.c
+index 4cf48fc..f6aab6d 100644
+--- a/scheduler/conf.c
++++ b/scheduler/conf.c
+@@ -114,6 +114,7 @@ static const cupsd_var_t	cupsd_vars[] =
+   { "MaxJobTime",		&MaxJobTime,		CUPSD_VARTYPE_TIME },
+   { "MaxLeaseDuration",		&MaxLeaseDuration,	CUPSD_VARTYPE_TIME },
+   { "MaxLogSize",		&MaxLogSize,		CUPSD_VARTYPE_INTEGER },
++  { "AccessLogMaxSize",		&AccessLogMaxSize,	CUPSD_VARTYPE_INTEGER },
+   { "MaxRequestSize",		&MaxRequestSize,	CUPSD_VARTYPE_INTEGER },
+   { "MaxSubscriptions",		&MaxSubscriptions,	CUPSD_VARTYPE_INTEGER },
+   { "MaxSubscriptionsPerJob",	&MaxSubscriptionsPerJob,	CUPSD_VARTYPE_INTEGER },
+@@ -735,6 +736,7 @@ cupsdReadConfiguration(void)
+   MaxClients               = 100;
+   MaxClientsPerHost        = 0;
+   MaxLogSize               = 1024 * 1024;
++  AccessLogMaxSize         = 1024 * 1024;
+   MaxRequestSize           = 0;
+   MultipleOperationTimeout = 900;
+   NumSystemGroups          = 0;
+diff --git a/scheduler/conf.h b/scheduler/conf.h
+index a607bf8..30afa57 100644
+--- a/scheduler/conf.h
++++ b/scheduler/conf.h
+@@ -194,6 +194,8 @@ VAR int			MaxClients		VALUE(100),
+ 					/* Maximum number of copies per job */
+ 			MaxLogSize		VALUE(1024 * 1024),
+ 					/* Maximum size of log files */
++			AccessLogMaxSize	VALUE(1024 * 1024),
++					/* Maximum size of access log file */
+ 			MaxRequestSize		VALUE(0),
+ 					/* Maximum size of IPP requests */
+ 			HostNameLookups		VALUE(FALSE),
+@@ -268,7 +270,7 @@ VAR gss_cred_id_t	ServerCreds;	/* Server's GSS credentials */
+  */
+ 
+ extern void	cupsdAddAlias(cups_array_t *aliases, const char *name);
+-extern int	cupsdCheckLogFile(cups_file_t **lf, const char *logname);
++extern int	cupsdCheckLogFile(cups_file_t **lf, const char *logname, int maxsize);
+ extern int	cupsdCheckPermissions(const char *filename,
+ 		                      const char *suffix, mode_t mode,
+ 	 			      uid_t user, gid_t group, int is_dir,
+diff --git a/scheduler/log.c b/scheduler/log.c
+index d99accc..6f1eefa 100644
+--- a/scheduler/log.c
++++ b/scheduler/log.c
+@@ -108,7 +108,8 @@ static int	format_log_line(const char *message, va_list ap);
+ 
+ int					/* O  - 1 if log file open */
+ cupsdCheckLogFile(cups_file_t **lf,	/* IO - Log file */
+-	          const char  *logname)	/* I  - Log filename */
++	          const char  *logname,	/* I  - Log filename */
++	          int          maxsize)	/* I  - Max log file size */
+ {
+   char		backname[1024],		/* Backup log filename */
+ 		filename[1024],		/* Formatted log filename */
+@@ -138,8 +139,8 @@ cupsdCheckLogFile(cups_file_t **lf,	/* IO - Log file */
+   */
+ 
+   if (!*lf ||
+-      (strncmp(logname, "/dev/", 5) && cupsFileTell(*lf) > MaxLogSize &&
+-       MaxLogSize > 0))
++      (strncmp(logname, "/dev/", 5) && cupsFileTell(*lf) > maxsize &&
++       maxsize > 0))
+   {
+    /*
+     * Handle format strings...
+@@ -258,8 +259,8 @@ cupsdCheckLogFile(cups_file_t **lf,	/* IO - Log file */
+   * Do we need to rotate the log?
+   */
+ 
+-  if (strncmp(logname, "/dev/", 5) && cupsFileTell(*lf) > MaxLogSize &&
+-      MaxLogSize > 0)
++  if (strncmp(logname, "/dev/", 5) && cupsFileTell(*lf) > maxsize &&
++      maxsize > 0)
+   {
+    /*
+     * Rotate log file...
+@@ -1000,7 +1001,7 @@ cupsdLogPage(cupsd_job_t *job,		/* I - Job being printed */
+   * Not using syslog; check the log file...
+   */
+ 
+-  if (!cupsdCheckLogFile(&PageFile, PageLog))
++  if (!cupsdCheckLogFile(&PageFile, PageLog, MaxLogSize))
+     return (0);
+ 
+  /*
+@@ -1188,7 +1189,7 @@ cupsdLogRequest(cupsd_client_t *con,	/* I - Request to log */
+   * Not using syslog; check the log file...
+   */
+ 
+-  if (!cupsdCheckLogFile(&AccessFile, AccessLog))
++  if (!cupsdCheckLogFile(&AccessFile, AccessLog, AccessLogMaxSize))
+     return (0);
+ 
+  /*
+@@ -1265,7 +1266,7 @@ cupsdWriteErrorLog(int        level,	/* I - Log level */
+ 
+   _cupsMutexLock(&log_mutex);
+ 
+-  if (!cupsdCheckLogFile(&ErrorFile, ErrorLog))
++  if (!cupsdCheckLogFile(&ErrorFile, ErrorLog, MaxLogSize))
+   {
+     ret = 0;
+   }
