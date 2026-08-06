@@ -362,6 +362,7 @@ config("cups_config") {
 }
 
 ohos_shared_library("cups") {
+  branch_protector_ret = "pac_ret"
   sources = cups_generated_sources
   sources += cupsimage_generated_sources
   deps = [ ":cups_action" ]
@@ -376,6 +377,7 @@ ohos_shared_library("cups") {
 }
 
 ohos_shared_library("cupsimage") {
+  branch_protector_ret = "pac_ret"
   sources = cupsimage_generated_sources
   deps = [
     ":cups",
@@ -387,6 +389,7 @@ ohos_shared_library("cupsimage") {
 }
 
 ohos_executable("rastertopwg") {
+  branch_protector_ret = "pac_ret"
   sources = rastertopwg_generated_sources
   deps = [
     ":cups",
@@ -403,6 +406,7 @@ ohos_executable("rastertopwg") {
 }
 
 ohos_executable("commandtops") {
+  branch_protector_ret = "pac_ret"
   sources = commandtops_generated_sources
   deps = [
     ":cups",
@@ -420,6 +424,7 @@ ohos_executable("commandtops") {
 
 if (cups_feature_pstops_filter) {
   ohos_executable("pstops") {
+    branch_protector_ret = "pac_ret"
     sources = pstops_generated_sources
     deps = [
       ":cups",
@@ -434,6 +439,7 @@ if (cups_feature_pstops_filter) {
 }
 
 ohos_shared_library("backend") {
+  branch_protector_ret = "pac_ret"
   sources = backend_generated_sources
   deps = [
     ":cups",
@@ -449,6 +455,7 @@ ohos_shared_library("backend") {
 
 if (enable_cups_lpd_backend) {
   ohos_executable("lpd") {
+    branch_protector_ret = "pac_ret"
     sources = lpd_generated_sources
     deps = [
       ":backend",
@@ -468,6 +475,7 @@ if (enable_cups_lpd_backend) {
 
 if (enable_cups_socket_backend) {
   ohos_executable("socket") {
+    branch_protector_ret = "pac_ret"
     sources = socket_generated_sources
     deps = [
       ":backend",
@@ -486,6 +494,7 @@ if (enable_cups_socket_backend) {
 }
 
 ohos_executable("ipp") {
+  branch_protector_ret = "pac_ret"
   sources = ipp_generated_sources
   deps = [
     ":backend",
@@ -503,6 +512,7 @@ ohos_executable("ipp") {
 }
 
 ohos_executable("usb") {
+  branch_protector_ret = "pac_ret"
   sources = usb_generated_sources
   deps = [
     ":backend",
@@ -530,6 +540,7 @@ ohos_executable("usb") {
 #end of backend
 
 ohos_executable("lpadmin") {
+  branch_protector_ret = "pac_ret"
   sources = lpadmin_generated_sources
   deps = [
     ":cups",
@@ -542,6 +553,7 @@ ohos_executable("lpadmin") {
 }
 
 ohos_executable("lpinfo") {
+  branch_protector_ret = "pac_ret"
   sources = lpinfo_generated_sources
   deps = [
     ":cups",
@@ -554,6 +566,7 @@ ohos_executable("lpinfo") {
 }
 
 ohos_executable("lp") {
+  branch_protector_ret = "pac_ret"
   sources = lp_generated_sources
   deps = [
     ":cups",
@@ -567,6 +580,7 @@ ohos_executable("lp") {
 
 #ppdc
 ohos_shared_library("cupsppdc") {
+  branch_protector_ret = "pac_ret"
   sources = cupsppdc_generated_sources
   deps = [
     ":cups",
@@ -581,6 +595,7 @@ ohos_shared_library("cupsppdc") {
 }
 
 ohos_executable("ppdc") {
+  branch_protector_ret = "pac_ret"
   sources = ppdc_generated_sources
   deps = [
     ":cups",
@@ -597,6 +612,7 @@ ohos_executable("ppdc") {
 
 #scheduler
 ohos_shared_library("cupsmime") {
+  branch_protector_ret = "pac_ret"
   sources = cupsmime_generated_sources
   deps = [
     ":cups",
@@ -608,6 +624,7 @@ ohos_shared_library("cupsmime") {
 }
 
 ohos_executable("cupsd") {
+  branch_protector_ret = "pac_ret"
   sources = cupsd_generated_sources
   deps = [
     ":cups",
@@ -625,6 +642,7 @@ ohos_executable("cupsd") {
 }
 
 ohos_executable("cupsfilter") {
+  branch_protector_ret = "pac_ret"
   sources = cupsfilter_generated_sources
   deps = [
     ":cups",
@@ -641,6 +659,7 @@ ohos_executable("cupsfilter") {
 }
 
 ohos_executable("cups-deviced") {
+  branch_protector_ret = "pac_ret"
   sources = cups_deviced_generated_sources
   sources += scheduler_util_generated_sources
   deps = [
@@ -659,6 +678,7 @@ ohos_executable("cups-deviced") {
 }
 
 ohos_executable("cups-driverd") {
+  branch_protector_ret = "pac_ret"
   sources = cups_driverd_generated_sources
   sources += scheduler_util_generated_sources
   deps = [
@@ -677,6 +697,7 @@ ohos_executable("cups-driverd") {
 }
 
 ohos_executable("cups-exec") {
+  branch_protector_ret = "pac_ret"
   sources = cups_exec_generated_sources
   deps = [ ":cups_action" ]
   install_enable = true
@@ -703,6 +724,7 @@ ohos_prebuilt_etc("mime.types") {
 }
 
 ohos_executable("virtual-printer") {
+   branch_protector_ret = "pac_ret"
    sources = virtual_printer_generated_sources
    deps = [
      ":backend",
