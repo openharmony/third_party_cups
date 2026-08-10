@@ -96,7 +96,7 @@ bool IppUsbManager::FindUsbPrinter(UsbDevice& device, const std::string& uri)
     }
     for (size_t i = 0; i < devlist.size(); i++) {
         std::string sn = GetSerialNumber(devlist[i]);
-        if (uri.find(sn) == std::string::npos) {
+        if (sn.empty() || uri.find(sn) == std::string::npos) {
             continue;
         }
         device = devlist[i];
