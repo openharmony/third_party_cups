@@ -1,5 +1,5 @@
 diff --git a/scheduler/job.c b/scheduler/job.c
-index 11579875..c4e058e6 100644
+index 620a2dd4..c2315e9a 100644
 --- a/scheduler/job.c
 +++ b/scheduler/job.c
 @@ -1359,7 +1359,7 @@ cupsdContinueJob(cupsd_job_t *job)	/* I - Job */
@@ -20,7 +20,7 @@ index 11579875..c4e058e6 100644
    job->status_buffer = NULL;
  
   /*
-@@ -4968,7 +4968,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+@@ -4969,7 +4969,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
  		     "back-channel pipes.");
  
      cupsdClosePipe(job->status_pipes);
@@ -29,7 +29,7 @@ index 11579875..c4e058e6 100644
      job->status_buffer = NULL;
  
      cupsdDestroyProfile(job->profile);
-@@ -4999,7 +4999,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
+@@ -5000,7 +5000,7 @@ start_job(cupsd_job_t     *job,		/* I - Job ID */
      cupsdClosePipe(job->back_pipes);
  
      cupsdClosePipe(job->status_pipes);
@@ -39,32 +39,53 @@ index 11579875..c4e058e6 100644
  
      cupsdDestroyProfile(job->profile);
 diff --git a/scheduler/process.c b/scheduler/process.c
-index 7f05a90a..b6a80a67 100644
+index 7f05a90a..3ef73fe7 100644
 --- a/scheduler/process.c
 +++ b/scheduler/process.c
-@@ -639,6 +639,22 @@ cupsdStartProcess(
+@@ -639,6 +639,30 @@ cupsdStartProcess(
  
    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: Calling posix_spawn.");
  
-+  int flag = fcntl(3, F_GETFD);
-+  cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: backfd flag=%d.", flag);
++  /*
++   * Only clear FD_CLOEXEC on fd 3/4 when they are the intended
++   * back/side channel (backfd==3 / sidefd==4). Record original
++   * flags to restore after posix_spawn.
++   */
++  int fd3_cloexec = -1; /* -1 = not touched */
++  int fd4_cloexec = -1;
 +
-+  if (flag == 1)
++  if (backfd == 3)
 +  {
-+    fcntl(3, F_SETFD, 0);
++    fd3_cloexec = fcntl(3, F_GETFD);
++    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: backfd==3, fd3 flag=%d.", fd3_cloexec);
++    if (fd3_cloexec & FD_CLOEXEC)
++      fcntl(3, F_SETFD, fd3_cloexec & ~FD_CLOEXEC);
 +  }
 +
-+  flag = fcntl(4, F_GETFD);
-+  cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: sidefd flag=%d.", flag);
-+
-+  if (flag == 1)
++  if (sidefd == 4)
 +  {
-+    fcntl(4, F_SETFD, 0);
++    fd4_cloexec = fcntl(4, F_GETFD);
++    cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: sidefd==4, fd4 flag=%d.", fd4_cloexec);
++    if (fd4_cloexec & FD_CLOEXEC)
++      fcntl(4, F_SETFD, fd4_cloexec & ~FD_CLOEXEC);
 +  }
 +
    if (posix_spawn(pid, exec_path, &actions, &attrs, argv, envp ? envp : environ))
    {
      cupsdLogMessage(CUPSD_LOG_ERROR, "Unable to fork %s - %s.", command, strerror(errno));
+@@ -648,6 +672,12 @@ cupsdStartProcess(
+   else
+     cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdStartProcess: pid=%d", (int)*pid);
+ 
++  /* Restore FD_CLOEXEC on fd 3/4 if we cleared it */
++  if (fd3_cloexec != -1)
++    fcntl(3, F_SETFD, fd3_cloexec);
++  if (fd4_cloexec != -1)
++    fcntl(4, F_SETFD, fd4_cloexec);
++
+   posix_spawn_file_actions_destroy(&actions);
+   posix_spawnattr_destroy(&attrs);
+ 
 diff --git a/scheduler/statbuf.c b/scheduler/statbuf.c
 index 5a2530e4..9b71037e 100644
 --- a/scheduler/statbuf.c
