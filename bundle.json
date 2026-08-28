@@ -25,6 +25,7 @@
         "deps": {
             "components": [
                 "c_utils",
+                "cJSON",
                 "drivers_interface_usb",
                 "hilog",
                 "usb_manager",
