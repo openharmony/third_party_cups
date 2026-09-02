@@ -521,6 +521,7 @@ ohos_executable("usb") {
   ]
   external_deps = [
     "c_utils:utils",
+    "cJSON:cjson",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "libusb:libusb",
