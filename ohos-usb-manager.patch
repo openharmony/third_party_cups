@@ -1,9 +1,9 @@
 diff --git a/backend/usb_manager.cxx b/backend/usb_manager.cxx
 new file mode 100644
-index 00000000..a3bdce4c
+index 0000000..b5e2ac4
 --- /dev/null
 +++ b/backend/usb_manager.cxx
-@@ -0,0 +1,701 @@
+@@ -0,0 +1,703 @@
 +/*
 + * Copyright (c) 2024 Huawei Device Co., Ltd.
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,8 @@ index 00000000..a3bdce4c
 +#include "usb_manager.h"
 +#include "usb_srv_client.h"
 +#include "v1_0/iusb_interface.h"
++#include "v1_1/usb_types.h"
++#include "v1_2/usb_types.h"
 +
 +#include <map>
 +#include <regex>
@@ -707,7 +709,7 @@ index 00000000..a3bdce4c
 +}
 diff --git a/backend/usb_manager.h b/backend/usb_manager.h
 new file mode 100644
-index 00000000..7ff13faf
+index 0000000..7ff13fa
 --- /dev/null
 +++ b/backend/usb_manager.h
 @@ -0,0 +1,472 @@
