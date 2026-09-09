@@ -124,8 +124,8 @@ std::string IppUsbManager::GetSerialNumber(UsbDevice &usbDevice)
     const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
     std::vector<uint8_t> bufferData(HTTP_COMMON_CONST_VALUE_100, 0);
     int32_t ret = usbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
-    if (ret != 0 || bufferData[0] == 0) {
-        fprintf(stderr, "DEBUG: USB_MONITOR ControlTransfer failed, ret = %d\n", ret);
+    if (ret != 0 || bufferData[0] == 0 || bufferData[0] > HTTP_COMMON_CONST_VALUE_100) {
+        fprintf(stderr, "DEBUG: USB_MONITOR ControlTransfer failed, ret = %d, bLength = %d\n", ret, bufferData[0]);
         return "";
     }
     std::vector<uint8_t> arr((bufferData[0] - 1) / HTTP_COMMON_CONST_VALUE_2);
