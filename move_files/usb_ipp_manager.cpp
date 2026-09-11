@@ -509,6 +509,7 @@ bool IppUsbManager::AllocateInterface(const std::string &uri, UsbDevice& usbdevi
             ret = usbSrvClient.SetInterface(usbDevicePipe, ippInterface);
             if (ret != UEC_OK) {
                 fprintf(stderr, "DEBUG: USB_MONITOR SetInterface fail, ret = %d\n", ret);
+                usbSrvClient.ReleaseInterface(usbDevicePipe, ippInterface);
                 continue;
             }
         }
