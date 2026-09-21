@@ -1,0 +1,44 @@
+diff --git a/filter/rastertopwg.c b/filter/rastertopwg.c
+index b0edba6..0f8d350 100644
+--- a/filter/rastertopwg.c
++++ b/filter/rastertopwg.c
+@@ -13,6 +13,7 @@
+ #include <cups/raster.h>
+ #include <unistd.h>
+ #include <fcntl.h>
++#include <limits.h>
+ 
+ 
+ /*
+@@ -138,6 +139,16 @@ main(int  argc,				/* I - Number of command-line args */
+       page_right = 0;
+     else
+       page_right = (unsigned)tmp;
++
++    if (page_width > 0 && inheader.cupsBitsPerPixel > 0 &&
++        page_width > (UINT_MAX - 7) / inheader.cupsBitsPerPixel)
++    {
++      _cupsLangPrintFilter(stderr, "ERROR", _("Unsupported raster data."));
++      fprintf(stderr, "DEBUG: Overflow computing linesize (page_width=%u, bpp=%u) on page %d.\n",
++              page_width, inheader.cupsBitsPerPixel, page);
++      return (1);
++    }
++
+     linesize    = (page_width * inheader.cupsBitsPerPixel + 7) / 8;
+     lineoffset  = page_left * inheader.cupsBitsPerPixel / 8; /* Round down */
+ 
+@@ -208,6 +219,14 @@ main(int  argc,				/* I - Number of command-line args */
+     outheader.cupsHeight       = page_height;
+     outheader.cupsBytesPerLine = linesize;
+ 
++    if (linesize < (inheader.cupsBitsPerPixel + 7) / 8)
++    {
++      _cupsLangPrintFilter(stderr, "ERROR", _("Unsupported raster data."));
++      fprintf(stderr, "DEBUG: linesize %u < bytes-per-pixel %u on page %d.\n",
++              linesize, (inheader.cupsBitsPerPixel + 7) / 8, page);
++      return (1);
++    }
++
+     outheader.cupsInteger[14]  = 0;	/* VendorIdentifier */
+     outheader.cupsInteger[15]  = 0;	/* VendorLength */
+ 
