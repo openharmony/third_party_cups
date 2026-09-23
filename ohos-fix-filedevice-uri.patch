@@ -1,0 +1,47 @@
+diff --git a/scheduler/printers.c b/scheduler/printers.c
+index 2495106..52c2939 100644
+--- a/scheduler/printers.c
++++ b/scheduler/printers.c
+@@ -1030,10 +1030,39 @@ cupsdLoadAllPrinters(void)
+     else if (!_cups_strcasecmp(line, "DeviceURI"))
+     {
+       if (value)
+-	cupsdSetDeviceURI(p, value);
++      {
++       /*
++        * Validate the device URI: if it uses the "file" scheme and
++        * FileDevice is disabled, fall back to file:///dev/null to
++        * prevent arbitrary file overwrites via a tampered printers.conf.
++        */
++
++	char		f_scheme[HTTP_MAX_URI],	/* Method portion of URI */
++			f_userpass[HTTP_MAX_URI],/* Username portion of URI */
++			f_host[HTTP_MAX_URI],	/* Host portion of URI */
++			f_resource[HTTP_MAX_URI];/* Resource portion of URI */
++	int		f_port;			/* Port portion of URI */
++
++	httpSeparateURI(HTTP_URI_CODING_ALL, value, f_scheme, sizeof(f_scheme),
++			f_userpass, sizeof(f_userpass), f_host, sizeof(f_host),
++			&f_port, f_resource, sizeof(f_resource));
++
++	if (!strcmp(f_scheme, "file") && !FileDevice &&
++	    strcmp(f_resource, "/dev/null"))
++	{
++	  cupsdLogMessage(CUPSD_LOG_ERROR,
++			  "File device URIs have been disabled; ignoring "
++			  "DeviceURI \"%s\" on line %d of printers.conf and "
++			  "reverting to file:///dev/null.",
++			  value, linenum);
++	  cupsdSetDeviceURI(p, "file:///dev/null");
++	}
++	else
++	  cupsdSetDeviceURI(p, value);
++      }
+       else
+-	cupsdLogMessage(CUPSD_LOG_ERROR,
+-	                "Syntax error on line %d of printers.conf.", linenum);
++	      cupsdLogMessage(CUPSD_LOG_ERROR,
++	                      "Syntax error on line %d of printers.conf.", linenum);
+     }
+     else if (!_cups_strcasecmp(line, "Option") && value)
+     {
