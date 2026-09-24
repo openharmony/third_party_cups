@@ -97,7 +97,8 @@ def do_patch(target_dir):
         "ohos-fix-type-overread.patch",
         "ohos-reduce-print-data-log.patch",
         "ohos-access-log-maxsize.patch",
-        "ohos-fix-rastertopwg-linesize-overflow.patch"
+        "ohos-fix-rastertopwg-linesize-overflow.patch",
+        "ohos-fix-filedevice-uri.patch"
     ]
 
     for patch in patch_file:
