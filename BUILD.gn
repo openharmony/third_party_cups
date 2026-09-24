@@ -521,6 +521,7 @@ ohos_executable("usb") {
     ":cups_action",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "cJSON:cjson",
     "drivers_interface_usb:libusb_proxy_1.0",
