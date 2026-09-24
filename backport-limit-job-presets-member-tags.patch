@@ -1,0 +1,65 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Wed, 16 Sep 2026 14:42:04 -0400
+Subject: [PATCH] Validate the member attribute in the preset, not the
+ preset attribute
+
+Backport of upstream OpenPrinting/cups fixes to _ppdCreateFromIPP2's
+job-presets-supported PPD generation, squashed to their final state:
+
+  c86910736fe93a6a3f036cf9a5a2b4291dbaf82e (2026-04-22)
+    "Update PPD generator to only support custom boolean, integer, and
+    keyword member attributes in job-presets-supported."
+  5a2d2d4c8d2d987f8fdc9f6e5b6ab75ce6450a54 (2026-08-01)
+    "Fix tag checks in _ppdCreateFromIPP."
+  ad06fdb7b8cae9d5752634ae3516b483ffe2b5f0 (2026-09-16)
+    "Validate the member attribute in the preset, not the preset attribute."
+
+Rationale (PoC evidence, 2026-09-23 run 2026-09-23_16-54-37): a malicious
+IPP printer returns job-presets-supported as a beginCollection with a legal
+preset-name="draft" member plus an attacker-named TEXT member whose value
+carries a raw quote and newlines. cups/ppd-cache.c wrote unknown preset
+members verbatim ("Add attribute name and value as-is");
+cups/ipp-support.c ippAttributeString() escapes \" and \\ but passes
+LF through, while scheduler-side ippValidateAttributes() explicitly permits
+\\n in TEXT values; the PPD reader ppd.c ppd_read() toggles quoted-string
+state on ANY bare \" after a colon (no backslash-escape model), so the
+value closes the *APPrinterPreset "..." multi-line string and the embedded
+newlines land as top-level PPD directives (*cupsFilter2 /
+*FoomaticRIPCommandLine) -> command execution by the filter/foomatic-rip
+chain at print time (IPP Everywhere add path, scheduler create_local_bg_thread).
+
+The squashed change gates the fallback writer with ippValidateAttribute()
+and restricts it to BOOLEAN/INTEGER/KEYWORD member tags, matching upstream
+master (not yet in any 2.4.x release; this port's base is 2.4.14).
+TEXT/NAME members are no longer written; KEYWORD values containing quotes,
+newlines or spaces fail ippValidateAttribute(); INTEGER/BOOLEAN are
+binary-fixed and serialize as numbers/true/false.
+
+Adaptation / conflicts:
+  - c869107's original condition was a tautology
+    (tag == BOOLEAN || tag != INTEGER || tag != KEYWORD) and used the
+    collection attribute `attr`; only 5a2d2d4 + ad06fdb close the hole.
+    This patch carries the FINAL line (member + three ==), not the
+    intermediate commits.
+  - Applies to the 2.4.14 base at cups/ppd-cache.c line 5158 (upstream
+    master context differs only by line offset); verified with
+    `git apply --check` (fuzz=0).
+  - The scheduler/auth.c and CHANGES.md hunks from the upstream commits
+    are intentionally NOT included (out of scope).
+
+Upstream-commit: c86910736fe93a6a3f036cf9a5a2b4291dbaf82e
+Upstream-commit: 5a2d2d4c8d2d987f8fdc9f6e5b6ab75ce6450a54
+Upstream-commit: ad06fdb7b8cae9d5752634ae3516b483ffe2b5f0
+
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -5155,7 +5155,7 @@
+ 	  else if (keyword && !strcmp(keyword, "two-sided-short-edge"))
+ 	    cupsFilePuts(fp, "*Duplex DuplexTumble\n");
+         }
+-        else
++        else if (ippValidateAttribute(member) && (ippGetValueTag(member) == IPP_TAG_BOOLEAN || ippGetValueTag(member) == IPP_TAG_INTEGER || ippGetValueTag(member) == IPP_TAG_KEYWORD))
+         {
+          /*
+           * Add attribute name and value as-is...

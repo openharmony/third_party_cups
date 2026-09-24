@@ -98,7 +98,8 @@ def do_patch(target_dir):
         "ohos-reduce-print-data-log.patch",
         "ohos-access-log-maxsize.patch",
         "ohos-fix-filedevice-uri.patch",
-        "backport-escape-printers-conf-newlines.patch"
+        "backport-escape-printers-conf-newlines.patch",
+        "backport-limit-job-presets-member-tags.patch"
     ]
 
     for patch in patch_file:

@@ -279,7 +279,8 @@ action("cups_action") {
     "//third_party/cups/ohos-reduce-print-data-log.patch",
     "//third_party/cups/ohos-access-log-maxsize.patch",
     "//third_party/cups/ohos-fix-filedevice-uri.patch",
-    "//third_party/cups/backport-escape-printers-conf-newlines.patch"
+    "//third_party/cups/backport-escape-printers-conf-newlines.patch",
+    "//third_party/cups/backport-limit-job-presets-member-tags.patch"
   ]
   cups_src_dir = "//third_party/cups"
   foreach(file, outputs){
