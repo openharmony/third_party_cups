@@ -1,0 +1,187 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Wed, 16 Sep 2026 15:06:18 -0400
+Subject: [PATCH] Validate IPP attribute names unconditionally
+ (GHSA-w9hj-hq9p-m7f6)
+
+Backport/squash of upstream OpenPrinting/cups master commits
+f14d1fd8c64fe1e91718a4b910eca08c4087823c (2026-09-09 "Limit IPP
+attribute names to IPP_MAX_KEYWORD"),
+f7cd8e35d836d9842d6205319752b6832fce9851 (2026-09-18 "Restore name
+buffer length check") and
+f32341d7f9f9e1566e788dea329af4ac26da4fc7 (2026-09-16 "Validate IPP
+attribute names unconditionally", GHSA-w9hj-hq9p-m7f6).
+
+Attribute/member names were previously charset+length-checked only when
+ippValidateAttribute() ran on a named attribute, while ipp_add_attr() and
+the IPP reader accepted arbitrary name bytes (member names from
+memberName carry no name through the reader path). With collection
+attributes, a hostile printer response can steer member/attribute names
+into PPD option names (e.g. job-presets-supported member names are
+written as-is at ppd-cache.c:5165). This adds ipp_is_valid_keyword()
+(RFC 8011 5.1.4 charset + <=255 length, matching upstream) and enforces
+it in ipp_add_attr(), ippValidateAttribute() (names + keyword values) and
+ipp_read_io() for both attribute names and collection memberNames, so
+bad names are rejected at parse time.
+
+Adaptation to 2.4.14 (master diverged: /* */ comment style, keyword
+length cap, no bool helpers): helper is static int and returns 0/1; the
+reader hunk targets ipp_read_io() name reads and the memberName case of
+the collection parser. Keyword value length cap intentionally follows
+master (255) inside the shared helper.
+
+Upstream-commit: f14d1fd8c64fe1e91718a4b910eca08c4087823c
+Upstream-commit: f7cd8e35d836d9842d6205319752b6832fce9851
+Upstream-commit: f32341d7f9f9e1566e788dea329af4ac26da4fc7
+
+diff --git a/cups/ipp.c b/cups/ipp.c
+index e1e361b2..595f6a50 100644
+--- a/cups/ipp.c
++++ b/cups/ipp.c
+@@ -30,6 +30,7 @@ static ipp_attribute_t	*ipp_add_attr(ipp_t *ipp, const char *name,
+ 			              int num_values);
+ static void		ipp_free_values(ipp_attribute_t *attr, int element,
+ 			                int count);
++static int		ipp_is_valid_keyword(const char *name, const char *keyword);
+ static char		*ipp_get_code(const char *locale, char *buffer, size_t bufsize) _CUPS_NONNULL(1,2);
+ static char		*ipp_lang_code(const char *locale, char *buffer, size_t bufsize) _CUPS_NONNULL(1,2);
+ static size_t		ipp_length(ipp_t *ipp, int collection);
+@@ -4004,25 +4005,12 @@ ippValidateAttribute(
+   if (!attr->name)
+     return (1);
+ 
+- /*
++  /*
+   * Validate the attribute name.
+   */
+ 
+-  for (ptr = attr->name; *ptr; ptr ++)
+-    if (!isalnum(*ptr & 255) && *ptr != '-' && *ptr != '.' && *ptr != '_')
+-      break;
+-
+-  if (*ptr || ptr == attr->name)
+-  {
+-    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad attribute name - invalid character (RFC 8011 section 5.1.4)."), attr->name);
++  if (!ipp_is_valid_keyword(/*name*/NULL, attr->name))
+     return (0);
+-  }
+-
+-  if ((ptr - attr->name) > 255)
+-  {
+-    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad attribute name - bad length %d (RFC 8011 section 5.1.4)."), attr->name, (int)(ptr - attr->name));
+-    return (0);
+-  }
+ 
+   switch (attr->value_tag)
+   {
+@@ -4282,27 +4270,11 @@ ippValidateAttribute(
+ 	}
+         break;
+ 
+-    case IPP_TAG_KEYWORD :
++        case IPP_TAG_KEYWORD :
+         for (i = 0; i < attr->num_values; i ++)
+ 	{
+-	  for (ptr = attr->values[i].string.text; *ptr; ptr ++)
+-	  {
+-	    if (!isalnum(*ptr & 255) && *ptr != '-' && *ptr != '.' &&
+-	        *ptr != '_')
+-	      break;
+-	  }
+-
+-	  if (*ptr || ptr == attr->values[i].string.text)
+-	  {
+-	    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad keyword value \"%s\" - invalid character (RFC 8011 section 5.1.4)."), attr->name, attr->values[i].string.text);
+-	    return (0);
+-	  }
+-
+-	  if ((ptr - attr->values[i].string.text) > (IPP_MAX_KEYWORD - 1))
+-	  {
+-	    ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad keyword value \"%s\" - bad length %d (RFC 8011 section 5.1.4)."), attr->name, attr->values[i].string.text, (int)(ptr - attr->values[i].string.text));
++	  if (!ipp_is_valid_keyword(attr->name, attr->values[i].string.text))
+ 	    return (0);
+-	  }
+ 	}
+         break;
+ 
+@@ -4502,6 +4474,47 @@ ippValidateAttributes(ipp_t *ipp)	/* I - IPP message */
+     if (!ippValidateAttribute(attr))
+       return (0);
+ 
++  return (1);
++}
++
++
++/*
++ * 'ipp_is_valid_keyword()' - Determine whether a keyword string is valid.
++ */
++
++static int				/* O - 1 if valid, 0 otherwise */
++ipp_is_valid_keyword(
++    const char *name,			/* I - Attribute name or NULL for attribute-name checks */
++    const char *keyword)		/* I - Keyword string */
++{
++  const char	*ptr;			/* Pointer into keyword */
++
++
++  for (ptr = keyword; *ptr; ptr ++)
++  {
++    if (!isalnum(*ptr & 255) && *ptr != '-' && *ptr != '.' && *ptr != '_')
++      break;
++  }
++
++  if (*ptr || ptr == keyword)
++  {
++    if (name)
++      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad keyword value \"%s\" - invalid character (RFC 8011 section 5.1.4)."), name, keyword);
++    else
++      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad attribute name - invalid character (RFC 8011 section 5.1.4)."), keyword);
++
++    return (0);
++  }
++  else if ((ptr - keyword) > 255)
++  {
++    if (name)
++      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad keyword value \"%s\" - bad length %d (RFC 8011 section 5.1.4)."), name, keyword, (int)(ptr - keyword));
++    else
++      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad attribute name - bad length %d (RFC 8011 section 5.1.4)."), keyword, (int)(ptr - keyword));
++
++    return (0);
++  }
++
+   return (1);
+ }
+ 
+@@ -5459,7 +5472,7 @@ ipp_add_attr(ipp_t      *ipp,		/* I - IPP message */
+   * Range check input...
+   */
+ 
+-  if (!ipp || num_values < 0)
++  if (!ipp || num_values < 0 || (name && !ipp_is_valid_keyword(/*name*/NULL, name)))
+     return (NULL);
+ 
+  /*
+@@ -6272,7 +6285,10 @@ ipp_read_io(void       *src,		/* I - Data source */
+ 	      goto rollback;
+ 	    }
+ 
+-	    buffer[n] = '\0';
++	    	    buffer[n] = '\0';
++
++	    if (!ipp_is_valid_keyword(/*name*/NULL, (char *)buffer))
++	      goto rollback;
+ 
+             if (ipp->current)
+ 	      ipp->prev = ipp->current;
+@@ -6599,7 +6615,11 @@ ipp_read_io(void       *src,		/* I - Data source */
+ 		  goto rollback;
+ 		}
+ 
+-		buffer[n] = '\0';
++				buffer[n] = '\0';
++
++		if (!ipp_is_valid_keyword(/*name*/NULL, (char *)buffer))
++		  goto rollback;
++
+ 		attr->name = _cupsStrAlloc((char *)buffer);
+ 
+                /*

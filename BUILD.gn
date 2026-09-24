@@ -280,7 +280,12 @@ action("cups_action") {
     "//third_party/cups/ohos-access-log-maxsize.patch",
     "//third_party/cups/ohos-fix-filedevice-uri.patch",
     "//third_party/cups/backport-escape-printers-conf-newlines.patch",
-    "//third_party/cups/backport-limit-job-presets-member-tags.patch"
+    "//third_party/cups/backport-limit-job-presets-member-tags.patch",
+    "//third_party/cups/backport-validate-ipp-attribute-names.patch",
+    "//third_party/cups/backport-block-control-chars-in-ppd-strings.patch",
+    "//third_party/cups/backport-filter-control-chars-from-job-options.patch",
+    "//third_party/cups/backport-string-type-check-in-ppd-gen.patch",
+    "//third_party/cups/backport-fix-escaping-of-spaces-in-options.patch"
   ]
   cups_src_dir = "//third_party/cups"
   foreach(file, outputs){

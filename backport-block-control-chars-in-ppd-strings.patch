@@ -1,0 +1,31 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Thu, 30 Jul 2026 23:12:43 -0400
+Subject: [PATCH] Block all control chars in PPD localization strings
+
+Backport of upstream OpenPrinting/cups commit
+989cfca122a4299bfca0f33ff6529c1710aba9e3 (branch 2.4.x line; first
+target 2.4.17+, master also). ppd_put_string() previously stopped only at
+LF when copying localized text into the PPD; other control characters
+(CR, TAB, NUL, ESC...) were copied verbatim into the localization line.
+Localized text can originate from the remote printer-strings-uri gettext
+file fetched by _ppdCreateFromIPP2 (attacker-controlled HTTP content), so
+reject ALL control characters (<0x20 and 0x7f) as the truncation
+condition, matching upstream.
+
+Upstream-commit: 989cfca122a4299bfca0f33ff6529c1710aba9e3
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+index 9bffd54a..add58e3d 100644
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -5462,9 +5462,9 @@ ppd_put_string(cups_file_t  *fp,	/* I - PPD file */
+       return;
+   }
+ 
+-  // Add the first line of localized text...
++    // Add the first line of localized text...
+   cupsFilePrintf(fp, "*%s.%s %s/", lang->language, ppd_option, ppd_choice);
+-  while (*text && *text != '\n')
++  while (*text && (*text & 255) >= ' ')
+   {
+     // Escape ":" and "<"...
+     if (*text == ':' || *text == '<')
