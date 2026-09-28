@@ -97,6 +97,7 @@ def do_patch(target_dir):
         "ohos-fix-type-overread.patch",
         "ohos-reduce-print-data-log.patch",
         "ohos-access-log-maxsize.patch",
+        "ohos-fix-rastertopwg-linesize-overflow.patch",
         "ohos-fix-filedevice-uri.patch",
         "backport-escape-printers-conf-newlines.patch",
         "backport-limit-job-presets-member-tags.patch",
@@ -105,7 +106,6 @@ def do_patch(target_dir):
         "backport-filter-control-chars-from-job-options.patch",
         "backport-string-type-check-in-ppd-gen.patch",
         "backport-fix-escaping-of-spaces-in-options.patch"
-
     ]
 
     for patch in patch_file:
