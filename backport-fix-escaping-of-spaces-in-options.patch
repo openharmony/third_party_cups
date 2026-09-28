@@ -1,0 +1,67 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Sat, 27 Jun 2026 10:25:05 -0400
+Subject: [PATCH] Fix get_options regressions: advance value pointer and
+ escape spaces in options (Issues #1532 and #1630)
+
+Squash of two upstream OpenPrinting/cups fixes to the option-value
+string formatting introduced by 8d0f51ca (which this port carries as
+backport-filter-control-chars-from-job-options.patch):
+
+  da0ff58c041f7ee129c3c2c72fb14df1f1e4069a (2026-04-08, Issue #1532
+  "Fix get_options regression"): the new whitespace branch converted a
+  space but did not advance valptr, so any option value containing a
+  space (e.g. a document name) made the scheduler loop forever while
+  overflowing the options buffer.  Move the increment into the for()
+  clause.
+
+  5d72dffab0686dcf3b1b0728702ade46530e2c4b (2026-06-27, Issue #1630
+  "Fix escaping of spaces in options", 2.4.x equivalent e966de6d):
+  values converted to plain spaces were still re-split into extra
+  boolean options by the filters; emit '\' + ' ' so cupsParseOptions
+  restores the quoted value (e.g. document-name-supplied="story
+  booklet final.pdf" no longer becomes booklet=true, final.pdf=true).
+
+Adaptation: in this port get_options() is refactored into
+format_attr_to_buf() by ohos-user-sensitive-options-env.patch, so the
+hunks apply to that function with the ptr/valptr naming (upstream
+uses optptr).  Allocation note: upstream 0ff88973 ("Expand allocation
+of options string") is NOT required here - format_attr_to_buf() keeps
+the original tag coverage (no TEXTLANG/NAMELANG/MIMETYPE/URISCHEME)
+and ipp_length() reserves 2 * len + 2 per string value, which still
+covers the added backslash per whitespace character.
+
+Upstream-commit: da0ff58c041f7ee129c3c2c72fb14df1f1e4069a
+Upstream-commit: 5d72dffab0686dcf3b1b0728702ade46530e2c4b
+
+
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -4333,7 +4333,7 @@
+     case IPP_TAG_CHARSET:
+     case IPP_TAG_LANGUAGE:
+         case IPP_TAG_URI:
+-      for (valptr = attr->values[i].string.text; *valptr;)
++      for (valptr = attr->values[i].string.text; *valptr; valptr ++)
+       {
+        /*
+         * Convert tabs and newlines to spaces, filter out control chars,
+@@ -4342,13 +4342,18 @@
+ 
+         if (isspace(*valptr & 255))
+         {
++         /*
++          * Escape whitespace...
++          */
++
++          *ptr++ = '\\';
+           *ptr++ = ' ';
+ 	}
+         else if ((*valptr & 255) >= ' ' && *valptr != 0x7f)
+         {
+           if (strchr("\\\'\"", *valptr))
+ 	    *ptr++ = '\\';
+-	  *ptr++ = *valptr++;
++	  *ptr++ = *valptr;
+ 	}
+       }
+ 

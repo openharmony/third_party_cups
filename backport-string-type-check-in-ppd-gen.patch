@@ -1,0 +1,67 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Fri, 10 Apr 2026 19:25:16 -0400
+Subject: [PATCH] Make sure xxx-default and xxx-supported string attributes
+ are strings
+
+Backport of upstream OpenPrinting/cups commit
+2af52b6622495cbeb7b1a557b3cbb3edd26d0da7 (v2.4.x, released in v2.4.19;
+master equivalent 12ce51bf...): _ppdCreateFromIPP2 read
+media-source[-supported], media-type[-supported], output-bin[-default/-
+supported] values via ippGetString() with IPP_TAG_ZERO attribute lookups,
+accepting any value tag. Non-string tags yield NULL/garbage-derived PPD
+option names; enforce the value tag to be KEYWORD/NAME/NAMELANG (names
+are additionally ppdized).
+
+Part of the "type enforcement at the PPD generator" hardening family
+alongside the job-presets member tag whitelist.
+
+Upstream-commit: 2af52b6622495cbeb7b1a557b3cbb3edd26d0da7
+diff --git a/cups/ppd-cache.c b/cups/ppd-cache.c
+index add58e3d..88c1e250 100644
+--- a/cups/ppd-cache.c
++++ b/cups/ppd-cache.c
+@@ -3994,12 +3994,12 @@ _ppdCreateFromIPP2(
+   * InputSlot...
+   */
+ 
+-  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-source", IPP_TAG_ZERO)) != NULL)
++  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-source", IPP_TAG_ZERO)) != NULL && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+     pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
+   else
+     ppdname[0] = '\0';
+ 
+-  if ((attr = ippFindAttribute(supported, "media-source-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 1)
++  if ((attr = ippFindAttribute(supported, "media-source-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 1 && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+   {
+     int have_default = ppdname[0] != '\0';
+ 					/* Do we have a default InputSlot? */
+@@ -4090,12 +4090,12 @@ _ppdCreateFromIPP2(
+   * MediaType...
+   */
+ 
+-  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-type", IPP_TAG_ZERO)) != NULL)
++  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-type", IPP_TAG_ZERO)) != NULL && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+     pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
+   else
+     strlcpy(ppdname, "Unknown", sizeof(ppdname));
+ 
+-  if ((attr = ippFindAttribute(supported, "media-type-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 1)
++  if ((attr = ippFindAttribute(supported, "media-type-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 1 && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+   {
+     cupsFilePrintf(fp, "*OpenUI *MediaType: PickOne\n"
+                        "*OrderDependency: 10 AnySetup *MediaType\n"
+@@ -4540,12 +4540,12 @@ _ppdCreateFromIPP2(
+   * Output bin...
+   */
+ 
+-  if ((attr = ippFindAttribute(supported, "output-bin-default", IPP_TAG_ZERO)) != NULL)
++  if ((attr = ippFindAttribute(supported, "output-bin-default", IPP_TAG_ZERO)) != NULL && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+     pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
+   else
+     strlcpy(ppdname, "Unknown", sizeof(ppdname));
+ 
+-  if ((attr = ippFindAttribute(supported, "output-bin-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 0)
++  if ((attr = ippFindAttribute(supported, "output-bin-supported", IPP_TAG_ZERO)) != NULL && (count = ippGetCount(attr)) > 0 && (ippGetValueTag(attr) == IPP_TAG_KEYWORD || ippGetValueTag(attr) == IPP_TAG_NAME || ippGetValueTag(attr) == IPP_TAG_NAMELANG))
+   {
+     ipp_attribute_t	*trays = ippFindAttribute(supported, "printer-output-tray", IPP_TAG_STRING);
+ 					/* printer-output-tray attribute, if any */

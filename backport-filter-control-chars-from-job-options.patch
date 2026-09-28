@@ -1,0 +1,98 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Tue, 31 Mar 2026 18:45:13 -0400
+Subject: [PATCH] Filter out control characters from option values
+ (CVE-2026-34980)
+
+Backport of upstream OpenPrinting/cups commit
+8d0f51cac24cb5bf949c5b6a221e51a150d982e3 (first released in v2.4.17) -
+CVE-2026-34980: the scheduler did not filter control characters from
+option values.
+
+  - get_options string formatting: values embedded into the single
+    options string (job.conf, filter argv) now convert whitespace to a
+    plain space, drop control characters (<0x20, 0x7f), and escape
+    backslash/quote.
+  - update_job: backend "PPD:" keyword messages are no longer merged
+    wholesale into job->keywords; "special" PPD keywords (cupsFilter,
+    cupsFilter2, cupsFinishingTemplate, cupsPreFilter, APPrinterPreset,
+    ...) reported by a backend are rejected, blocking a
+    printer/backend-influenced PPD-option path.
+
+Adaptation: in this port, ohos-user-sensitive-options-env.patch already
+refactored get_options into format_attr_to_buf(); the upstream URI-value
+filtering is applied to the shared TEXT/NAME/KEYWORD/CHARSET/LANGUAGE/URI
+string case there (ptr/valptr naming kept). The update_job() hunk applies
+verbatim.
+
+Upstream-commit: 8d0f51cac24cb5bf949c5b6a221e51a150d982e3
+diff --git a/scheduler/job.c b/scheduler/job.c
+index c395a48e..2bd25184 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -4332,12 +4332,24 @@ format_attr_to_buf(
+     case IPP_TAG_KEYWORD:
+     case IPP_TAG_CHARSET:
+     case IPP_TAG_LANGUAGE:
+-    case IPP_TAG_URI:
++        case IPP_TAG_URI:
+       for (valptr = attr->values[i].string.text; *valptr;)
+       {
+-        if (strchr(" \t\n\\\'\"", *valptr))
+-          *ptr++ = '\\';
+-        *ptr++ = *valptr++;
++       /*
++        * Convert tabs and newlines to spaces, filter out control chars,
++	* and escape \, ', and ".
++	*/
++
++        if (isspace(*valptr & 255))
++        {
++          *ptr++ = ' ';
++	}
++        else if ((*valptr & 255) >= ' ' && *valptr != 0x7f)
++        {
++          if (strchr("\\\'\"", *valptr))
++	    *ptr++ = '\\';
++	  *ptr++ = *valptr++;
++	}
+       }
+ 
+       *ptr = '\0';
+@@ -5596,16 +5608,33 @@ update_job(cupsd_job_t *job)		/* I - Job to check */
+ 
+       cupsFreeOptions(num_attrs, attrs);
+     }
+-    else if (loglevel == CUPSD_LOG_PPD)
++        else if (loglevel == CUPSD_LOG_PPD)
+     {
+      /*
+-      * Set attribute(s)...
++      * Set PPD keyword(s)/value(s)...
+       */
+ 
++      int			i,		/* Looping var */
++			num_keywords;	/* Number of keywords */
++      cups_option_t	*keywords,	/* Keywords */
++			*keyword;	/* Current keyword */
++
+       cupsdLogJob(job, CUPSD_LOG_DEBUG, "PPD: %s", message);
+ 
+-      job->num_keywords = cupsParseOptions(message, job->num_keywords,
+-                                           &job->keywords);
++      keywords     = NULL;
++      num_keywords = cupsParseOptions(message, 0, &keywords);
++
++      for (i = 0, keyword = keywords; i < num_keywords; i ++, keyword ++)
++      {
++       /*
++        * Filter out "special" PPD keywords...
++        */
++
++        if (strcmp(keyword->name, "cupsFilter") && strcmp(keyword->name, "cupsFilter2") && strcmp(keyword->name, "cupsFinishingTemplate") && strcmp(keyword->name, "cupsIPPFinishings") && strcmp(keyword->name, "cupsIPPReason") && strcmp(keyword->name, "cupsMarkerName") && strcmp(keyword->name, "cupsMaxSize") && strncmp(keyword->name, "cupsMediaQualifier", 18) && strcmp(keyword->name, "cupsMinSize") && strcmp(keyword->name, "cupsPageSizeCategory") && strcmp(keyword->name, "cupsPortMonitor") && strcmp(keyword->name, "cupsPreFilter") && strcmp(keyword->name, "cupsPrintQuality") && strcmp(keyword->name, "APPrinterPreset"))
++          job->num_keywords = cupsAddOption(keyword->name, keyword->value, job->num_keywords, &job->keywords);
++      }
++
++      cupsFreeOptions(num_keywords, keywords);
+     }
+     else
+     {
