@@ -1,0 +1,75 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Fri, 12 Jun 2026 19:43:22 +0000
+Subject: [PATCH] Sanitize destination-uri and pre-dial-string values
+ (CVE-2026-55467)
+
+Backport of upstream OpenPrinting/cups commit
+0cf4e7814d6810ed3c454222bce3aa342d541681 (2.4.x, master equivalent
+a9e7e7a3; upstream parent d41cf0616 = the quote_string fix carried by
+backport-sanitize-backend-ipp-attr-strings.patch) - CVE-2026-55467:
+the fax phone/faxPrefix options derived from a job's destination-uris
+collection (destination-uri "tel:..." and pre-dial-string) bypassed the
+CVE-2026-34980 control-character sanitizer, letting a print client
+smuggle control characters (CR/LF) into the option string handed to the
+fax backend (option-string grammar injection / incomplete-fix bypass).
+
+Fix: copy both values through a control-char filter (<0x20 and DEL ->
+space) into a bounded 256-byte buffer before cupsAddOption(), matching
+upstream verbatim.
+
+Product note: no fax queue is deployed in this product (CUPS_PRINTER_FAX
+branch not exercised); carried to complete the 8d0f51ca sanitizer family
+and keep the code line aligned with upstream 2.4.x.
+
+Adaptation: none needed - context is byte-identical in this port's build
+state (verified with git apply --fuzz=0 over the full install.py chain).
+
+Upstream-commit: 0cf4e7814d6810ed3c454222bce3aa342d541681
+Upstream-commit: a9e7e7a3a (master equivalent)
+CVE: CVE-2026-55467
+GHSA: GHSA-69qc-prxg-h2c7
+
+diff --git a/scheduler/job.c b/scheduler/job.c
+index 67b21513..eedd2a28 100644
+--- a/scheduler/job.c
++++ b/scheduler/job.c
+@@ -3952,12 +3952,37 @@ get_options(cupsd_job_t *job,		/* I - Job */
+     ipp_t *ipp = ippGetCollection(attr, 0);	// Collection value
+     const char *destination_uri = ippGetString(ippFindAttribute(ipp, "destination-uri", IPP_TAG_URI), 0, NULL);
+     const char *pre_dial_string = ippGetString(ippFindAttribute(ipp, "pre-dial-string", IPP_TAG_TEXT), 0, NULL);
++    char buffer[256], *bufptr;		// Sanitized value
+ 
+     if (destination_uri && !strncmp(destination_uri, "tel:", 4))
+-      num_pwgppds = cupsAddOption("phone", destination_uri + 4, num_pwgppds, &pwgppds);
++    {
++      for (destination_uri += 4, bufptr = buffer; *destination_uri && bufptr < (buffer + sizeof(buffer) - 1); destination_uri ++)
++      {
++        if ((*destination_uri & 255) < ' ' || *destination_uri == 127)
++          *bufptr++ = ' ';
++	else
++	  *bufptr++ = *destination_uri;
++      }
++
++      *bufptr = '\0';
++
++      num_pwgppds = cupsAddOption("phone", buffer, num_pwgppds, &pwgppds);
++    }
+ 
+     if (pre_dial_string)
+-      num_pwgppds = cupsAddOption("faxPrefix", pre_dial_string, num_pwgppds, &pwgppds);
++    {
++      for (bufptr = buffer; *pre_dial_string && bufptr < (buffer + sizeof(buffer) - 1); pre_dial_string ++)
++      {
++        if ((*pre_dial_string & 255) < ' ' || *pre_dial_string == 127)
++          *bufptr++ = ' ';
++	else
++	  *bufptr++ = *pre_dial_string;
++      }
++
++      *bufptr = '\0';
++
++      num_pwgppds = cupsAddOption("faxPrefix", buffer, num_pwgppds, &pwgppds);
++    }
+   }
+ 
+  /*
