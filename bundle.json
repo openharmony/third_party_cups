@@ -32,7 +32,8 @@
                 "zlib",
                 "openssl",
                 "libusb",
-                "ipc"
+                "ipc",
+                "bounds_checking_function"
             ]
         },
         "build": {
