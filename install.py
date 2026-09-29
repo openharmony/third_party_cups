@@ -107,7 +107,8 @@ def do_patch(target_dir):
         "backport-string-type-check-in-ppd-gen.patch",
         "backport-fix-escaping-of-spaces-in-options.patch",
         "backport-sanitize-backend-ipp-attr-strings.patch",
-        "backport-sanitize-fax-phone-option-values.patch"
+        "backport-sanitize-fax-phone-option-values.patch",
+        "backport-rangecheck-job-password-supported.patch"
     ]
 
     for patch in patch_file:

@@ -288,7 +288,8 @@ action("cups_action") {
     "//third_party/cups/backport-string-type-check-in-ppd-gen.patch",
     "//third_party/cups/backport-fix-escaping-of-spaces-in-options.patch",
     "//third_party/cups/backport-sanitize-backend-ipp-attr-strings.patch",
-    "//third_party/cups/backport-sanitize-fax-phone-option-values.patch"
+    "//third_party/cups/backport-sanitize-fax-phone-option-values.patch",
+    "//third_party/cups/backport-rangecheck-job-password-supported.patch"
   ]
   cups_src_dir = "//third_party/cups"
   foreach(file, outputs){
