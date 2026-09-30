@@ -1,0 +1,50 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Sun, 05 Apr 2026 13:22:58 +0000
+Subject: [PATCH] Protect against a driver reporting a supply type with a trailing '-' (GHSA-qfp8-9frx-5j48)
+
+Backport of upstream OpenPrinting/cups commit
+70ac35324da1cd81b3c36247cd7449733c82bc41 (2026-04-05, same disclosure
+day as the job-password-supported range check; first shipped in the
+v2.4.17 wave) - GHSA-qfp8-9frx-5j48 "cupsdSetPrinterAttr marker-types
+parsing OOB read" (low 4.0): when a marker-types keyword value ended
+with '-' (e.g. "toner-"), the camelCase conversion loop consumed the
+hyphen by advancing past the NUL terminator; the loop-continue test
+then read past the end of the IPP string allocation, leaking heap
+bytes into the derived printer-supply attribute (or crashing cupsd
+when hitting an unmapped page).  Values arrive from a remote printer's
+Get-Printer-Attributes response (everywhere/remote queues) and via
+backend "PPD:" marker messages (update_job path, which the CVE-2026-
+34980 blacklist does not block for marker-types).
+
+Fix: consume '-' as a case-switch only when a next byte exists
+(`*type == '-' && type[1]`), verbatim from upstream including the
+enclosing braces.
+
+Adaptation: none - the build-state block is byte-identical to
+upstream context; generated against the full install.py chain and
+verified with git apply.
+
+Upstream-commit: 70ac35324da1cd81b3c36247cd7449733c82bc41
+GHSA: GHSA-qfp8-9frx-5j48
+
+diff --git a/scheduler/printers.c b/scheduler/printers.c
+index 52c29396..40a8c39d 100644
+--- a/scheduler/printers.c
++++ b/scheduler/printers.c
+@@ -2181,13 +2181,15 @@ cupsdSetPrinterAttr(
+       type  = ippGetString(types, i, NULL);
+ 
+       for (psptr = pstype; *type && psptr < (pstype + sizeof(pstype) - 1); type ++)
+-        if (*type == '-')
++      {
++        if (*type == '-' && type[1])
+ 	{
+ 	  type ++;
+ 	  *psptr++ = (char)toupper(*type & 255);
+ 	}
+ 	else
+ 	  *psptr++ = *type;
++      }
+       *psptr = '\0';
+ 
+       snprintf(buffer, sizeof(buffer), "index=%d;class=%s;type=%s;unit=percent;maxcapacity=100;level=%d;colorantname=%s;", i + 1, strncmp(pstype, "waste", 5) ? "supplyThatIsConsumed" : "receptacleThatIsFilled", pstype, level, color);

@@ -1,0 +1,64 @@
+From: Michael R Sweet <msweet@msweet.org>
+Date: Wed, 17 Jun 2026 00:00:00 -0400
+Subject: [PATCH] backend/ipp: sanitize IPP attribute strings in quote_string()
+ (CVE-2026-55453)
+
+Backport of upstream OpenPrinting/cups fix for CVE-2026-55453 /
+GHSA-7hqf-mfhx-7r3v (2.4.x commit d41cf06, master commit 806e1b48):
+"ipp backend status-line injection can update queue PPD and lead to
+conditional RCE as lp via foomatic-rip".
+
+backend/ipp.c quote_string() copies remote-supplied IPP string attribute
+values into the "ATTR: name=\"...\"" / "STATE:" status lines written to the
+backend's stdout, but did not neutralize control characters. A malicious (or
+MitM) IPP printer can put CR/LF inside job-printer-state-message /
+printer-state-message (and other reported text attributes) to break out of the
+current line and inject additional ATTR:/STATE:/PPD: scheduler records. Those
+are consumed by scheduler/statbuf.c -> update_job(), which then lets the remote
+persistently update the queue PPD and (where a PPD-driven filter such as
+foomatic-rip is in the chain) can lead to execution as the filter account.
+
+Fix (matching upstream, defense at the source emitter): inside quote_string()'s
+copy loop, map every control character ((unsigned char) < 0x20) and DEL (0x7f)
+to a single space instead of copying it verbatim, so a reported value can never
+introduce a new backend status line. This is complementary to the already
+backported scheduler-side hardening (option-value control-char filtering and
+the "PPD:" special-keyword blacklist); neither alone closes the emitter.
+
+Adaptation to 2.4.14: applies to backend/ipp.c quote_string() only; hunk line
+numbers reflect the build state after the existing install.py patch chain
+(cups-log-datamasking/ohos_ip_conflict/cups-ipp-multifile shift this function's
+offset but do not touch its body). Verified with git apply --fuzz=0 on that
+chain.
+
+Upstream-commit: d41cf0616688721e9d435d54118c4c8a36ed596a
+Upstream-commit: 806e1b483 (master equivalent)
+CVE: CVE-2026-55453
+GHSA: GHSA-7hqf-mfhx-7r3v
+
+diff --git a/backend/ipp.c b/backend/ipp.c
+index f11421c5..eef49980 100644
+--- a/backend/ipp.c
++++ b/backend/ipp.c
+@@ -3156,7 +3156,20 @@ quote_string(const char *s,		/* I - String */
+         break;
+     }
+ 
+-    *qptr++ = *s++;
++    if ((*s & 255) < ' ' || *s == 127)
++    {
++     /*
++      * Replace control characters (incl. CR/LF/TAB) and DEL with a
++      * space, so a remote IPP attribute value cannot inject extra
++      * backend status lines (ATTR:/STATE:/PPD:) nor break the quoted
++      * option grammar...  (CVE-2026-55453)
++      */
++
++      *qptr++ = ' ';
++      s ++;
++    }
++    else
++      *qptr++ = *s++;
+   }
+ 
+   *qptr++ = '\"';
